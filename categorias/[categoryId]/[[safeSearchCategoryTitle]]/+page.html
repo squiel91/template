@@ -1,0 +1,17 @@
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+	<a href="/">Inicio</a>
+	<i data-lucide="chevron-right"></i>
+	<a href="/categorias">Categorias</a>
+	<i data-lucide="chevron-right"></i>
+	<span id="category-breadcrumb">Categoria</span>
+</nav>
+
+<section class="listing-head" aria-labelledby="category-title">
+	<div class="listing-meta">
+		<h1 id="category-title" class="page-title">Categoria</h1>
+		<p id="category-description" class="page-subtitle"></p>
+	</div>
+</section>
+
+<div id="category-products" aria-live="polite"></div>
+<script type="module" src="/categorias/[categoryId]/script.js"></script>

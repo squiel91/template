@@ -1,0 +1,46 @@
+<section class="hero" aria-labelledby="store-home-title">
+	<div class="hero-copy">
+		<p class="hero-eyebrow">Nueva temporada</p>
+		<h1 id="store-home-title">Tienda Genérica</h1>
+		<p>Vendemos todo lo que necesites. Todo, literal.</p>
+		<p>Descubri productos para cada momento del dia, con precios claros y compra rapida.</p>
+		<div class="hero-actions">
+			<a id="hero-offers-link" class="hero-button hero-button--primary" href="/productos">
+				<i data-lucide="badge-percent"></i>
+				<span>Ver ofertas</span>
+			</a>
+			<a id="hero-primary-category" class="hero-button" href="/categorias">
+				<i data-lucide="arrow-right-circle"></i>
+				<span>Ver categorias</span>
+			</a>
+		</div>
+	</div>
+</section>
+
+<section class="benefits-strip" aria-label="Beneficios de compra">
+	<div class="hero-benefit"><i data-lucide="truck"></i><span>Envios a todo el pais</span></div>
+	<div class="hero-benefit"><i data-lucide="shield-check"></i><span>Compra segura</span></div>
+	<div class="hero-benefit"><i data-lucide="refresh-cw"></i><span>Cambios sencillos</span></div>
+</section>
+
+<section aria-labelledby="featured-products-title">
+	<div class="section-header">
+		<h2 id="featured-products-title" class="section-title">
+			<i data-lucide="sparkles"></i>
+			<span>Productos destacados</span>
+		</h2>
+		<a class="muted-link" href="/productos">Ver todos</a>
+	</div>
+	<div id="featured-products" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="home-categories-title">
+	<div class="section-header">
+		<h2 id="home-categories-title" class="section-title">
+			<i data-lucide="layout-grid"></i>
+			<span>Categorias</span>
+		</h2>
+	</div>
+	<div id="home-categories" class="category-grid" aria-live="polite"></div>
+</section>
+<script type="module" src="/index/script.js"></script>

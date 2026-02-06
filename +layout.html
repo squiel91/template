@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Tienda Genérica</title>
+		<meta
+			name="description"
+			content="Tienda Genérica: Vendemos todo lo que necesites. Todo, literal."
+		/>
+		<meta name="theme-color" content="#ffffff" />
+		<meta name="tiendu-store-id" content="4" />
+		<meta name="tiendu-api-base-url" content="http://localhost:4000" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="/styles.css" />
+		<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+	</head>
+	<body>
+		<a href="#contenido" class="skip-link">Saltar al contenido</a>
+		<header class="site-header" role="banner">
+			<div class="site-header__inner site-header__inner--full">
+				<button id="menu-toggle" class="icon-button" type="button" aria-label="Abrir menu">
+					<i data-lucide="menu"></i>
+				</button>
+				<a href="/" class="brand" aria-label="Inicio Tienda Genérica">
+					<span class="brand__name">Tienda Genérica</span>
+				</a>
+				<storefront-search class="header-search"></storefront-search>
+				<button id="open-cart-button" class="cart-button" type="button" aria-label="Abrir carrito">
+					<i data-lucide="shopping-cart"></i>
+					<span>Carrito</span>
+					<span id="cart-quantity" class="cart-quantity" aria-live="polite">0</span>
+				</button>
+			</div>
+		</header>
+
+		<aside id="side-menu" class="side-menu" aria-hidden="true">
+			<div class="side-menu__backdrop" id="menu-backdrop"></div>
+			<div class="side-menu__panel" role="dialog" aria-label="Menu de navegacion">
+				<div class="side-menu__header">
+					<strong>Menu</strong>
+					<button id="menu-close" class="icon-button" type="button" aria-label="Cerrar menu">
+						<i data-lucide="x"></i>
+					</button>
+				</div>
+				<section class="side-menu__section" aria-labelledby="menu-categories-title">
+					<h2 id="menu-categories-title">Categorias</h2>
+					<ul id="category-list" class="side-menu__list" aria-live="polite"></ul>
+				</section>
+				<section class="side-menu__section" aria-labelledby="menu-pages-title">
+					<h2 id="menu-pages-title">Paginas</h2>
+					<ul id="page-list" class="side-menu__list" aria-live="polite"></ul>
+				</section>
+			</div>
+		</aside>
+
+		<main id="contenido" class="container page-shell" role="main">
+			{{content}}
+		</main>
+
+		<footer class="site-footer">
+			<div class="container">
+				<p>
+					<span id="footer-year"></span>, todos los derechos reservados. Tienda co-creada con
+					<a href="https://tiendu.uy" target="_blank" rel="noopener noreferrer">Tiendu</a>.
+				</p>
+			</div>
+		</footer>
+
+		<store-loading-overlay id="page-transition-overlay"></store-loading-overlay>
+		<script type="module" src="/layout/script.js"></script>
+	</body>
+</html>
