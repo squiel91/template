@@ -1,91 +1,118 @@
-class LoadingButton extends HTMLElement {
-	static get observedAttributes() {
-		return ['label', 'loading-label', 'duration', 'disabled']
+// @ts-nocheck
+
+import { LitElement, html } from '/shared/lit.js'
+
+const STYLE_ID = 'loading-button-lit-styles'
+
+const ensureStyles = () => {
+	if (document.getElementById(STYLE_ID)) return
+	const style = document.createElement('style')
+	style.id = STYLE_ID
+	style.textContent = `
+		loading-button button {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			padding: 14px 28px;
+			font-family: inherit;
+			font-size: 16px;
+			font-weight: 600;
+			color: #ffffff;
+			background: #0f172a;
+			border: none;
+			border-radius: 9999px;
+			cursor: pointer;
+			transition: all 0.15s ease;
+			min-width: 180px;
+		}
+
+		loading-button button:hover:not([disabled]) {
+			background: #1e293b;
+			transform: translateY(-2px);
+			box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+		}
+
+		loading-button button:active:not([disabled]) {
+			transform: translateY(0);
+		}
+
+		loading-button button[disabled] {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		loading-button button[aria-busy='true'] {
+			animation: loading-button-pulse 1.5s ease-in-out infinite;
+		}
+
+		@keyframes loading-button-pulse {
+			0%,
+			100% { opacity: 1; }
+			50% { opacity: 0.7; }
+		}
+	`
+	document.head.appendChild(style)
+}
+
+class LoadingButton extends LitElement {
+	static properties = {
+		label: { type: String },
+		loadingLabel: { type: String, attribute: 'loading-label' },
+		duration: { type: Number },
+		disabled: { type: Boolean, reflect: true }
 	}
 
 	constructor() {
 		super()
-		this.attachShadow({ mode: 'open' })
+		this.label = 'Agregar al carrito'
+		this.loadingLabel = 'Agregando...'
+		this.duration = 4000
+		this.disabled = false
 		this._loading = false
 		this._timeoutId = null
-		this.handleClick = this.handleClick.bind(this)
+	}
+
+	createRenderRoot() {
+		return this
 	}
 
 	connectedCallback() {
-		this.render()
+		super.connectedCallback()
+		ensureStyles()
 	}
 
 	disconnectedCallback() {
-		const button = this.shadowRoot?.querySelector('button')
-		button?.removeEventListener('click', this.handleClick)
+		super.disconnectedCallback()
 		if (this._timeoutId) {
 			clearTimeout(this._timeoutId)
 			this._timeoutId = null
 		}
 	}
 
-	attributeChangedCallback() {
-		this.render()
-	}
-
 	getDuration() {
-		const durationAttr = this.getAttribute('duration')
-		const duration = Number(durationAttr)
+		const duration = Number(this.duration)
 		return Number.isFinite(duration) && duration > 0 ? duration : 4000
 	}
 
 	handleClick() {
-		if (this._loading || this.hasAttribute('disabled')) return
-		this.startLoading()
-		this.dispatchEvent(
-			new CustomEvent('loading-click', { bubbles: true, composed: true })
-		)
-	}
-
-	startLoading() {
-		if (this._loading) return
+		if (this._loading || this.disabled) return
 		this._loading = true
-		this.render()
-		this._timeoutId = setTimeout(() => {
+		this.requestUpdate()
+		this.dispatchEvent(new CustomEvent('loading-click', { bubbles: true, composed: true }))
+		this._timeoutId = window.setTimeout(() => {
 			this._loading = false
-			this.render()
+			this.requestUpdate()
 		}, this.getDuration())
 	}
 
-		render() {
-			if (!this.shadowRoot) return
-			const label = this.getAttribute('label') || 'Button'
-			const loadingLabel = this.getAttribute('loading-label') || 'Loading'
-			const isDisabled = this._loading || this.hasAttribute('disabled')
-			this.shadowRoot.innerHTML = `
-				<style>
-					button {
-						background: #1f4fbf;
-						color: #fff;
-						border: 1px solid #1f4fbf;
-						padding: 10px 14px;
-						border-radius: 10px;
-						font-size: 0.95rem;
-						font-family: 'DM Sans', sans-serif;
-						font-weight: 600;
-						cursor: pointer;
-						transition: filter 0.15s ease;
-					}
-					button:hover {
-						filter: brightness(0.96);
-					}
-					button[disabled] {
-						opacity: 0.6;
-						cursor: not-allowed;
-					}
-				</style>
-				<button ${isDisabled ? 'disabled' : ''} aria-busy="${this._loading}">
-					${this._loading ? loadingLabel : label}
-				</button>
-			`
-		this.shadowRoot
-			.querySelector('button')
-			?.addEventListener('click', this.handleClick)
+	render() {
+		const isDisabled = this._loading || this.disabled
+		return html`
+			<button ?disabled=${isDisabled} aria-busy=${String(this._loading)} @click=${this.handleClick}>
+				${this._loading ? this.loadingLabel : this.label}
+			</button>
+		`
 	}
 }
 

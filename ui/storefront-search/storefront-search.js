@@ -1,259 +1,417 @@
 // @ts-nocheck
 
+import { LitElement, html, nothing } from '/shared/lit.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getListingPriceLabel } from '/shared/product-pricing.js'
 import { urlSafe } from '/shared/url-safe.js'
 import { refreshIcons } from '/shared/icons.js'
 
-class StorefrontSearch extends HTMLElement {
+const STYLE_ID = 'storefront-search-lit-styles'
+
+const ensureStyles = () => {
+	if (document.getElementById(STYLE_ID)) return
+	const style = document.createElement('style')
+	style.id = STYLE_ID
+	style.textContent = `
+		storefront-search {
+			display: block;
+		}
+
+		storefront-search .storefront-search-shell {
+			position: relative;
+		}
+
+		storefront-search .storefront-search__mobile-trigger {
+			display: none;
+			width: 40px;
+			height: 40px;
+			align-items: center;
+			justify-content: center;
+			border-radius: 9999px;
+			border: 1px solid #e2e8f0;
+			background: #ffffff;
+			color: #0f172a;
+		}
+
+		storefront-search .storefront-search__mobile-trigger i,
+		storefront-search .storefront-search__mobile-trigger svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		storefront-search .storefront-search__mobile-backdrop {
+			display: none;
+			border: none;
+			background: rgba(15, 23, 42, 0.35);
+		}
+
+		storefront-search .storefront-search__form {
+			position: relative;
+		}
+
+		storefront-search .storefront-search__control {
+			display: flex;
+			align-items: center;
+			padding: 0 0 0 10px;
+			height: 40px;
+			background: #ffffff;
+			border-radius: 14px;
+			overflow: hidden;
+			border: 1px solid #cbd5e1;
+			transition: all 0.15s ease;
+		}
+
+		storefront-search .storefront-search__control:focus-within {
+			background: #f8fafc;
+			border-color: #94a3b8;
+		}
+
+		storefront-search .storefront-search__control i,
+		storefront-search .storefront-search__control svg {
+			width: 18px;
+			height: 18px;
+			color: #94a3b8;
+			flex-shrink: 0;
+		}
+
+		storefront-search .storefront-search__control input {
+			border: none;
+			outline: none;
+			font: inherit;
+			width: 100%;
+			min-width: 0;
+			padding: 0;
+			margin-left: 8px;
+			font-size: 14px;
+			color: #0f172a;
+			background: transparent;
+		}
+
+		storefront-search .storefront-search__control input::placeholder {
+			color: #94a3b8;
+		}
+
+		storefront-search .storefront-search__control input[type='search']::-webkit-search-cancel-button {
+			-webkit-appearance: none;
+			appearance: none;
+			display: none;
+		}
+
+		storefront-search .storefront-search__submit {
+			padding: 0 14px;
+			font-size: 14px;
+			font-weight: 600;
+			color: #0f172a;
+			background: transparent;
+			border: none;
+			border-left: 1px solid #cbd5e1;
+			border-radius: 0;
+			align-self: stretch;
+			display: inline-flex;
+			align-items: center;
+			flex-shrink: 0;
+			transition: color 0.15s ease;
+		}
+
+		storefront-search .storefront-search__submit:hover,
+		storefront-search .storefront-search__submit:focus-visible {
+			outline: none;
+			color: #1e293b;
+			background: #f8fafc;
+			border-left-color: #94a3b8;
+		}
+
+		storefront-search .storefront-search__mobile-close {
+			display: none;
+			padding: 0 10px;
+			background: transparent;
+			border: none;
+			border-left: 1px solid #cbd5e1;
+			border-radius: 0;
+			align-self: stretch;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+		}
+
+		storefront-search .storefront-search__mobile-close i,
+		storefront-search .storefront-search__mobile-close svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		storefront-search .storefront-search__dropdown {
+			position: absolute;
+			top: calc(100% + 8px);
+			left: 0;
+			right: 0;
+			background: #ffffff;
+			border-radius: 16px;
+			box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+			max-height: min(72vh, 420px);
+			overflow: auto;
+			z-index: 50;
+			border: 1px solid #e2e8f0;
+		}
+
+		storefront-search .storefront-search__results {
+			list-style: none;
+			padding: 8px;
+			margin: 0;
+		}
+
+		storefront-search .storefront-search__item {
+			padding: 0;
+		}
+
+		storefront-search .storefront-search__item-link {
+			display: grid;
+			grid-template-columns: 52px 1fr;
+			gap: 12px;
+			align-items: center;
+			padding: 10px 12px;
+			text-decoration: none;
+			color: inherit;
+			border-radius: 12px;
+			transition: background 0.15s ease;
+		}
+
+		storefront-search .storefront-search__item-link:hover {
+			background: #f8fafc;
+		}
+
+		storefront-search .storefront-search__thumb {
+			width: 52px;
+			height: 52px;
+			border-radius: 10px;
+			background: #f1f5f9;
+			overflow: hidden;
+			flex-shrink: 0;
+		}
+
+		storefront-search .storefront-search__thumb img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		storefront-search .storefront-search__meta {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			min-width: 0;
+		}
+
+		storefront-search .storefront-search__title {
+			font-size: 14px;
+			font-weight: 500;
+			line-height: 1.4;
+			color: #0f172a;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		storefront-search .storefront-search__price {
+			font-size: 14px;
+			font-weight: 700;
+			color: #0f172a;
+		}
+
+		storefront-search .storefront-search__status {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 16px;
+			font-size: 14px;
+			color: #64748b;
+		}
+
+		storefront-search .storefront-search__status i,
+		storefront-search .storefront-search__status svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		storefront-search .storefront-search__status--loading i,
+		storefront-search .storefront-search__status--loading svg {
+			animation: storefront-search-spin 1s linear infinite;
+		}
+
+		@keyframes storefront-search-spin {
+			to { transform: rotate(360deg); }
+		}
+
+		@media (max-width: 768px) {
+			storefront-search .storefront-search__mobile-trigger {
+				display: inline-flex;
+			}
+
+			storefront-search .storefront-search__form {
+				display: block;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				z-index: 80;
+				padding: 12px;
+				background: #ffffff;
+				box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+				transform: translateY(-120%);
+				opacity: 0;
+				pointer-events: none;
+				transition: transform 180ms ease, opacity 180ms ease;
+			}
+
+			storefront-search[data-mobile-open] .storefront-search__mobile-backdrop {
+				display: block;
+				position: fixed;
+				inset: 0;
+				z-index: 70;
+			}
+
+			storefront-search[data-mobile-open] .storefront-search__form {
+				transform: translateY(0);
+				opacity: 1;
+				pointer-events: auto;
+			}
+
+			storefront-search .storefront-search__mobile-close {
+				display: inline-flex;
+			}
+
+			storefront-search .storefront-search__dropdown {
+				position: static;
+				margin-top: 8px;
+				max-height: 60vh;
+			}
+		}
+	`
+	document.head.appendChild(style)
+}
+
+class StorefrontSearch extends LitElement {
+	static properties = {
+		query: { type: String },
+		items: { type: Array },
+		loading: { type: Boolean },
+		open: { type: Boolean },
+		mobileOpen: { type: Boolean, attribute: 'data-mobile-open', reflect: true }
+	}
+
 	constructor() {
 		super()
 		this.query = ''
 		this.items = []
 		this.loading = false
 		this.open = false
+		this.mobileOpen = false
 		this.requestId = 0
 		this.debounceId = null
+		this.viewportMedia = window.matchMedia('(max-width: 768px)')
 		this.handleDocumentClick = this.handleDocumentClick.bind(this)
 		this.handleDocumentKeydown = this.handleDocumentKeydown.bind(this)
+		this.handleViewportChange = this.handleViewportChange.bind(this)
+	}
+
+	createRenderRoot() {
+		return this
 	}
 
 	connectedCallback() {
-		if (this.childElementCount > 0) return
-		this.render()
-		this.bindEvents()
-
+		super.connectedCallback()
+		ensureStyles()
 		const urlQuery = new URL(window.location.href).searchParams.get('q')?.trim() || ''
-		if (urlQuery) {
-			this.query = urlQuery
-			if (this.input instanceof HTMLInputElement) {
-				this.input.value = urlQuery
-			}
-		}
-
+		if (urlQuery) this.query = urlQuery
 		document.addEventListener('click', this.handleDocumentClick)
 		document.addEventListener('keydown', this.handleDocumentKeydown)
+		this.viewportMedia.addEventListener('change', this.handleViewportChange)
 	}
 
 	disconnectedCallback() {
+		super.disconnectedCallback()
 		if (this.debounceId) {
 			window.clearTimeout(this.debounceId)
 			this.debounceId = null
 		}
 		document.removeEventListener('click', this.handleDocumentClick)
 		document.removeEventListener('keydown', this.handleDocumentKeydown)
+		this.viewportMedia.removeEventListener('change', this.handleViewportChange)
 	}
 
-	render() {
-		this.innerHTML = `
-			<form class="storefront-search" action="/productos" method="get" role="search" autocomplete="off">
-				<label class="sr-only" for="storefront-search-input">Buscar productos</label>
-				<div class="storefront-search__control">
-					<i data-lucide="search"></i>
-					<input id="storefront-search-input" type="search" name="q" placeholder="Buscar productos" />
-					<button type="submit">Buscar</button>
-				</div>
-				<div class="storefront-search__dropdown" id="storefront-search-dropdown" hidden>
-					<ul class="storefront-search__results" id="storefront-search-results"></ul>
-				</div>
-			</form>
-			<style>
-				storefront-search {
-					display: block;
-				}
-
-				.storefront-search {
-					position: relative;
-				}
-
-				.storefront-search__control {
-					display: flex;
-					align-items: center;
-					gap: 8px;
-					border: 1px solid #d0d5dd;
-					border-radius: 10px;
-					padding: 4px 6px 4px 10px;
-					background: #fff;
-					min-width: 240px;
-				}
-
-				.storefront-search__control i {
-					width: 16px;
-					height: 16px;
-					stroke-width: 1.8;
-				}
-
-				.storefront-search__control input {
-					border: none;
-					outline: none;
-					font: inherit;
-					width: 100%;
-					min-width: 0;
-				}
-
-				.storefront-search__control button {
-					border: 1px solid #d0d5dd;
-					background: #fff;
-					color: #101828;
-					border-radius: 8px;
-					padding: 7px 10px;
-					font: inherit;
-					font-size: 0.88rem;
-					font-weight: 500;
-					cursor: pointer;
-				}
-
-				.storefront-search__dropdown {
-					position: absolute;
-					top: calc(100% + 8px);
-					left: 0;
-					right: 0;
-					background: #fff;
-					border: 1px solid #e4e7ec;
-					border-radius: 12px;
-					box-shadow: 0 12px 28px rgba(16, 24, 40, 0.12);
-					max-height: min(72vh, 420px);
-					overflow: auto;
-					z-index: 35;
-				}
-
-				.storefront-search__results {
-					list-style: none;
-					padding: 0;
-					margin: 0;
-				}
-
-				.storefront-search__item {
-					padding: 0;
-					border-bottom: 1px solid #f2f4f7;
-				}
-
-				.storefront-search__item:last-child {
-					border-bottom: none;
-				}
-
-				.storefront-search__item-link {
-					display: grid;
-					grid-template-columns: 56px 1fr;
-					gap: 10px;
-					align-items: center;
-					padding: 9px 10px;
-					text-decoration: none;
-					color: inherit;
-				}
-
-				.storefront-search__item-link:hover {
-					background: #f8fafc;
-				}
-
-				.storefront-search__thumb {
-					width: 56px;
-					height: 56px;
-					border-radius: 8px;
-					background: #e5e7eb;
-					overflow: hidden;
-					border: 1px solid #e4e7ec;
-				}
-
-				.storefront-search__thumb img {
-					width: 100%;
-					height: 100%;
-					object-fit: cover;
-				}
-
-				.storefront-search__meta {
-					display: flex;
-					flex-direction: column;
-					gap: 4px;
-				}
-
-				.storefront-search__title {
-					font-size: 0.92rem;
-					font-weight: 600;
-					line-height: 1.25;
-					color: #101828;
-				}
-
-				.storefront-search__price {
-					font-size: 0.86rem;
-					font-weight: 600;
-					color: #1f4fbf;
-				}
-
-				.storefront-search__status {
-					display: flex;
-					align-items: center;
-					gap: 8px;
-					padding: 10px;
-					font-size: 0.88rem;
-					color: #667085;
-				}
-
-				.storefront-search__status i {
-					width: 16px;
-					height: 16px;
-				}
-
-				.storefront-search__status--loading i {
-					animation: spin 1s linear infinite;
-				}
-
-				@keyframes spin {
-					to {
-						transform: rotate(360deg);
-					}
-				}
-			</style>
-		`
-
-		this.form = this.querySelector('form')
-		this.input = this.querySelector('#storefront-search-input')
-		this.dropdown = this.querySelector('#storefront-search-dropdown')
-		this.results = this.querySelector('#storefront-search-results')
+	updated() {
 		refreshIcons()
 	}
 
-	bindEvents() {
-		if (!(this.form instanceof HTMLFormElement) || !(this.input instanceof HTMLInputElement)) {
+	isMobileView() {
+		return this.viewportMedia.matches
+	}
+
+	openMobile() {
+		if (!this.isMobileView()) return
+		this.mobileOpen = true
+		this.open = this.loading || this.query.length > 0
+		window.requestAnimationFrame(() => {
+			const input = this.querySelector('#storefront-search-input')
+			if (input instanceof HTMLInputElement) input.focus()
+		})
+	}
+
+	closeMobile() {
+		this.mobileOpen = false
+		this.open = false
+	}
+
+	clearAndCloseMobile() {
+		this.query = ''
+		this.items = []
+		this.loading = false
+		this.closeMobile()
+	}
+
+	handleViewportChange() {
+		if (this.isMobileView()) return
+		this.mobileOpen = false
+		this.open = false
+	}
+
+	handleInput(event) {
+		const input = event.target
+		const nextQuery = input instanceof HTMLInputElement ? input.value.trim() : ''
+		this.query = nextQuery
+
+		if (this.debounceId) {
+			window.clearTimeout(this.debounceId)
+			this.debounceId = null
+		}
+
+		if (!nextQuery) {
+			this.items = []
+			this.loading = false
+			this.open = false
 			return
 		}
 
-		this.input.addEventListener('input', () => {
-			const nextQuery = this.input.value.trim()
-			this.query = nextQuery
+		this.open = true
+		this.loading = true
+		this.debounceId = window.setTimeout(() => {
+			this.fetchProducts(nextQuery)
+		}, 280)
+	}
 
-			if (this.debounceId) {
-				window.clearTimeout(this.debounceId)
-				this.debounceId = null
-			}
+	handleFocus() {
+		if (this.isMobileView() && !this.mobileOpen) {
+			this.openMobile()
+			return
+		}
+		if (!this.query) return
+		this.open = true
+	}
 
-			if (!nextQuery) {
-				this.items = []
-				this.loading = false
-				this.open = false
-				this.renderResults()
-				return
-			}
-
-			this.open = true
-			this.loading = true
-			this.renderResults()
-			this.debounceId = window.setTimeout(() => {
-				this.fetchProducts(nextQuery)
-			}, 280)
-		})
-
-		this.input.addEventListener('focus', () => {
-			if (!this.query) return
-			this.open = true
-			this.renderResults()
-		})
-
-		this.form.addEventListener('submit', event => {
-			if (!this.query.trim()) {
-				event.preventDefault()
-			}
-		})
+	handleSubmit(event) {
+		if (!this.query.trim()) {
+			event.preventDefault()
+		}
 	}
 
 	async fetchProducts(term) {
@@ -269,88 +427,103 @@ class StorefrontSearch extends HTMLElement {
 			if (currentRequestId !== this.requestId) return
 			this.loading = false
 			this.open = true
-			this.renderResults()
 		}
-	}
-
-	renderResults() {
-		if (!(this.dropdown instanceof HTMLElement) || !(this.results instanceof HTMLElement)) {
-			return
-		}
-
-		const shouldShow = this.open && (this.query.length > 0 || this.loading)
-		this.dropdown.hidden = !shouldShow
-		if (!shouldShow) {
-			this.results.replaceChildren()
-			return
-		}
-
-		const fragment = document.createDocumentFragment()
-
-		for (const product of this.items) {
-			const item = document.createElement('li')
-			item.className = 'storefront-search__item'
-
-			const link = document.createElement('a')
-			link.className = 'storefront-search__item-link'
-			link.href = `/productos/${product.id}/${urlSafe(product.title || '')}`
-
-			const thumb = document.createElement('div')
-			thumb.className = 'storefront-search__thumb'
-			if (product.coverImage?.url) {
-				const image = document.createElement('img')
-				image.src = product.coverImage.url
-				image.alt = product.coverImage.alt || product.title || 'Producto'
-				image.loading = 'lazy'
-				thumb.appendChild(image)
-			}
-
-			const meta = document.createElement('div')
-			meta.className = 'storefront-search__meta'
-			const title = document.createElement('span')
-			title.className = 'storefront-search__title'
-			title.textContent = product.title || 'Producto'
-			const price = document.createElement('span')
-			price.className = 'storefront-search__price'
-			price.textContent = getListingPriceLabel(product)
-			meta.appendChild(title)
-			meta.appendChild(price)
-
-			link.appendChild(thumb)
-			link.appendChild(meta)
-			item.appendChild(link)
-			fragment.appendChild(item)
-		}
-
-		if (!this.loading && this.query && this.items.length === 0) {
-			const empty = document.createElement('li')
-			empty.className = 'storefront-search__item'
-			empty.innerHTML = '<div class="storefront-search__status"><i data-lucide="search-x"></i><span>Sin resultados</span></div>'
-			fragment.appendChild(empty)
-		}
-
-		if (this.loading) {
-			const loading = document.createElement('li')
-			loading.className = 'storefront-search__item'
-			loading.innerHTML = '<div class="storefront-search__status storefront-search__status--loading"><i data-lucide="loader-circle"></i><span>Cargando...</span></div>'
-			fragment.appendChild(loading)
-		}
-
-		this.results.replaceChildren(fragment)
-		refreshIcons()
 	}
 
 	handleDocumentClick(event) {
+		if (this.isMobileView()) return
 		if (!(event.target instanceof Node)) return
 		if (this.contains(event.target)) return
 		this.open = false
-		this.renderResults()
 	}
 
 	handleDocumentKeydown(event) {
 		if (event.key !== 'Escape') return
+		if (this.mobileOpen) {
+			this.closeMobile()
+			return
+		}
 		this.open = false
-		this.renderResults()
+	}
+
+	renderStatusLoading() {
+		return html`
+			<li class="storefront-search__item">
+				<div class="storefront-search__status storefront-search__status--loading">
+					<i data-lucide="loader-circle"></i>
+					<span>Buscando...</span>
+				</div>
+			</li>
+		`
+	}
+
+	renderStatusEmpty() {
+		return html`
+			<li class="storefront-search__item">
+				<div class="storefront-search__status">
+					<i data-lucide="search-x"></i>
+					<span>Sin resultados</span>
+				</div>
+			</li>
+		`
+	}
+
+	renderItem(product) {
+		return html`
+			<li class="storefront-search__item">
+				<a class="storefront-search__item-link" href=${`/productos/${product.id}/${urlSafe(product.title || '')}`}>
+					<div class="storefront-search__thumb">
+						${product.coverImage?.url
+							? html`<img src=${product.coverImage.url} alt=${product.coverImage.alt || product.title || 'Producto'} loading="lazy" />`
+							: nothing}
+					</div>
+					<div class="storefront-search__meta">
+						<span class="storefront-search__title">${product.title || 'Producto'}</span>
+						<span class="storefront-search__price">${getListingPriceLabel(product)}</span>
+					</div>
+				</a>
+			</li>
+		`
+	}
+
+	render() {
+		const shouldShow = this.open && (this.query.length > 0 || this.loading)
+		return html`
+			<div class="storefront-search-shell">
+				<button class="storefront-search__mobile-trigger" type="button" aria-label="Abrir busqueda" @click=${this.openMobile}>
+					<i data-lucide="search"></i>
+				</button>
+				<button class="storefront-search__mobile-backdrop" type="button" aria-label="Cerrar busqueda" @click=${this.closeMobile}></button>
+				<form class="storefront-search__form" action="/productos" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
+					<label class="sr-only" for="storefront-search-input">Buscar productos</label>
+					<div class="storefront-search__control">
+						<i data-lucide="search"></i>
+						<input
+							id="storefront-search-input"
+							type="search"
+							name="q"
+							placeholder="Buscar productos..."
+							.value=${this.query}
+							@input=${this.handleInput}
+							@focus=${this.handleFocus}
+						/>
+						<button class="storefront-search__submit" type="submit">Buscar</button>
+						<button class="storefront-search__mobile-close" type="button" aria-label="Limpiar y cerrar busqueda" @click=${this.clearAndCloseMobile}>
+							<i data-lucide="x"></i>
+						</button>
+					</div>
+					<div class="storefront-search__dropdown" ?hidden=${!shouldShow}>
+						<ul class="storefront-search__results">
+							${this.items.map(product => this.renderItem(product))}
+							${this.loading ? this.renderStatusLoading() : nothing}
+							${!this.loading && this.query && this.items.length === 0
+								? this.renderStatusEmpty()
+								: nothing}
+						</ul>
+					</div>
+				</form>
+			</div>
+		`
 	}
 }
 

@@ -7,12 +7,12 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {number} id
 	* @property {string} url
 	* @property {string | null} alt
- * @property {boolean} hasTransparency
- * @property {number} height
- * @property {number} width
- * @property {number} storeId
- * @property {number} userId
- * @property {string} updatedAt
+	* @property {boolean} hasTransparency
+	* @property {number} height
+	* @property {number} width
+	* @property {number} storeId
+	* @property {number} userId
+	* @property {string} updatedAt
 	* @property {string} createdAt
 	*/
 
@@ -46,11 +46,11 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {number} id
 	* @property {number} productId
 	* @property {number | null} priceInCents
- * @property {number | null} weightInGrams
- * @property {number | null} compareAtPriceInCents
- * @property {number | null} stock
- * @property {string | null} sku
- * @property {boolean} isListed
+	* @property {number | null} weightInGrams
+	* @property {number | null} compareAtPriceInCents
+	* @property {number | null} stock
+	* @property {string | null} sku
+	* @property {boolean} isListed
 	* @property {PublicImage | null} coverImage
 	* @property {Array<ProductAttribute>} attributes
 	*/
@@ -75,9 +75,9 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 
 /**
 	* @typedef {Object} Product
- * @property {number} id
- * @property {string} title
- * @property {number | null} basePriceInCents
+	* @property {number} id
+	* @property {string} title
+	* @property {number | null} basePriceInCents
 	* @property {Array<PublicImage> | null} images
 	* @property {string | null} description
 	* @property {Array<{ name: string; value: string }> | null} specifications
@@ -157,11 +157,20 @@ const trackMetaPurchase = () => {}
 	const request = async (url, options = {}) => {
 		const { queryParams, ...fetchOptions } = options
 		const finalUrl = buildUrl(url, queryParams)
-		const response = await baseFetch(finalUrl, fetchOptions)
-		if (!response.ok) {
-			throw new Error(`Request failed: ${response.status}`)
+		console.log('[SDK] Request:', finalUrl)
+		try {
+			const response = await baseFetch(finalUrl, fetchOptions)
+			if (!response.ok) {
+				console.error('[SDK] Request failed:', response.status, finalUrl)
+				throw new Error(`Request failed: ${response.status}`)
+			}
+			const data = await response.json()
+			console.log('[SDK] Response:', finalUrl, data)
+			return data
+		} catch (err) {
+			console.error('[SDK] Request error:', finalUrl, err)
+			throw err
 		}
-		return response.json()
 	}
 
 	return {

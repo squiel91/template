@@ -7,7 +7,12 @@ import { escapeHtml } from '/shared/sanitize.js'
 const renderMessage = message => {
 	const container = document.getElementById('page')
 	if (!container) return
-	container.innerHTML = `<div class="empty-state"><i data-lucide="file-warning"></i><span>${escapeHtml(message)}</span></div>`
+	container.innerHTML = `
+		<div class="empty-state">
+			<i data-lucide="file-warning"></i>
+			<span class="empty-state__title">${escapeHtml(message)}</span>
+		</div>
+	`
 	refreshIcons()
 }
 

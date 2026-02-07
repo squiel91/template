@@ -114,28 +114,28 @@ const renderProduct = product => {
 	const firstImage = images[0]
 
 	container.innerHTML = `
-		<section class="product-detail">
-			<div>
+		<div class="product-detail">
+			<div class="product-gallery">
 				<img class="product-main-image" id="product-main-image" alt="${escapeHtml(title)}" ${
 					firstImage?.url ? `src="${escapeHtml(firstImage.url)}"` : ''
 				} />
 				<div id="product-thumbs" class="product-thumbs"></div>
 			</div>
 			<div class="product-info">
-				<h1 class="page-title">${escapeHtml(title)}</h1>
+				<h1 class="product-info__title">${escapeHtml(title)}</h1>
 				<div class="product-price-line">
 					<span class="product-price" id="product-price">-</span>
 					<span class="product-compare" id="product-compare"></span>
 				</div>
-				<p class="product-description">${escapeHtml(description)}</p>
+				<div class="product-description">${escapeHtml(description)}</div>
 				<div id="variant-selector" class="variant-selector"></div>
 				<div class="product-actions">
-					<loading-button id="add-to-cart-button" label="Agregar al carrito" loading-label="Agregando" duration="900"></loading-button>
+					<loading-button id="add-to-cart-button" label="Agregar al carrito" loading-label="Agregando..." duration="1200"></loading-button>
 					<span class="stock-note" id="stock-note"></span>
 				</div>
 				<dl class="product-specs" id="product-specs"></dl>
 			</div>
-		</section>
+		</div>
 	`
 
 	const breadcrumb = document.getElementById('product-breadcrumb')
@@ -147,6 +147,7 @@ const renderProduct = product => {
 		descriptionMeta.setAttribute('content', description.slice(0, 150))
 	}
 
+	// Image gallery
 	const mainImage = document.getElementById('product-main-image')
 	const thumbs = document.getElementById('product-thumbs')
 	if (thumbs && mainImage) {
@@ -195,8 +196,10 @@ const renderProduct = product => {
 			const stock = currentVariant?.stock
 			if (typeof stock === 'number') {
 				stockNode.textContent = stock > 0 ? `${stock} disponibles` : 'Sin stock'
+				stockNode.style.color = stock > 0 ? '#10b981' : '#ef4444'
 			} else {
 				stockNode.textContent = 'Stock sujeto a disponibilidad'
+				stockNode.style.color = '#64748b'
 			}
 		}
 	}
@@ -205,7 +208,7 @@ const renderProduct = product => {
 		if (!variantSelector) return
 		const attributes = Array.isArray(product.attributes) ? product.attributes : []
 		if (attributes.length === 0 || variants.length === 0) {
-			variantSelector.innerHTML = '<p class="stock-note">Sin opciones configurables.</p>'
+			variantSelector.style.display = 'none'
 			return
 		}
 
@@ -275,14 +278,19 @@ const renderProduct = product => {
 	const specsNode = document.getElementById('product-specs')
 	if (specsNode && Array.isArray(product.specifications)) {
 		const visibleSpecs = product.specifications.filter(spec => !spec.name.startsWith('_'))
-		specsNode.innerHTML = visibleSpecs
-			.map(
-				spec => `<div>
-					<dt>${escapeHtml(spec.name)}</dt>
-					<dd>${escapeHtml(spec.value)}</dd>
-				</div>`
-			)
-			.join('')
+		if (visibleSpecs.length > 0) {
+			specsNode.innerHTML = visibleSpecs
+				.map(
+					spec => `<div>
+						<dt>${escapeHtml(spec.name)}</dt>
+						<dd>${escapeHtml(spec.value)}</dd>
+					</div>`
+				)
+				.join('')
+			specsNode.style.display = 'grid'
+		} else {
+			specsNode.style.display = 'none'
+		}
 	}
 
 	syncVariantFromSelection()
@@ -293,7 +301,12 @@ const renderProduct = product => {
 const renderMessage = message => {
 	const container = document.getElementById('product')
 	if (!container) return
-	container.innerHTML = `<div class="empty-state"><i data-lucide="alert-circle"></i><span>${escapeHtml(message)}</span></div>`
+	container.innerHTML = `
+		<div class="empty-state">
+			<i data-lucide="alert-circle"></i>
+			<span class="empty-state__title">${escapeHtml(message)}</span>
+		</div>
+	`
 	refreshIcons()
 }
 

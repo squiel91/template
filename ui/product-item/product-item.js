@@ -1,106 +1,293 @@
-class ProductItem extends HTMLElement {
-	static get observedAttributes() {
-		return ['product-id', 'title', 'price', 'compare-price', 'image-url', 'image-alt', 'url']
+// @ts-nocheck
+
+import { LitElement, html, nothing } from '/shared/lit.js'
+import { tiendu } from '/shared/tiendu-client.js'
+
+const STYLE_ID = 'product-item-lit-styles'
+
+const CART_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8c.9 0 1.8-.7 2-1.6l1.7-7.4"/><path d="m9 11 1 9"/><path d="M4.5 15.5h15"/></svg>`
+const SPINNER_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-item__spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
+
+const ensureStyles = () => {
+	if (document.getElementById(STYLE_ID)) return
+	const style = document.createElement('style')
+	style.id = STYLE_ID
+	style.textContent = `
+		product-item {
+			display: block;
+			font-family: inherit;
+		}
+
+		.product-item__link {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+			text-decoration: none;
+			color: inherit;
+		}
+
+		.product-item__media {
+			position: relative;
+			aspect-ratio: 1 / 1;
+			width: 100%;
+			background: #f8fafc;
+			border-radius: 16px;
+			overflow: hidden;
+		}
+
+		.product-item__media img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.product-item__link:hover img {
+			transform: scale(1.05);
+		}
+
+		.product-item__quick-action {
+			position: absolute;
+			bottom: 12px;
+			right: 12px;
+			opacity: 0;
+			transform: translateY(8px);
+			transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.product-item__link:hover .product-item__quick-action {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		.product-item__quick-action-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+			padding: 10px 14px;
+			border-radius: 9999px;
+			font-size: 13px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.15s ease;
+			border: none;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		}
+
+		.product-item__quick-action-btn--cart {
+			width: 40px;
+			height: 40px;
+			padding: 0;
+			background: #0f172a;
+			color: white;
+		}
+
+		.product-item__quick-action-btn--cart:hover {
+			background: #1e293b;
+			transform: scale(1.05);
+		}
+
+		.product-item__quick-action-btn--options {
+			background: white;
+			color: #0f172a;
+			padding: 10px 16px;
+		}
+
+		.product-item__quick-action-btn--options:hover {
+			background: #f8fafc;
+			transform: scale(1.02);
+		}
+
+		.product-item__quick-action-btn:disabled {
+			opacity: 0.7;
+			cursor: wait;
+		}
+
+		.product-item__quick-action-btn svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		.product-item__spin {
+			animation: product-item-spin 1s linear infinite;
+		}
+
+		.product-item__meta {
+			padding: 0 4px;
+		}
+
+		.product-item__title {
+			font-size: 15px;
+			font-weight: 500;
+			color: #0f172a;
+			line-height: 1.4;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			margin: 0;
+		}
+
+		.product-item__price-line {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		.product-item__price {
+			font-size: 15px;
+			font-weight: 700;
+			color: #0f172a;
+			letter-spacing: -0.01em;
+		}
+
+		.product-item__compare {
+			font-size: 13px;
+			color: #94a3b8;
+			text-decoration: line-through;
+			font-weight: 500;
+		}
+
+		@keyframes product-item-spin {
+			from { transform: rotate(0deg); }
+			to { transform: rotate(360deg); }
+		}
+
+		@media (max-width: 768px) {
+			.product-item__quick-action {
+				opacity: 1;
+				transform: none;
+			}
+		}
+	`
+	document.head.appendChild(style)
+}
+
+class ProductItem extends LitElement {
+	static properties = {
+		productId: { type: String, attribute: 'product-id' },
+		title: { type: String },
+		price: { type: String },
+		comparePrice: { type: String, attribute: 'compare-price' },
+		imageUrl: { type: String, attribute: 'image-url' },
+		imageAlt: { type: String, attribute: 'image-alt' },
+		url: { type: String },
+		hasSingleVariant: { type: Boolean, attribute: 'has-single-variant' },
+		hasMultipleVariants: { type: Boolean, attribute: 'has-multiple-variants' },
+		variantId: { type: String, attribute: 'variant-id' }
 	}
 
 	constructor() {
 		super()
-		this.attachShadow({ mode: 'open' })
+		this.productId = ''
+		this.title = ''
+		this.price = ''
+		this.comparePrice = ''
+		this.imageUrl = ''
+		this.imageAlt = ''
+		this.url = ''
+		this.hasSingleVariant = false
+		this.hasMultipleVariants = false
+		this.variantId = ''
+		this.isLoading = false
+	}
+
+	createRenderRoot() {
+		return this
 	}
 
 	connectedCallback() {
-		this.render()
+		super.connectedCallback()
+		ensureStyles()
 	}
 
-	attributeChangedCallback() {
-		this.render()
+	handleQuickAction(event) {
+		event.preventDefault()
+		event.stopPropagation()
+
+		if (this.hasMultipleVariants) {
+			window.location.href = this.url || `/productos/${this.productId}`
+			return
+		}
+
+		if (!this.variantId || this.isLoading) return
+
+		this.isLoading = true
+		this.requestUpdate()
+
+		tiendu.cart
+			.addProductVariant({ id: Number(this.variantId) }, 1, ({ updatedCartItemsQuantity }) => {
+				const cartBadge = document.getElementById('cart-quantity')
+				if (cartBadge) cartBadge.textContent = String(updatedCartItemsQuantity)
+			})
+			.catch(err => {
+				console.error('[ProductItem] Error adding to cart:', err)
+			})
+			.finally(() => {
+				this.isLoading = false
+				this.requestUpdate()
+			})
+	}
+
+	renderQuickAction() {
+		if (!this.hasSingleVariant && !this.hasMultipleVariants) return nothing
+
+		if (this.hasSingleVariant) {
+			return html`
+				<div class="product-item__quick-action">
+					<button
+						class="product-item__quick-action-btn product-item__quick-action-btn--cart"
+						type="button"
+						aria-label="Agregar al carrito"
+						@click=${this.handleQuickAction}
+						?disabled=${this.isLoading}
+					>
+						${this.isLoading ? SPINNER_ICON : CART_ICON}
+					</button>
+				</div>
+			`
+		}
+
+		return html`
+			<div class="product-item__quick-action">
+				<button
+					class="product-item__quick-action-btn product-item__quick-action-btn--options"
+					type="button"
+					aria-label="Ver opciones"
+					@click=${this.handleQuickAction}
+				>
+					<span>Opciones</span>
+				</button>
+			</div>
+		`
 	}
 
 	render() {
-		if (!this.shadowRoot) return
-		const productId = this.getAttribute('product-id') ?? ''
-		const url = this.getAttribute('url') || `/productos/${productId}`
-		const title = this.getAttribute('title') ?? ''
-		const price = this.getAttribute('price') ?? ''
-		const comparePrice = this.getAttribute('compare-price') ?? ''
-		const imageUrl = this.getAttribute('image-url')
-		const imageAlt = this.getAttribute('image-alt') ?? title
+		if (!this.title || !this.price) return nothing
 
-		this.shadowRoot.innerHTML = `
-			<a href="${url}">
-				<div class="media">
-				${
-					imageUrl
-						? `<img src="${imageUrl}" alt="${imageAlt}" loading="lazy" />`
-						: ''
-				}
+		const href = this.url || `/productos/${this.productId}`
+		const alt = this.imageAlt || this.title
+
+		return html`
+			<a href=${href} class="product-item__link">
+				<div class="product-item__media">
+					${this.imageUrl
+						? html`<img src=${this.imageUrl} alt=${alt} loading="lazy" />`
+						: nothing}
+					${this.renderQuickAction()}
 				</div>
-				<div class="meta">
-					<h3>${title}</h3>
-					<div class="price-line">
-						<p class="price">${price}</p>
-						${comparePrice ? `<p class="compare">${comparePrice}</p>` : ''}
+				<div class="product-item__meta">
+					<h3 class="product-item__title">${this.title}</h3>
+					<div class="product-item__price-line">
+						<span class="product-item__price">${this.price}</span>
+						${this.comparePrice
+							? html`<span class="product-item__compare">${this.comparePrice}</span>`
+							: nothing}
 					</div>
 				</div>
 			</a>
-			<style>
-				:host {
-					display: block;
-					font-family: inherit;
-				}
-				a {
-					display: flex;
-					flex-direction: column;
-					gap: 10px;
-					padding: 0;
-					text-decoration: none;
-					color: inherit;
-				}
-				.media {
-					aspect-ratio: 1 / 1;
-					width: 100%;
-					background: #f8fafc;
-					border-radius: 16px;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					overflow: hidden;
-				}
-				img {
-					width: 100%;
-					height: 100%;
-					object-fit: cover;
-					transition: transform 0.28s ease;
-				}
-				a:hover img {
-					transform: scale(1.06);
-				}
-				.meta {
-					padding: 0 2px;
-				}
-				.meta h3 {
-					font-size: 16px;
-					margin: 0 0 6px;
-					font-weight: 600;
-					line-height: 1.3;
-				}
-				.price-line {
-					display: flex;
-					align-items: baseline;
-					gap: 8px;
-				}
-				.price {
-					margin: 0;
-					font-weight: 600;
-					color: #1f4fbf;
-				}
-				.compare {
-					margin: 0;
-					font-size: 0.84rem;
-					color: #667085;
-					text-decoration: line-through;
-				}
-			</style>
 		`
 	}
 }

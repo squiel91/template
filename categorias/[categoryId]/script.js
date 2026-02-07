@@ -11,7 +11,12 @@ import { urlSafe } from '/shared/url-safe.js'
 const renderState = message => {
 	const container = document.getElementById('category-products')
 	if (!container) return
-	container.innerHTML = `<div class="empty-state"><i data-lucide="package-search"></i><span>${escapeHtml(message)}</span></div>`
+	container.innerHTML = `
+		<div class="empty-state">
+			<i data-lucide="package-search"></i>
+			<span class="empty-state__title">${escapeHtml(message)}</span>
+		</div>
+	`
 	refreshIcons()
 }
 
@@ -30,17 +35,31 @@ const renderProducts = products => {
 	for (const product of products) {
 		const item = document.createElement('product-item')
 		const priceData = getListingPriceData(product)
+		const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
+		
 		item.setAttribute('product-id', String(product.id))
 		item.setAttribute('title', product.title)
 		item.setAttribute('price', priceData.label)
+		
 		if (priceData.compareLabel) {
 			item.setAttribute('compare-price', priceData.compareLabel)
 		}
+		
 		item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title)}`)
+		
 		if (product.coverImage?.url) {
 			item.setAttribute('image-url', product.coverImage.url)
 			item.setAttribute('image-alt', product.coverImage.alt || product.title)
 		}
+		
+		// Pass variant info for quick actions
+		if (validVariants.length === 1) {
+			item.setAttribute('has-single-variant', 'true')
+			item.setAttribute('variant-id', String(validVariants[0].id))
+		} else if (validVariants.length > 1) {
+			item.setAttribute('has-multiple-variants', 'true')
+		}
+		
 		list.appendChild(item)
 	}
 
@@ -78,7 +97,7 @@ const init = async () => {
 
 		const categoryDescription = document.getElementById('category-description')
 		if (categoryDescription) {
-			categoryDescription.textContent = category.description || 'Productos de esta categoria.'
+			categoryDescription.textContent = category.description || `${category.productCount || 0} productos en esta categoria`
 		}
 
 		document.title = `${category.name} | Tienda Genérica`

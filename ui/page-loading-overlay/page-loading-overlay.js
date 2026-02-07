@@ -1,76 +1,100 @@
 // @ts-nocheck
 
+import { LitElement, html } from '/shared/lit.js'
 import { refreshIcons } from '/shared/icons.js'
 
-class StoreLoadingOverlay extends HTMLElement {
+const STYLE_ID = 'page-loading-overlay-lit-styles'
+
+const ensureStyles = () => {
+	if (document.getElementById(STYLE_ID)) return
+	const style = document.createElement('style')
+	style.id = STYLE_ID
+	style.textContent = `
+		store-loading-overlay {
+			position: fixed;
+			inset: 0;
+			display: none;
+			z-index: 100;
+		}
+
+		store-loading-overlay[open] {
+			display: grid;
+		}
+
+		store-loading-overlay .overlay-surface {
+			display: grid;
+			place-items: center;
+			background: rgba(255, 255, 255, 0.9);
+			backdrop-filter: blur(4px);
+		}
+
+		store-loading-overlay .overlay-panel {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 56px;
+			height: 56px;
+			border-radius: 50%;
+			background: #0f172a;
+			box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+		}
+
+		store-loading-overlay .overlay-panel i,
+		store-loading-overlay .overlay-panel svg {
+			width: 24px;
+			height: 24px;
+			color: white;
+			animation: page-overlay-spin 1s linear infinite;
+		}
+
+		@keyframes page-overlay-spin {
+			to { transform: rotate(360deg); }
+		}
+	`
+	document.head.appendChild(style)
+}
+
+class StoreLoadingOverlay extends LitElement {
+	static properties = {
+		open: { type: Boolean, reflect: true }
+	}
+
 	constructor() {
 		super()
-		this.attachShadow({ mode: 'open' })
+		this.open = false
+	}
+
+	createRenderRoot() {
+		return this
 	}
 
 	connectedCallback() {
-		if (!this.shadowRoot || this.shadowRoot.childElementCount > 0) return
-		this.setAttribute('aria-hidden', 'true')
-		this.shadowRoot.innerHTML = `
-			<div class="overlay-surface" role="status" aria-live="polite" aria-label="Cargando pagina">
-				<div class="overlay-panel">
-					<i data-lucide="loader-circle"></i>
-				</div>
-			</div>
-			<style>
-				:host {
-					position: fixed;
-					inset: 0;
-					display: none;
-					z-index: 999;
-				}
+		super.connectedCallback()
+		ensureStyles()
+		this.setAttribute('aria-hidden', this.open ? 'false' : 'true')
+	}
 
-				:host([open]) {
-					display: grid;
-				}
-
-				.overlay-surface {
-					display: grid;
-					place-items: center;
-					background: rgba(255, 255, 255, 0.8);
-					backdrop-filter: blur(2px);
-				}
-
-				.overlay-panel {
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					width: 44px;
-					height: 44px;
-					border-radius: 999px;
-					background: #fff;
-					border: 1px solid #e4e7ec;
-				}
-
-				.overlay-panel i {
-					width: 20px;
-					height: 20px;
-					animation: spin 1s linear infinite;
-				}
-
-				@keyframes spin {
-					to {
-						transform: rotate(360deg);
-					}
-				}
-			</style>
-		`
+	updated() {
+		this.setAttribute('aria-hidden', this.open ? 'false' : 'true')
 		refreshIcons()
 	}
 
 	show() {
-		this.setAttribute('open', '')
-		this.setAttribute('aria-hidden', 'false')
+		this.open = true
 	}
 
 	hide() {
-		this.removeAttribute('open')
-		this.setAttribute('aria-hidden', 'true')
+		this.open = false
+	}
+
+	render() {
+		return html`
+			<div class="overlay-surface" role="status" aria-live="polite" aria-label="Cargando pagina">
+				<div class="overlay-panel">
+					<i data-lucide="loader-2"></i>
+				</div>
+			</div>
+		`
 	}
 }
 

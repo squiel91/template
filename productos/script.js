@@ -13,16 +13,21 @@ const url = new URL(window.location.href)
 const formatResultsCopy = (total, query) => {
 	if (query) {
 		return total === 1
-			? `1 resultado para "${query}".`
-			: `${total} resultados para "${query}".`
+			? `1 resultado para "${query}"`
+			: `${total} resultados para "${query}"`
 	}
-	return total === 1 ? '1 producto disponible.' : `${total} productos disponibles.`
+	return total === 1 ? '1 producto' : `${total} productos`
 }
 
 const renderEmpty = message => {
 	const container = document.getElementById('products-list')
 	if (!container) return
-	container.innerHTML = `<div class="empty-state"><i data-lucide="package-search"></i><span>${escapeHtml(message)}</span></div>`
+	container.innerHTML = `
+		<div class="empty-state">
+			<i data-lucide="package-search"></i>
+			<span class="empty-state__title">${escapeHtml(message)}</span>
+		</div>
+	`
 	refreshIcons()
 }
 
@@ -41,18 +46,31 @@ const renderProducts = products => {
 	for (const product of products) {
 		const item = document.createElement('product-item')
 		const priceData = getListingPriceData(product)
+		const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
 
 		item.setAttribute('product-id', String(product.id))
 		item.setAttribute('title', product.title)
 		item.setAttribute('price', priceData.label)
+		
 		if (priceData.compareLabel) {
 			item.setAttribute('compare-price', priceData.compareLabel)
 		}
+		
 		item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title)}`)
+		
 		if (product.coverImage?.url) {
 			item.setAttribute('image-url', product.coverImage.url)
 			item.setAttribute('image-alt', product.coverImage.alt || product.title)
 		}
+		
+		// Pass variant info for quick actions
+		if (validVariants.length === 1) {
+			item.setAttribute('has-single-variant', 'true')
+			item.setAttribute('variant-id', String(validVariants[0].id))
+		} else if (validVariants.length > 1) {
+			item.setAttribute('has-multiple-variants', 'true')
+		}
+		
 		list.appendChild(item)
 	}
 
@@ -64,6 +82,7 @@ const init = async () => {
 	const search = url.searchParams.get('q')?.trim() || ''
 	const resultsCopy = document.getElementById('products-results-copy')
 	const searchInput = document.getElementById('products-search-input')
+	
 	if (searchInput instanceof HTMLInputElement) {
 		searchInput.value = search
 	}
@@ -71,9 +90,11 @@ const init = async () => {
 	try {
 		const response = await tiendu.products.list({ search, page: 1, size: 60 })
 		const products = response.data || []
+		
 		if (resultsCopy) {
 			resultsCopy.textContent = formatResultsCopy(products.length, search)
 		}
+		
 		renderProducts(products)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
