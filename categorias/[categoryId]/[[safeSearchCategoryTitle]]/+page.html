@@ -1,10 +1,9 @@
-<nav class="breadcrumbs" aria-label="Breadcrumb">
-	<a href="/">Inicio</a>
-	<i data-lucide="chevron-right"></i>
-	<a href="/categorias">Categorias</a>
-	<i data-lucide="chevron-right"></i>
-	<span id="category-breadcrumb">Categoria</span>
-</nav>
+<store-breadcrumbs
+	id="category-breadcrumbs"
+	aria-label="Breadcrumb"
+	items='[{"label":"Inicio","href":"/"},{"label":"Categorias","href":"/categorias"}]'
+	current-label="Categoria"
+></store-breadcrumbs>
 
 <section class="listing-head" aria-labelledby="category-title">
 	<div class="listing-meta">

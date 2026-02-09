@@ -4,6 +4,7 @@ import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getListingPriceData } from '/shared/product-pricing.js'
+import { withPageLoading } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -40,6 +41,8 @@ const renderProducts = products => {
 		item.setAttribute('product-id', String(product.id))
 		item.setAttribute('title', product.title)
 		item.setAttribute('price', priceData.label)
+		item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
+		item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
 		
 		if (priceData.compareLabel) {
 			item.setAttribute('compare-price', priceData.compareLabel)
@@ -92,8 +95,10 @@ const init = async () => {
 		const categoryTitle = document.getElementById('category-title')
 		if (categoryTitle) categoryTitle.textContent = category.name
 
-		const categoryBreadcrumb = document.getElementById('category-breadcrumb')
-		if (categoryBreadcrumb) categoryBreadcrumb.textContent = category.name
+		const categoryBreadcrumb = document.getElementById('category-breadcrumbs')
+		if (categoryBreadcrumb && typeof categoryBreadcrumb.setCurrentLabel === 'function') {
+			categoryBreadcrumb.setCurrentLabel(category.name)
+		}
 
 		const categoryDescription = document.getElementById('category-description')
 		if (categoryDescription) {
@@ -108,6 +113,6 @@ const init = async () => {
 	}
 }
 
-init()
+void withPageLoading(init)
 
 export {}

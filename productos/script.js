@@ -4,6 +4,7 @@ import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getListingPriceData } from '/shared/product-pricing.js'
+import { withPageLoading } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -51,6 +52,8 @@ const renderProducts = products => {
 		item.setAttribute('product-id', String(product.id))
 		item.setAttribute('title', product.title)
 		item.setAttribute('price', priceData.label)
+		item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
+		item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
 		
 		if (priceData.compareLabel) {
 			item.setAttribute('compare-price', priceData.compareLabel)
@@ -81,11 +84,6 @@ const renderProducts = products => {
 const init = async () => {
 	const search = url.searchParams.get('q')?.trim() || ''
 	const resultsCopy = document.getElementById('products-results-copy')
-	const searchInput = document.getElementById('products-search-input')
-	
-	if (searchInput instanceof HTMLInputElement) {
-		searchInput.value = search
-	}
 
 	try {
 		const response = await tiendu.products.list({ search, page: 1, size: 60 })
@@ -102,6 +100,6 @@ const init = async () => {
 	}
 }
 
-init()
+void withPageLoading(init)
 
 export {}

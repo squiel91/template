@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+  <title id="title">Sin imagenes</title>
+  <desc id="desc">Placeholder de imagen para productos sin imagenes.</desc>
+  <rect x="0" y="0" width="800" height="800" fill="#e5e7eb"/>
+  <rect x="120" y="120" width="560" height="560" rx="28" fill="#f3f4f6" stroke="#d1d5db" stroke-width="6"/>
+  <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans, Arial, sans-serif" font-size="56" font-weight="600" fill="#9ca3af">Sin imagenes</text>
+</svg>

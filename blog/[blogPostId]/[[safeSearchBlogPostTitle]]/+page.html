@@ -1,0 +1,18 @@
+<article>
+	<store-breadcrumbs
+		id="blog-post-breadcrumbs"
+		aria-label="Breadcrumb"
+		items='[{"label":"Inicio","href":"/"},{"label":"Blog","href":"/blog"}]'
+		current-label="Articulo"
+	></store-breadcrumbs>
+
+	<header class="article-head">
+		<p id="blog-post-meta" class="article-head__meta"></p>
+		<h1 id="blog-post-title" class="page-title">Articulo</h1>
+		<p id="blog-post-excerpt" class="article-head__excerpt"></p>
+	</header>
+
+	<div id="blog-post-cover" class="article-cover"></div>
+	<div id="blog-post-content" class="page-content" aria-live="polite"></div>
+</article>
+<script type="module" src="/blog/[blogPostId]/script.js"></script>

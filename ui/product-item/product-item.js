@@ -2,6 +2,7 @@
 
 import { LitElement, html, nothing } from '/shared/lit.js'
 import { tiendu } from '/shared/tiendu-client.js'
+import '/ui/rating-stars/rating-stars.js'
 
 const STYLE_ID = 'product-item-lit-styles'
 
@@ -136,6 +137,21 @@ const ensureStyles = () => {
 			flex-wrap: wrap;
 		}
 
+		.product-item__rating-line {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			margin-top: 6px;
+			color: #64748b;
+			font-size: 15px;
+			line-height: 1;
+		}
+
+		.product-item__rating-line span {
+			display: inline-flex;
+			align-items: center;
+		}
+
 		.product-item__price {
 			font-size: 15px;
 			font-weight: 700;
@@ -176,7 +192,9 @@ class ProductItem extends LitElement {
 		url: { type: String },
 		hasSingleVariant: { type: Boolean, attribute: 'has-single-variant' },
 		hasMultipleVariants: { type: Boolean, attribute: 'has-multiple-variants' },
-		variantId: { type: String, attribute: 'variant-id' }
+		variantId: { type: String, attribute: 'variant-id' },
+		averageRating: { type: Number, attribute: 'average-rating' },
+		reviewsQuantity: { type: Number, attribute: 'reviews-quantity' }
 	}
 
 	constructor() {
@@ -191,6 +209,8 @@ class ProductItem extends LitElement {
 		this.hasSingleVariant = false
 		this.hasMultipleVariants = false
 		this.variantId = ''
+		this.averageRating = 0
+		this.reviewsQuantity = 0
 		this.isLoading = false
 	}
 
@@ -269,6 +289,12 @@ class ProductItem extends LitElement {
 
 		const href = this.url || `/productos/${this.productId}`
 		const alt = this.imageAlt || this.title
+		const averageRating = Number.isFinite(this.averageRating)
+			? this.averageRating
+			: 0
+		const reviewsQuantity = Number.isFinite(this.reviewsQuantity)
+			? this.reviewsQuantity
+			: 0
 
 		return html`
 			<a href=${href} class="product-item__link">
@@ -280,6 +306,10 @@ class ProductItem extends LitElement {
 				</div>
 				<div class="product-item__meta">
 					<h3 class="product-item__title">${this.title}</h3>
+					<div class="product-item__rating-line" aria-label="Calificacion del producto">
+						<rating-stars value=${String(averageRating)} size="18"></rating-stars>
+						<span>${averageRating.toFixed(1)} (${reviewsQuantity})</span>
+					</div>
 					<div class="product-item__price-line">
 						<span class="product-item__price">${this.price}</span>
 						${this.comparePrice

@@ -15,17 +15,190 @@
 			href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
 			rel="stylesheet"
 		/>
+		<style>
+			#boot-page-overlay {
+				position: fixed;
+				inset: 0;
+				display: none;
+				z-index: 100;
+			}
+
+			#boot-page-overlay[data-open='true'] {
+				display: grid;
+			}
+
+			#boot-page-overlay .boot-page-overlay__surface {
+				display: grid;
+				place-items: center;
+				background: rgba(255, 255, 255, 1);
+				backdrop-filter: blur(4px);
+				opacity: 1;
+			}
+
+			#boot-page-overlay .boot-page-overlay__panel {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				opacity: 1;
+				transform: scale(1);
+			}
+
+			#boot-page-overlay .boot-page-overlay__panel svg {
+				width: 48px;
+				height: 48px;
+				color: #0f172a;
+				animation: boot-page-overlay-spin 1s linear infinite;
+			}
+
+			#boot-page-overlay[data-animate-in='true'][data-state='opening'] .boot-page-overlay__surface {
+				opacity: 0;
+				animation: boot-page-overlay-fade-in 250ms ease forwards;
+			}
+
+			#boot-page-overlay[data-animate-in='true'][data-state='opening'] .boot-page-overlay__panel {
+				opacity: 0;
+				transform: scale(0.75);
+				animation: boot-page-overlay-zoom-in 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+			}
+
+			#boot-page-overlay[data-state='closing'] .boot-page-overlay__surface {
+				animation: boot-page-overlay-fade-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+			}
+
+			#boot-page-overlay[data-state='closing'] .boot-page-overlay__panel {
+				animation: boot-page-overlay-zoom-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+			}
+
+			@keyframes boot-page-overlay-spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			@keyframes boot-page-overlay-fade-in {
+				from {
+					opacity: 0;
+				}
+				to {
+					opacity: 1;
+				}
+			}
+
+			@keyframes boot-page-overlay-fade-out {
+				from {
+					opacity: 1;
+				}
+				to {
+					opacity: 0;
+				}
+			}
+
+			@keyframes boot-page-overlay-zoom-in {
+				from {
+					opacity: 0;
+					transform: scale(0.75);
+				}
+				to {
+					opacity: 1;
+					transform: scale(1);
+				}
+			}
+
+			@keyframes boot-page-overlay-zoom-out {
+				from {
+					opacity: 1;
+					transform: scale(1);
+				}
+				to {
+					opacity: 0;
+					transform: scale(0.75);
+				}
+			}
+		</style>
+		<link rel="icon" type="image/svg+xml" href="/public/favicon.svg" />
 		<link rel="stylesheet" href="/styles.css" />
 		<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
+		<script>
+			(() => {
+				const OPEN_MS = 250
+				const CLOSE_MS = 750
+				let openTimer = null
+				let closeTimer = null
+
+				const getOverlay = () => document.getElementById('boot-page-overlay')
+
+				const clearTimers = () => {
+					if (openTimer) {
+						window.clearTimeout(openTimer)
+						openTimer = null
+					}
+					if (closeTimer) {
+						window.clearTimeout(closeTimer)
+						closeTimer = null
+					}
+				}
+
+				const show = ({ animate = true } = {}) => {
+					const overlay = getOverlay()
+					if (!overlay) return
+					clearTimers()
+					overlay.dataset.open = 'true'
+					overlay.dataset.animateIn = animate ? 'true' : 'false'
+					overlay.dataset.state = animate ? 'opening' : 'open'
+
+					if (animate) {
+						openTimer = window.setTimeout(() => {
+							const nextOverlay = getOverlay()
+							if (!nextOverlay) return
+							if (nextOverlay.dataset.open === 'true') {
+								nextOverlay.dataset.state = 'open'
+							}
+							openTimer = null
+						}, OPEN_MS)
+					}
+				}
+
+				const hide = () => {
+					const overlay = getOverlay()
+					if (!overlay) return
+					if (overlay.dataset.open !== 'true') return
+					if (overlay.dataset.state === 'closing') return
+					clearTimers()
+					overlay.dataset.state = 'closing'
+					closeTimer = window.setTimeout(() => {
+						const nextOverlay = getOverlay()
+						if (!nextOverlay) return
+						nextOverlay.dataset.open = 'false'
+						nextOverlay.dataset.state = 'closed'
+						nextOverlay.dataset.animateIn = 'false'
+						closeTimer = null
+					}, CLOSE_MS)
+				}
+
+				window.__tienduPageOverlay = { show, hide }
+			})()
+		</script>
 	</head>
 	<body>
+		<div
+			id="boot-page-overlay"
+			data-open="true"
+			data-state="open"
+			data-animate-in="false"
+		>
+			<div class="boot-page-overlay__surface" role="status" aria-live="polite" aria-label="Cargando pagina">
+				<div class="boot-page-overlay__panel" aria-hidden="true">
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle-icon lucide-loader-circle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+				</div>
+			</div>
+		</div>
 		<a href="#contenido" class="skip-link">Saltar al contenido</a>
 		
 		<nav class="site-header" aria-label="Navegacion principal">
 			<div class="container site-header__inner">
 				<div class="site-header__left">
 					<button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menu">
-						<i data-lucide="menu"></i>
+						<i data-lucide="align-left"></i>
 					</button>
 					<a href="/" class="brand brand__name" aria-label="Inicio Tienda">
 						Mi Tienda
@@ -34,11 +207,16 @@
 				
 				<div class="site-header__right">
 					<storefront-search class="storefront-search"></storefront-search>
-					<button id="open-cart-button" class="cart-button" type="button" aria-label="Abrir carrito">
-						<i data-lucide="shopping-cart"></i>
-						<span class="cart-button__text">Carrito</span>
-						<span id="cart-quantity" class="cart-quantity" aria-live="polite">0</span>
-					</button>
+					<tiendu-button
+						id="open-cart-button"
+						variant="secondary"
+						icon="shopping-cart"
+						loading-icon="loader-2"
+						label="Carrito"
+						badge="0"
+						badge-id="cart-quantity"
+						aria-label="Abrir carrito"
+					></tiendu-button>
 				</div>
 			</div>
 		</nav>
@@ -53,6 +231,14 @@
 					</button>
 				</div>
 				<div class="side-menu__content">
+					<section class="side-menu__section" aria-labelledby="menu-main-title">
+						<h2 id="menu-main-title" class="side-menu__section-title">Principal</h2>
+						<ul class="side-menu__list">
+							<li><a href="/productos">Productos</a></li>
+							<li><a href="/categorias">Categorias</a></li>
+							<li><a href="/blog">Blog</a></li>
+						</ul>
+					</section>
 					<section class="side-menu__section" aria-labelledby="menu-categories-title">
 						<h2 id="menu-categories-title" class="side-menu__section-title">Categorias</h2>
 						<ul id="category-list" class="side-menu__list" aria-live="polite"></ul>
@@ -71,14 +257,46 @@
 
 		<footer class="site-footer">
 			<div class="container">
-				<p>
+				<div class="footer-grid">
+					<section class="footer-column" aria-labelledby="footer-store-title">
+						<h2 id="footer-store-title">Mi Tienda</h2>
+						<p>
+							Una tienda pensada para resolver compras del dia a dia con buen servicio,
+							entregas rapidas y atencion cercana.
+						</p>
+						<ul class="footer-details">
+							<li><strong>Horario:</strong> Lun a Vie 09:00 a 18:00</li>
+							<li><strong>Direccion:</strong> Calle Principal 123, Ciudad</li>
+						</ul>
+						<h3>+ Info</h3>
+						<ul id="footer-page-list" class="footer-links" aria-live="polite"></ul>
+					</section>
+
+					<section class="footer-column" aria-labelledby="footer-categories-title">
+						<h2 id="footer-categories-title">Categorias</h2>
+						<ul id="footer-category-list" class="footer-links" aria-live="polite"></ul>
+					</section>
+
+					<section class="footer-column" aria-labelledby="footer-contact-title">
+						<h2 id="footer-contact-title">Contacto y redes</h2>
+						<ul class="footer-links">
+							<li><a href="#" aria-label="Instagram">Instagram</a></li>
+							<li><a href="#" aria-label="Facebook">Facebook</a></li>
+							<li><a href="#" aria-label="TikTok">TikTok</a></li>
+							<li><a href="mailto:contacto@mitienda.com">contacto@mitienda.com</a></li>
+							<li><a href="tel:+59800000000">+598 00 000 000</a></li>
+							<li><a href="https://wa.me/59800000000" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+						</ul>
+					</section>
+				</div>
+
+				<p class="footer-legal">
 					<span id="footer-year"></span> Mi Tienda. Todos los derechos reservados. Hecho con
 					<a href="https://tiendu.uy" target="_blank" rel="noopener noreferrer">Tiendu</a>.
 				</p>
 			</div>
 		</footer>
 
-		<store-loading-overlay id="page-transition-overlay"></store-loading-overlay>
 		<script type="module" src="/layout/script.js"></script>
 	</body>
 </html>

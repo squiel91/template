@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import { tiendu } from '/shared/tiendu-client.js'
+import { withPageLoading } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -80,6 +81,6 @@ const init = async () => {
 	}
 }
 
-init()
+void withPageLoading(init)
 
 export {}

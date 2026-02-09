@@ -1,10 +1,9 @@
-<nav class="breadcrumbs" aria-label="Breadcrumb">
-	<a href="/">Inicio</a>
-	<i data-lucide="chevron-right"></i>
-	<a href="/productos">Productos</a>
-	<i data-lucide="chevron-right"></i>
-	<span id="product-breadcrumb" aria-current="page">Detalle</span>
-</nav>
+<store-breadcrumbs
+	id="product-breadcrumbs"
+	aria-label="Breadcrumb"
+	items='[{"label":"Inicio","href":"/"},{"label":"Productos","href":"/productos"}]'
+	current-label="Detalle"
+></store-breadcrumbs>
 
 <article id="product" aria-live="polite"></article>
 

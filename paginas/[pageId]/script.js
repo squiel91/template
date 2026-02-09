@@ -1,8 +1,10 @@
 // @ts-nocheck
 
 import { tiendu } from '/shared/tiendu-client.js'
+import { withPageLoading } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
+import { renderContentBlocks } from '/shared/content-blocks.js'
 
 const renderMessage = message => {
 	const container = document.getElementById('page')
@@ -14,43 +16,6 @@ const renderMessage = message => {
 		</div>
 	`
 	refreshIcons()
-}
-
-const renderBlock = block => {
-	if (!block || typeof block !== 'object') return null
-
-	if (block.type === 'heading') {
-		const level = Math.min(Math.max(Number(block.level) || 2, 1), 3)
-		const heading = document.createElement(`h${level}`)
-		heading.textContent = block.text || ''
-		return heading
-	}
-
-	if (block.type === 'paragraph') {
-		const paragraph = document.createElement('p')
-		paragraph.textContent = block.text || ''
-		return paragraph
-	}
-
-	if (block.type === 'image' && block.image?.url) {
-		const figure = document.createElement('figure')
-		if (block.align) figure.classList.add(`align-${block.align}`)
-		if (block.size) figure.classList.add(`size-${block.size}`)
-		const image = document.createElement('img')
-		image.src = block.image.url
-		image.alt = block.image.alt || ''
-		image.loading = 'lazy'
-		figure.appendChild(image)
-		return figure
-	}
-
-	if (block.type === 'html' && block.code) {
-		const wrapper = document.createElement('div')
-		wrapper.innerHTML = block.code
-		return wrapper
-	}
-
-	return null
 }
 
 const init = async () => {
@@ -75,20 +40,13 @@ const init = async () => {
 
 		const container = document.getElementById('page')
 		if (!container) return
-		container.innerHTML = ''
-
-		if (Array.isArray(page.content)) {
-			for (const block of page.content) {
-				const node = renderBlock(block)
-				if (node) container.appendChild(node)
-			}
-		}
+		renderContentBlocks(container, page.content)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
 		renderMessage(`Error al cargar la pagina: ${message}`)
 	}
 }
 
-init()
+void withPageLoading(init)
 
 export {}

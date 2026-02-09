@@ -1,10 +1,17 @@
 // @ts-nocheck
 
-import '/ui/loading-button/loading-button.js'
+import '/ui/app-button/app-button.js'
+import '/ui/rating-stars/rating-stars.js'
+import '/ui/product-item/product-item.js'
+import '/ui/product-list/product-list.js'
+import '/ui/tiendu-image-carousel/tiendu-image-carousel.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getPriceDataForVariant } from '/shared/product-pricing.js'
+import { getListingPriceData } from '/shared/product-pricing.js'
+import { withPageLoading } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
+import { urlSafe } from '/shared/url-safe.js'
 
 /**
  * @param {Array<any> | null | undefined} variants
@@ -98,8 +105,126 @@ const isValueEnabled = (variants, attributeId, valueId, selectedValues) => {
 	})
 }
 
+const buildReviewReportHref = reviewId => {
+	const subject = 'Reportar resena'
+	const body = `Creo que la resena ${reviewId} viola las politicas de Tiendu. Por favor revisen esta resena.`
+	return `mailto:hello@tiendu.lat?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
+
+const formatRelativeTime = value => {
+	if (!value) return 'hace un momento'
+	const date = new Date(value)
+	if (Number.isNaN(date.getTime())) return 'hace un momento'
+
+	const diffMs = Math.max(0, Date.now() - date.getTime())
+	const minutes = Math.floor(diffMs / 60000)
+	const hours = Math.floor(diffMs / 3600000)
+	const days = Math.floor(diffMs / 86400000)
+	const weeks = Math.floor(days / 7)
+	const months = Math.floor(days / 30)
+	const years = Math.floor(days / 365)
+
+	if (minutes < 1) return 'hace un momento'
+	if (minutes < 60) return `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`
+	if (hours < 24) return `hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`
+	if (days < 7) return `hace ${days} ${days === 1 ? 'dia' : 'dias'}`
+	if (weeks < 5) return `hace ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`
+	if (months < 12) return `hace ${months} ${months === 1 ? 'mes' : 'meses'}`
+	return `hace ${years} ${years === 1 ? 'ano' : 'anos'}`
+}
+
+const getUnitsSoldCopy = unitsSold => {
+	if (!Number.isFinite(unitsSold) || unitsSold <= 0) return ''
+	if (unitsSold < 5) return '3 unidades vendidas'
+	if (unitsSold < 10) return 'Mas de 5 unidades vendidas'
+	if (unitsSold < 20) return 'Mas de 10 unidades vendidas'
+	if (unitsSold < 30) return 'Mas de 20 unidades vendidas'
+	return 'Mas de 30 unidades vendidas'
+}
+
+const toSafeCssColor = value => {
+	const color = String(value || '').trim()
+	if (!color) return null
+	if (/^#([0-9a-fA-F]{3,8})$/.test(color)) return color
+	if (/^[a-zA-Z]+$/.test(color)) return color
+	return null
+}
+
+const buildGalleryImages = (images, variants, fallbackAlt) => {
+	const result = []
+	const seen = new Set()
+
+	const addImage = image => {
+		if (!image || typeof image.url !== 'string' || !image.url.trim()) return
+		const key =
+			typeof image.id === 'number'
+				? `id:${image.id}`
+				: `url:${image.url.trim()}`
+		if (seen.has(key)) return
+		seen.add(key)
+		result.push({
+			id: typeof image.id === 'number' ? image.id : null,
+			url: image.url,
+			alt: image.alt || fallbackAlt || ''
+		})
+	}
+
+	if (Array.isArray(images)) {
+		for (const image of images) addImage(image)
+	}
+
+	if (Array.isArray(variants)) {
+		for (const variant of variants) addImage(variant?.coverImage)
+	}
+
+	return result
+}
+
+const renderRelatedProducts = products => {
+	const container = document.getElementById('related-products-list')
+	if (!container) return
+
+	const relatedProducts = Array.isArray(products) ? products : []
+
+	const list = document.createElement('product-list')
+
+	for (const product of relatedProducts) {
+		const item = document.createElement('product-item')
+		const priceData = getListingPriceData(product)
+		const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
+
+		item.setAttribute('product-id', String(product.id))
+		item.setAttribute('title', product.title || 'Producto')
+		item.setAttribute('price', priceData.label || '')
+		item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
+		item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
+		item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title || 'producto')}`)
+
+		if (priceData.compareLabel) {
+			item.setAttribute('compare-price', priceData.compareLabel)
+		}
+
+		if (product.coverImage?.url) {
+			item.setAttribute('image-url', product.coverImage.url)
+			item.setAttribute('image-alt', product.coverImage.alt || product.title || '')
+		}
+
+		if (validVariants.length === 1) {
+			item.setAttribute('has-single-variant', 'true')
+			item.setAttribute('variant-id', String(validVariants[0].id))
+		} else if (validVariants.length > 1) {
+			item.setAttribute('has-multiple-variants', 'true')
+		}
+
+		list.appendChild(item)
+	}
+
+	container.innerHTML = ''
+	container.appendChild(list)
+}
+
 /** @param {any} product */
-const renderProduct = product => {
+const renderProduct = (product, relatedProducts = []) => {
 	const container = document.getElementById('product')
 	if (!container) return
 
@@ -109,37 +234,182 @@ const renderProduct = product => {
 	const selectedValues = defaultVariant ? extractVariantValueMap(defaultVariant) : new Map()
 
 	const title = product.title || 'Producto'
-	const description = product.description || 'Sin descripcion disponible.'
+	const description = product.description || ''
+	const descriptionText = String(description).trim()
+	const hasDescription = descriptionText.length > 0
+	const descriptionPreviewLength = 260
+	const hasLongDescription = descriptionText.length > descriptionPreviewLength
+	const unitsSoldCopy = getUnitsSoldCopy(Number(product.unitsSold))
+	const visibleSpecs = Array.isArray(product.specifications)
+		? product.specifications.filter(spec => !spec.name.startsWith('_'))
+		: []
+	const hasSpecifications = visibleSpecs.length > 0
+	const normalizedRelatedProducts = (Array.isArray(relatedProducts) ? relatedProducts : [])
+		.filter(item => item && Number(item.id) !== Number(product.id))
+		.slice(0, 4)
+	const hasRelatedProducts = normalizedRelatedProducts.length > 0
 	const images = Array.isArray(product.images) ? product.images : []
-	const firstImage = images[0]
+	const galleryImages = buildGalleryImages(images, variants, title)
+	const reviews = Array.isArray(product.reviews) ? product.reviews : []
+	const reviewsQuantity =
+		typeof product.reviewsQuantity === 'number' ? product.reviewsQuantity : reviews.length
+	const averageRating =
+		typeof product.averageRating === 'number' ? product.averageRating : reviews.length
+			? reviews.reduce((sum, review) => sum + (Number(review?.rating) || 0), 0) /
+				reviews.length
+			: 0
+
+	const reviewsByScore = new Map([
+		[5, 0],
+		[4, 0],
+		[3, 0],
+		[2, 0],
+		[1, 0]
+	])
+	for (const review of reviews) {
+		const rating = Math.max(1, Math.min(5, Number(review?.rating) || 0))
+		reviewsByScore.set(rating, (reviewsByScore.get(rating) || 0) + 1)
+	}
+
+	const reviewRowsHtml = [5, 4, 3, 2, 1]
+		.map(score => {
+			const count = reviewsByScore.get(score) || 0
+			const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0
+			return `<div class="reviews-overview__row"><span>${score} ${score === 1 ? 'estrella' : 'estrellas'}</span><div class="reviews-overview__bar"><div style="width:${percent}%;"></div></div><strong>${count}</strong></div>`
+		})
+		.join('')
+
+	const reviewItemsHtml = reviews.length
+		? reviews
+				.map(review => {
+					const reviewId = Number(review?.id) || 0
+					const reportHref = buildReviewReportHref(reviewId)
+					const authorName = escapeHtml(review?.authorName || 'Cliente')
+					const content = escapeHtml(review?.content || '')
+					const reviewTime = escapeHtml(
+						formatRelativeTime(review?.createdAt || review?.updatedAt)
+					)
+					const isVerified = Boolean(review?.isVerifiedPurchase)
+
+					return `
+						<article class="review-item">
+							<header class="review-item__header">
+								<div>
+									<h3>${authorName}</h3>
+									<p>${reviewTime}</p>
+								</div>
+								<div class="review-item__meta">
+									<rating-stars value="${Math.max(1, Math.min(5, Number(review?.rating) || 0))}" size="18"></rating-stars>
+									${
+										isVerified
+											? '<span class="review-item__verified"><i data-lucide="badge-check"></i>Compra verificada</span>'
+											: ''
+									}
+								</div>
+							</header>
+							<p class="review-item__content">${content}</p>
+							<footer class="review-item__actions">
+								<a class="review-item__report" href="${reportHref}">Reportar</a>
+								<a class="review-item__report-link" href="${reportHref}">
+									mailto:hello@tiendu.lat?subject=Reportar resena&body=Creo que la resena ${reviewId} viola las politicas de Tiendu. Por favor revisen esta resena.
+								</a>
+							</footer>
+						</article>
+					`
+				})
+				.join('')
+		: `<div class="empty-state"><i data-lucide="messages-square"></i><span class="empty-state__title">Este producto aun no tiene reseñas.</span></div>`
 
 	container.innerHTML = `
 		<div class="product-detail">
 			<div class="product-gallery">
-				<img class="product-main-image" id="product-main-image" alt="${escapeHtml(title)}" ${
-					firstImage?.url ? `src="${escapeHtml(firstImage.url)}"` : ''
-				} />
-				<div id="product-thumbs" class="product-thumbs"></div>
+				<tiendu-image-carousel id="product-image-carousel"></tiendu-image-carousel>
 			</div>
 			<div class="product-info">
 				<h1 class="product-info__title">${escapeHtml(title)}</h1>
+				${
+					unitsSoldCopy
+						? `<p class="product-units-sold"><i data-lucide="trending-up"></i><span>${unitsSoldCopy}</span></p>`
+						: ''
+				}
+				<button type="button" id="go-to-reviews-button" class="product-rating-summary" aria-label="Ver reseñas">
+					<rating-stars value="${Number(averageRating).toFixed(2)}" size="22"></rating-stars>
+					<span>${Number(averageRating || 0).toFixed(1)} (${reviewsQuantity})</span>
+				</button>
 				<div class="product-price-line">
 					<span class="product-price" id="product-price">-</span>
 					<span class="product-compare" id="product-compare"></span>
 				</div>
-				<div class="product-description">${escapeHtml(description)}</div>
 				<div id="variant-selector" class="variant-selector"></div>
+				<div class="stock-note" id="stock-note"></div>
 				<div class="product-actions">
-					<loading-button id="add-to-cart-button" label="Agregar al carrito" loading-label="Agregando..." duration="1200"></loading-button>
-					<span class="stock-note" id="stock-note"></span>
+					<tiendu-button id="add-to-cart-button" variant="primary" label="Agregar al carrito" loading-label="Agregar al carrito" icon="plus" loading-icon="loader-2" duration="4000"></tiendu-button>
+					<tiendu-button id="share-product-button" variant="secondary" label="Compartir" icon="forward" aria-label="Compartir producto"></tiendu-button>
 				</div>
-				<dl class="product-specs" id="product-specs"></dl>
 			</div>
 		</div>
+
+		${
+			hasDescription || hasSpecifications
+				? `<section id="description-section" class="description-section section" aria-labelledby="description-title">
+			<div class="section__header">
+				<h2 id="description-title" class="section__title section__title--large">Sobre el producto</h2>
+			</div>
+			${
+				hasDescription
+					? `<p id="product-description-text" class="product-description" data-full="${escapeHtml(descriptionText)}">${escapeHtml(
+							hasLongDescription
+								? `${descriptionText.slice(0, descriptionPreviewLength).trimEnd()}...`
+								: descriptionText
+						)}</p>`
+					: ''
+			}
+			${
+				hasLongDescription && hasDescription
+					? '<button type="button" id="description-toggle" class="description-toggle">Ver mas</button>'
+					: ''
+			}
+			${hasSpecifications ? '<dl class="product-specs" id="product-specs"></dl>' : ''}
+		</section>`
+				: ''
+		}
+
+		<section id="reviews-section" class="reviews-section" aria-labelledby="reviews-title">
+			<div class="section__header reviews-section__header">
+				<h2 id="reviews-title" class="section__title section__title--large">Reseñas</h2>
+				<span class="reviews-section__verified"><i data-lucide="shield-check"></i>Verificadas por Tiendu</span>
+			</div>
+
+			<div class="reviews-overview">
+				<div class="reviews-overview__score">
+					<strong>${Number(averageRating || 0).toFixed(1)}</strong>
+					<rating-stars value="${Number(averageRating).toFixed(2)}" size="28"></rating-stars>
+					<span>${reviewsQuantity} ${reviewsQuantity === 1 ? 'resena' : 'reseñas'}</span>
+				</div>
+				<div class="reviews-overview__distribution">
+					${reviewRowsHtml}
+				</div>
+			</div>
+
+			<div class="reviews-list">${reviewItemsHtml}</div>
+		</section>
+
+		${
+			hasRelatedProducts
+				? `<section id="related-products-section" class="related-products section" aria-labelledby="related-products-title">
+			<div class="section__header">
+				<h2 id="related-products-title" class="section__title section__title--large">Tambien te puede interesar</h2>
+			</div>
+			<div id="related-products-list" aria-live="polite"></div>
+		</section>`
+				: ''
+		}
 	`
 
-	const breadcrumb = document.getElementById('product-breadcrumb')
-	if (breadcrumb) breadcrumb.textContent = title
+	const breadcrumb = document.getElementById('product-breadcrumbs')
+	if (breadcrumb && typeof breadcrumb.setCurrentLabel === 'function') {
+		breadcrumb.setCurrentLabel(title)
+	}
 
 	document.title = `${title} | Tienda Genérica`
 	const descriptionMeta = document.querySelector('meta[name="description"]')
@@ -147,35 +417,9 @@ const renderProduct = product => {
 		descriptionMeta.setAttribute('content', description.slice(0, 150))
 	}
 
-	// Image gallery
-	const mainImage = document.getElementById('product-main-image')
-	const thumbs = document.getElementById('product-thumbs')
-	if (thumbs && mainImage) {
-		if (images.length > 1) {
-			thumbs.innerHTML = images
-				.map(
-					(image, index) => `<button type="button" data-image-url="${escapeHtml(image.url)}" data-image-alt="${
-						escapeHtml(image.alt || title)
-					}" class="${index === 0 ? 'is-active' : ''}">
-						<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.alt || title)}" loading="lazy" />
-					</button>`
-				)
-				.join('')
-
-			thumbs.addEventListener('click', event => {
-				const button = event.target instanceof Element ? event.target.closest('button') : null
-				if (!(button instanceof HTMLButtonElement)) return
-				const imageUrl = button.dataset.imageUrl
-				const imageAlt = button.dataset.imageAlt
-				if (!imageUrl || !(mainImage instanceof HTMLImageElement)) return
-				mainImage.src = imageUrl
-				mainImage.alt = imageAlt || title
-				for (const activeButton of thumbs.querySelectorAll('button')) {
-					activeButton.classList.remove('is-active')
-				}
-				button.classList.add('is-active')
-			})
-		}
+	const imageCarousel = document.getElementById('product-image-carousel')
+	if (imageCarousel && typeof imageCarousel.setImages === 'function') {
+		imageCarousel.setImages(galleryImages)
 	}
 
 	const variantSelector = document.getElementById('variant-selector')
@@ -183,6 +427,11 @@ const renderProduct = product => {
 	const compareNode = document.getElementById('product-compare')
 	const stockNode = document.getElementById('stock-note')
 	const addToCartButton = document.getElementById('add-to-cart-button')
+	const goToReviewsButton = document.getElementById('go-to-reviews-button')
+	const shareProductButton = document.getElementById('share-product-button')
+	const descriptionToggle = document.getElementById('description-toggle')
+	const descriptionNode = document.getElementById('product-description-text')
+	let isDescriptionExpanded = false
 
 	let currentVariant = defaultVariant
 
@@ -195,10 +444,15 @@ const renderProduct = product => {
 		if (stockNode) {
 			const stock = currentVariant?.stock
 			if (typeof stock === 'number') {
-				stockNode.textContent = stock > 0 ? `${stock} disponibles` : 'Sin stock'
-				stockNode.style.color = stock > 0 ? '#10b981' : '#ef4444'
+				if (stock === 0) {
+					stockNode.innerHTML = 'Actualmente sin stock. Consultar por <a href="https://wa.me/59899424414" target="_blank" rel="noopener noreferrer">WhatsApp</a>'
+					stockNode.style.color = '#ef4444'
+				} else {
+					stockNode.textContent = `${stock} ${stock === 1 ? 'unidad' : 'unidades'} en stock`
+					stockNode.style.color = '#10b981'
+				}
 			} else {
-				stockNode.textContent = 'Stock sujeto a disponibilidad'
+				stockNode.textContent = 'Tenemos en stock'
 				stockNode.style.color = '#64748b'
 			}
 		}
@@ -212,27 +466,47 @@ const renderProduct = product => {
 			return
 		}
 
+		if (variantSelector.childElementCount > 0) return
+
 		const sectionHtml = attributes
 			.map(attribute => {
 				const optionsHtml = attribute.values
 					.map(value => {
-						const selected = selectedValues.get(attribute.id) === value.id
-						const enabled = isValueEnabled(variants, attribute.id, value.id, selectedValues)
-						return `<button type="button" class="option-chip" data-attribute-id="${attribute.id}" data-value-id="${value.id}" aria-pressed="${selected}" ${
-							enabled ? '' : 'disabled'
-						}><i data-lucide="check"></i><span>${escapeHtml(value.value)}</span></button>`
+						const safeColor = toSafeCssColor(value?.color)
+						const swatchImageUrl = value?.image?.url
+						const swatchHtml = swatchImageUrl
+							? `<span class="option-chip__swatch option-chip__swatch--image" aria-hidden="true"><img src="${escapeHtml(swatchImageUrl)}" alt="" loading="lazy" /></span>`
+							: safeColor
+								? `<span class="option-chip__swatch option-chip__swatch--color" style="background:${safeColor};" aria-hidden="true"></span>`
+								: ''
+						return `<button type="button" class="option-chip ${swatchHtml ? '' : 'option-chip--no-swatch'}" data-attribute-id="${attribute.id}" data-value-id="${value.id}" aria-pressed="false">${swatchHtml}<span class="option-chip__label">${escapeHtml(value.value)}</span></button>`
 					})
 					.join('')
 
 				return `<fieldset class="variant-group">
 					<legend>${escapeHtml(attribute.name)}</legend>
-					<div class="variant-options">${optionsHtml}</div>
+					${optionsHtml}
 				</fieldset>`
 			})
 			.join('')
 
 		variantSelector.innerHTML = sectionHtml
-		refreshIcons()
+	}
+
+	const updateVariantSelectorState = () => {
+		if (!variantSelector) return
+		const optionButtons = variantSelector.querySelectorAll('.option-chip')
+		for (const button of optionButtons) {
+			if (!(button instanceof HTMLButtonElement)) continue
+			const attributeId = Number(button.dataset.attributeId)
+			const valueId = Number(button.dataset.valueId)
+			if (!Number.isFinite(attributeId) || !Number.isFinite(valueId)) continue
+
+			const selected = selectedValues.get(attributeId) === valueId
+			const enabled = isValueEnabled(variants, attributeId, valueId, selectedValues)
+			button.setAttribute('aria-pressed', selected ? 'true' : 'false')
+			button.disabled = !enabled
+		}
 	}
 
 	const syncVariantFromSelection = () => {
@@ -247,13 +521,24 @@ const renderProduct = product => {
 
 		updatePrice()
 		renderVariantSelector()
+		updateVariantSelectorState()
 		const unavailable = !currentVariant || currentVariant.stock === 0
 		if (addToCartButton) {
-			if (unavailable) {
+			if (typeof addToCartButton.setDisabled === 'function') {
+				addToCartButton.setDisabled(unavailable)
+			} else if (unavailable) {
 				addToCartButton.setAttribute('disabled', '')
 			} else {
 				addToCartButton.removeAttribute('disabled')
 			}
+		}
+
+		if (
+			imageCarousel &&
+			typeof imageCarousel.setCurrentImageById === 'function' &&
+			typeof currentVariant?.coverImage?.id === 'number'
+		) {
+			imageCarousel.setCurrentImageById(currentVariant.coverImage.id)
 		}
 	}
 
@@ -269,28 +554,85 @@ const renderProduct = product => {
 	})
 
 	if (addToCartButton) {
-		addToCartButton.addEventListener('loading-click', () => {
+		addToCartButton.addEventListener('app-click', () => {
 			if (!currentVariant || currentVariant.stock === 0) return
-			tiendu.cart.addProductVariant(currentVariant, 1)
+			if (typeof addToCartButton.startLoading === 'function') {
+				addToCartButton.startLoading()
+			}
+			tiendu.cart
+				.addProductVariant(currentVariant, 1, () => {
+					if (typeof addToCartButton.stopLoading === 'function') {
+						addToCartButton.stopLoading()
+					}
+				})
+				.catch(() => {
+					if (typeof addToCartButton.stopLoading === 'function') {
+						addToCartButton.stopLoading()
+					}
+				})
 		})
 	}
 
-	const specsNode = document.getElementById('product-specs')
-	if (specsNode && Array.isArray(product.specifications)) {
-		const visibleSpecs = product.specifications.filter(spec => !spec.name.startsWith('_'))
-		if (visibleSpecs.length > 0) {
-			specsNode.innerHTML = visibleSpecs
-				.map(
-					spec => `<div>
-						<dt>${escapeHtml(spec.name)}</dt>
-						<dd>${escapeHtml(spec.value)}</dd>
-					</div>`
-				)
-				.join('')
-			specsNode.style.display = 'grid'
+	if (goToReviewsButton) {
+		goToReviewsButton.addEventListener('click', () => {
+			const section = document.getElementById('reviews-section')
+			if (!section) return
+			section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+		})
+	}
+
+	if (shareProductButton instanceof HTMLElement) {
+		if (typeof navigator.share !== 'function') {
+			shareProductButton.style.display = 'none'
 		} else {
-			specsNode.style.display = 'none'
+			shareProductButton.addEventListener('app-click', async () => {
+				try {
+					await navigator.share({
+						title,
+						text: `Mira este producto: ${title}`,
+						url: window.location.href
+					})
+				} catch (error) {
+					if (
+						error &&
+						typeof error === 'object' &&
+						'name' in error &&
+						error.name === 'AbortError'
+					) {
+						return
+					}
+				}
+			})
 		}
+	}
+
+	if (descriptionToggle && descriptionNode) {
+		descriptionToggle.addEventListener('click', () => {
+			isDescriptionExpanded = !isDescriptionExpanded
+			if (isDescriptionExpanded) {
+				descriptionNode.textContent = descriptionText
+				descriptionToggle.textContent = 'Ver menos'
+			} else {
+				descriptionNode.textContent = `${descriptionText.slice(0, descriptionPreviewLength).trimEnd()}...`
+				descriptionToggle.textContent = 'Ver mas'
+			}
+		})
+	}
+
+	if (hasRelatedProducts) {
+		renderRelatedProducts(normalizedRelatedProducts)
+	}
+
+	const specsNode = document.getElementById('product-specs')
+	if (specsNode && hasSpecifications) {
+		specsNode.innerHTML = visibleSpecs
+			.map(
+				spec => `<div>
+					<dt>${escapeHtml(spec.name)}</dt>
+					<dd>${escapeHtml(spec.value)}</dd>
+				</div>`
+			)
+			.join('')
 	}
 
 	syncVariantFromSelection()
@@ -321,14 +663,17 @@ const init = async () => {
 	}
 
 	try {
-		const product = await tiendu.products.get(productId)
-		renderProduct(product)
+		const [product, relatedProducts] = await Promise.all([
+			tiendu.products.get(productId),
+			tiendu.products.getRelated(productId).catch(() => [])
+		])
+		renderProduct(product, relatedProducts)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
 		renderMessage(`No se pudo cargar el producto: ${message}`)
 	}
 }
 
-init()
+void withPageLoading(init)
 
 export {}

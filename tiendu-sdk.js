@@ -124,12 +124,64 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	*/
 
 /**
- * @typedef {Object} Page
+	* @typedef {Object} Page
 	* @property {number} id
 	* @property {string | null} title
 	* @property {Array<PageBlock>} content
 	* @property {PublicImage | null} coverImage
 	* @property {string} publicUrl
+	*/
+
+/**
+	* @typedef {Object} PublicUser
+	* @property {string} name
+	*/
+
+/**
+	* @typedef {Object} BlogPostListing
+	* @property {number} id
+	* @property {string} title
+	* @property {string | null} excerpt
+	* @property {PublicImage | null} coverImage
+	* @property {PublicUser} manager
+	* @property {string} publicUrl
+	* @property {string} createdAt
+	* @property {string} updatedAt
+	*/
+
+/**
+	* @typedef {Object} BlogPost
+	* @property {number} id
+	* @property {string} title
+	* @property {string | null} excerpt
+	* @property {PublicImage | null} coverImage
+	* @property {PublicUser} manager
+	* @property {string} publicUrl
+	* @property {string} createdAt
+	* @property {string} updatedAt
+	* @property {Array<{
+	*   type: 'heading',
+	*   level: 1 | 2 | 3,
+	*   text: string
+	* } | {
+	*   type: 'paragraph',
+	*   text: string
+	* } | {
+	*   type: 'image',
+	*   image: PublicImage,
+	*   size: 'small' | 'medium' | 'large' | 'full',
+	*   align: 'left' | 'center' | 'right'
+	* } | {
+	*   type: 'html',
+	*   code: string
+	* }>} content
+	*/
+
+/**
+	* @typedef {{ success: true } | {
+	*   success: false,
+	*   errorCode: 'INVALID_EMAIL' | 'EXISTING_SUBSCRIBER' | 'INTERNAL_ERROR'
+	* }} SubscriberAddResult
 	*/
 
 /**
@@ -258,6 +310,20 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				return response?.data ?? response
 			}
 		},
+		subscribers: {
+			/** @param {string} email @returns {Promise<SubscriberAddResult>} */
+			add: async email => {
+				const response = await upFetch.post(`${baseApiUrl}/subscribers`, { email })
+				return response?.data ?? response
+			}
+		},
+		images: {
+			/** @param {number} imageId @returns {Promise<PublicImage>} */
+			get: async imageId => {
+				const response = await upFetch.get(`${baseApiUrl}/images/${imageId}`)
+				return response?.data ?? response
+			}
+		},
 		pages: {
 			/** @returns {Promise<Array<PageListing>>} */
 			list: async () => {
@@ -267,6 +333,18 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			/** @param {number} pageId @returns {Promise<Page>} */
 			get: async pageId => {
 				const response = await upFetch.get(`${baseApiUrl}/pages/${pageId}`)
+				return response?.data ?? response
+			}
+		},
+		blogPosts: {
+			/** @returns {Promise<Array<BlogPostListing>>} */
+			list: async () => {
+				const response = await upFetch.get(`${baseApiUrl}/blog-posts`)
+				return response?.data ?? response
+			},
+			/** @param {number} blogPostId @returns {Promise<BlogPost>} */
+			get: async blogPostId => {
+				const response = await upFetch.get(`${baseApiUrl}/blog-posts/${blogPostId}`)
 				return response?.data ?? response
 			}
 		},
