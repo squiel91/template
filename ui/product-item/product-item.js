@@ -6,8 +6,9 @@ import '/ui/rating-stars/rating-stars.js'
 
 const STYLE_ID = 'product-item-lit-styles'
 
-const CART_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8c.9 0 1.8-.7 2-1.6l1.7-7.4"/><path d="m9 11 1 9"/><path d="M4.5 15.5h15"/></svg>`
+const CART_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2h3l2.68 12.39a2 2 0 0 0 1.95 1.61h7.72a2 2 0 0 0 1.95-1.57L22 7H6"></path></svg>`
 const SPINNER_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-item__spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
+const QUICK_ACTION_LOADING_TIMEOUT_MS = 3000
 
 const ensureStyles = () => {
 	if (document.getElementById(STYLE_ID)) return
@@ -61,6 +62,11 @@ const ensureStyles = () => {
 			transform: translateY(0);
 		}
 
+		.product-item__link--loading .product-item__quick-action {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
 		.product-item__quick-action-btn {
 			display: inline-flex;
 			align-items: center;
@@ -87,17 +93,6 @@ const ensureStyles = () => {
 		.product-item__quick-action-btn--cart:hover {
 			background: #1e293b;
 			transform: scale(1.05);
-		}
-
-		.product-item__quick-action-btn--options {
-			background: white;
-			color: #0f172a;
-			padding: 10px 16px;
-		}
-
-		.product-item__quick-action-btn--options:hover {
-			background: #f8fafc;
-			transform: scale(1.02);
 		}
 
 		.product-item__quick-action-btn:disabled {
@@ -212,6 +207,7 @@ class ProductItem extends LitElement {
 		this.averageRating = 0
 		this.reviewsQuantity = 0
 		this.isLoading = false
+		this.loadingTimeoutId = null
 	}
 
 	createRenderRoot() {
@@ -223,37 +219,56 @@ class ProductItem extends LitElement {
 		ensureStyles()
 	}
 
+	disconnectedCallback() {
+		super.disconnectedCallback()
+		if (this.loadingTimeoutId) {
+			window.clearTimeout(this.loadingTimeoutId)
+			this.loadingTimeoutId = null
+		}
+	}
+
+	stopLoading() {
+		if (this.loadingTimeoutId) {
+			window.clearTimeout(this.loadingTimeoutId)
+			this.loadingTimeoutId = null
+		}
+		if (!this.isLoading) return
+		this.isLoading = false
+		this.requestUpdate()
+	}
+
+	startLoading() {
+		if (this.loadingTimeoutId) {
+			window.clearTimeout(this.loadingTimeoutId)
+		}
+		this.isLoading = true
+		this.requestUpdate()
+		this.loadingTimeoutId = window.setTimeout(() => {
+			this.stopLoading()
+		}, QUICK_ACTION_LOADING_TIMEOUT_MS)
+	}
+
 	handleQuickAction(event) {
 		event.preventDefault()
 		event.stopPropagation()
 
-		if (this.hasMultipleVariants) {
-			window.location.href = this.url || `/productos/${this.productId}`
-			return
-		}
-
 		if (!this.variantId || this.isLoading) return
 
-		this.isLoading = true
-		this.requestUpdate()
+		this.startLoading()
 
 		tiendu.cart
 			.addProductVariant({ id: Number(this.variantId) }, 1, ({ updatedCartItemsQuantity }) => {
 				const cartBadge = document.getElementById('cart-quantity')
 				if (cartBadge) cartBadge.textContent = String(updatedCartItemsQuantity)
+				this.stopLoading()
 			})
 			.catch(err => {
 				console.error('[ProductItem] Error adding to cart:', err)
-			})
-			.finally(() => {
-				this.isLoading = false
-				this.requestUpdate()
+				this.stopLoading()
 			})
 	}
 
 	renderQuickAction() {
-		if (!this.hasSingleVariant && !this.hasMultipleVariants) return nothing
-
 		if (this.hasSingleVariant) {
 			return html`
 				<div class="product-item__quick-action">
@@ -270,18 +285,7 @@ class ProductItem extends LitElement {
 			`
 		}
 
-		return html`
-			<div class="product-item__quick-action">
-				<button
-					class="product-item__quick-action-btn product-item__quick-action-btn--options"
-					type="button"
-					aria-label="Ver opciones"
-					@click=${this.handleQuickAction}
-				>
-					<span>Opciones</span>
-				</button>
-			</div>
-		`
+		return nothing
 	}
 
 	render() {
@@ -295,9 +299,10 @@ class ProductItem extends LitElement {
 		const reviewsQuantity = Number.isFinite(this.reviewsQuantity)
 			? this.reviewsQuantity
 			: 0
+		const linkClass = this.isLoading ? 'product-item__link product-item__link--loading' : 'product-item__link'
 
 		return html`
-			<a href=${href} class="product-item__link">
+			<a href=${href} class=${linkClass}>
 				<div class="product-item__media">
 					${this.imageUrl
 						? html`<img src=${this.imageUrl} alt=${alt} loading="lazy" />`

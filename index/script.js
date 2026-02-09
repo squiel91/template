@@ -4,8 +4,8 @@ import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { storefrontConfig } from '/shared/storefront-config.js'
-import { getListingPriceData } from '/shared/product-pricing.js'
 import { withPageLoading } from '/shared/page-loading.js'
+import { createProductItemElement } from '/shared/product-item-element.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -182,35 +182,8 @@ const renderProductsInContainer = (containerId, products) => {
 			continue
 		}
 
-		const item = document.createElement('product-item')
-
 		try {
-			const priceData = getListingPriceData(product)
-			const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
-
-			item.setAttribute('product-id', String(product.id))
-			item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title || 'producto')}`)
-			item.setAttribute('title', product.title || 'Producto')
-			item.setAttribute('price', priceData.label || '')
-			item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
-			item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
-
-			if (priceData.compareLabel) {
-				item.setAttribute('compare-price', priceData.compareLabel)
-			}
-
-			if (product.coverImage?.url) {
-				item.setAttribute('image-url', product.coverImage.url)
-				item.setAttribute('image-alt', product.coverImage.alt || product.title || '')
-			}
-
-			if (validVariants.length === 1) {
-				item.setAttribute('has-single-variant', 'true')
-				item.setAttribute('variant-id', String(validVariants[0].id))
-			} else if (validVariants.length > 1) {
-				item.setAttribute('has-multiple-variants', 'true')
-			}
-
+			const item = createProductItemElement(product)
 			list.appendChild(item)
 		} catch (err) {
 			console.error('[Home] Error creating product item:', err, product)

@@ -3,13 +3,17 @@
 import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
-import { getListingPriceData } from '/shared/product-pricing.js'
 import { withPageLoading } from '/shared/page-loading.js'
+import { createInfiniteScroll } from '/shared/infinite-scroll.js'
+import { createProductItemElement } from '/shared/product-item-element.js'
+import {
+	getCurrentRelativeUrlWithoutOrigin
+} from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
-import { urlSafe } from '/shared/url-safe.js'
 
 const url = new URL(window.location.href)
+const PAGE_SIZE = 20
 
 const formatResultsCopy = (total, query) => {
 	if (query) {
@@ -32,68 +36,66 @@ const renderEmpty = message => {
 	refreshIcons()
 }
 
-const renderProducts = products => {
+const init = async () => {
+	const search = url.searchParams.get('q')?.trim() || ''
+	const resultsCopy = document.getElementById('products-results-copy')
 	const container = document.getElementById('products-list')
 	if (!container) return
 
-	if (!Array.isArray(products) || products.length === 0) {
-		renderEmpty('No encontramos productos con ese criterio.')
-		return
+	let page = 0
+	let totalLoaded = 0
+	let hasMore = true
+	const origin = {
+		url: getCurrentRelativeUrlWithoutOrigin(),
+		title: search ? 'Busqueda' : 'Productos'
 	}
 
 	container.innerHTML = ''
 	const list = document.createElement('product-list')
+	container.appendChild(list)
 
-	for (const product of products) {
-		const item = document.createElement('product-item')
-		const priceData = getListingPriceData(product)
-		const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
-
-		item.setAttribute('product-id', String(product.id))
-		item.setAttribute('title', product.title)
-		item.setAttribute('price', priceData.label)
-		item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
-		item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
-		
-		if (priceData.compareLabel) {
-			item.setAttribute('compare-price', priceData.compareLabel)
-		}
-		
-		item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title)}`)
-		
-		if (product.coverImage?.url) {
-			item.setAttribute('image-url', product.coverImage.url)
-			item.setAttribute('image-alt', product.coverImage.alt || product.title)
-		}
-		
-		// Pass variant info for quick actions
-		if (validVariants.length === 1) {
-			item.setAttribute('has-single-variant', 'true')
-			item.setAttribute('variant-id', String(validVariants[0].id))
-		} else if (validVariants.length > 1) {
-			item.setAttribute('has-multiple-variants', 'true')
-		}
-		
-		list.appendChild(item)
+	const updateResultsCopy = () => {
+		if (!resultsCopy) return
+		resultsCopy.textContent = formatResultsCopy(totalLoaded, search)
 	}
 
-	container.appendChild(list)
-	refreshIcons()
-}
+	const appendProducts = products => {
+		for (const product of products) {
+			list.appendChild(createProductItemElement(product, { origin }))
+		}
+		refreshIcons()
+	}
 
-const init = async () => {
-	const search = url.searchParams.get('q')?.trim() || ''
-	const resultsCopy = document.getElementById('products-results-copy')
+	const loadNextPage = async () => {
+		if (!hasMore) return false
+		page += 1
+		const response = await tiendu.products.list({ search, page, size: PAGE_SIZE })
+		const products = response?.data || []
+
+		if (page === 1 && products.length === 0) {
+			renderEmpty('No encontramos productos con ese criterio.')
+			hasMore = false
+			return false
+		}
+
+		appendProducts(products)
+		totalLoaded += products.length
+		updateResultsCopy()
+		hasMore = products.length === PAGE_SIZE
+		return hasMore
+	}
 
 	try {
-		const response = await tiendu.products.list({ search, page: 1, size: 60 })
-		const products = response.data || []
-		
-		if (resultsCopy) {
-			resultsCopy.textContent = formatResultsCopy(products.length, search)
-		}
-		
-		renderProducts(products)
+		const shouldKeepLoading = await loadNextPage()
+		if (!hasMore) return
+
+		const scroller = createInfiniteScroll({
+			container,
+			onLoadMore: loadNextPage,
+			loadingText: 'Cargando mas productos...'
+		})
+		scroller.start()
+		if (!shouldKeepLoading) scroller.setDone(true)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
 		renderEmpty(`Error al cargar el catalogo: ${message}`)

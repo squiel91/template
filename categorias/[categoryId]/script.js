@@ -3,11 +3,17 @@
 import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
-import { getListingPriceData } from '/shared/product-pricing.js'
 import { withPageLoading } from '/shared/page-loading.js'
+import { createInfiniteScroll } from '/shared/infinite-scroll.js'
+import { createProductItemElement } from '/shared/product-item-element.js'
+import {
+	getCurrentRelativeUrlWithoutOrigin,
+	getOriginFromCurrentUrl
+} from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
-import { urlSafe } from '/shared/url-safe.js'
+
+const PAGE_SIZE = 20
 
 const renderState = message => {
 	const container = document.getElementById('category-products')
@@ -21,7 +27,7 @@ const renderState = message => {
 	refreshIcons()
 }
 
-const renderProducts = products => {
+const renderProducts = (list, products, origin) => {
 	const container = document.getElementById('category-products')
 	if (!container) return
 
@@ -30,43 +36,9 @@ const renderProducts = products => {
 		return
 	}
 
-	container.innerHTML = ''
-	const list = document.createElement('product-list')
-
 	for (const product of products) {
-		const item = document.createElement('product-item')
-		const priceData = getListingPriceData(product)
-		const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
-		
-		item.setAttribute('product-id', String(product.id))
-		item.setAttribute('title', product.title)
-		item.setAttribute('price', priceData.label)
-		item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
-		item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
-		
-		if (priceData.compareLabel) {
-			item.setAttribute('compare-price', priceData.compareLabel)
-		}
-		
-		item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title)}`)
-		
-		if (product.coverImage?.url) {
-			item.setAttribute('image-url', product.coverImage.url)
-			item.setAttribute('image-alt', product.coverImage.alt || product.title)
-		}
-		
-		// Pass variant info for quick actions
-		if (validVariants.length === 1) {
-			item.setAttribute('has-single-variant', 'true')
-			item.setAttribute('variant-id', String(validVariants[0].id))
-		} else if (validVariants.length > 1) {
-			item.setAttribute('has-multiple-variants', 'true')
-		}
-		
-		list.appendChild(item)
+		list.appendChild(createProductItemElement(product, { origin }))
 	}
-
-	container.appendChild(list)
 	refreshIcons()
 }
 
@@ -75,6 +47,7 @@ const init = async () => {
 		/** @type {any} */ (window).PARAMS ?? {}
 	)
 	const categoryId = Number(params.categoryId)
+	const origin = getOriginFromCurrentUrl()
 
 	if (!Number.isFinite(categoryId) || categoryId < 1) {
 		renderState('Categoria no valida.')
@@ -82,13 +55,13 @@ const init = async () => {
 	}
 
 	try {
-		const [category, response] = await Promise.all([
+		const [category] = await Promise.all([
 			tiendu.categories.get(categoryId),
 			tiendu.products.list({
 				categoryId,
 				includeProductsFromSubcategories: true,
 				page: 1,
-				size: 60
+				size: PAGE_SIZE
 			})
 		])
 
@@ -96,6 +69,13 @@ const init = async () => {
 		if (categoryTitle) categoryTitle.textContent = category.name
 
 		const categoryBreadcrumb = document.getElementById('category-breadcrumbs')
+		if (categoryBreadcrumb && typeof categoryBreadcrumb.setItems === 'function') {
+			const items = [{ label: 'Inicio', href: '/' }]
+			if (origin) {
+				items.push({ label: origin.title, href: origin.url })
+			}
+			categoryBreadcrumb.setItems(items)
+		}
 		if (categoryBreadcrumb && typeof categoryBreadcrumb.setCurrentLabel === 'function') {
 			categoryBreadcrumb.setCurrentLabel(category.name)
 		}
@@ -106,7 +86,52 @@ const init = async () => {
 		}
 
 		document.title = `${category.name} | Tienda Genérica`
-		renderProducts(response.data || [])
+
+		const container = document.getElementById('category-products')
+		if (!container) return
+		container.innerHTML = ''
+		const list = document.createElement('product-list')
+		container.appendChild(list)
+
+		let page = 0
+		let hasMore = true
+		const productOrigin = {
+			url: getCurrentRelativeUrlWithoutOrigin(),
+			title: category.name || 'Categoria'
+		}
+
+		const loadNextPage = async () => {
+			if (!hasMore) return false
+			page += 1
+			const response = await tiendu.products.list({
+				categoryId,
+				includeProductsFromSubcategories: true,
+				page,
+				size: PAGE_SIZE
+			})
+			const products = response?.data || []
+
+			if (page === 1 && products.length === 0) {
+				renderState('No hay productos publicados en esta categoria.')
+				hasMore = false
+				return false
+			}
+
+			renderProducts(list, products, productOrigin)
+			hasMore = products.length === PAGE_SIZE
+			return hasMore
+		}
+
+		const shouldKeepLoading = await loadNextPage()
+		if (!hasMore) return
+
+		const scroller = createInfiniteScroll({
+			container,
+			onLoadMore: loadNextPage,
+			loadingText: 'Cargando mas productos...'
+		})
+		scroller.start()
+		if (!shouldKeepLoading) scroller.setDone(true)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
 		renderState(`Error al cargar la categoria: ${message}`)

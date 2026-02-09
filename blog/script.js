@@ -2,6 +2,10 @@
 
 import { tiendu } from '/shared/tiendu-client.js'
 import { withPageLoading } from '/shared/page-loading.js'
+import {
+	withOriginQuery,
+	getCurrentRelativeUrlWithoutOrigin
+} from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -41,35 +45,80 @@ const init = async () => {
 			return dateB - dateA
 		})
 
-		renderState(
-			sortedPosts
-				.map(post => {
-					const title = escapeHtml(post?.title || 'Articulo')
-					const excerpt = escapeHtml(post?.excerpt || '')
-					const href = escapeHtml(`/blog/${post.id}/${urlSafe(post?.title || 'articulo')}`)
-					const coverImage = post?.coverImage?.url
-					const managerName = escapeHtml(post?.manager?.name || 'Equipo de la tienda')
-					const dateLabel = escapeHtml(formatDate(post?.createdAt))
+		const featuredPost = sortedPosts[0]
+		const remainingPosts = sortedPosts.slice(1)
+		const origin = {
+			url: getCurrentRelativeUrlWithoutOrigin(),
+			title: 'Blog'
+		}
 
-					return `
-						<article class="blog-list-item">
-							<a class="blog-list-item__media" href="${href}">
-								${
-									coverImage
-										? `<img src="${escapeHtml(coverImage)}" alt="${title}" loading="lazy" />`
-										: '<div class="blog-card__media-fallback"><i data-lucide="file-text"></i></div>'
-								}
-							</a>
-							<div class="blog-list-item__body">
-								<p class="blog-list-item__meta">${dateLabel}${dateLabel ? ' - ' : ''}${managerName}</p>
-								<h2><a href="${href}">${title}</a></h2>
-								${excerpt ? `<p>${excerpt}</p>` : ''}
-								<a class="section__action" href="${href}">Leer articulo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
-							</div>
-						</article>
-					`
-				})
-				.join('')
+		const featuredHtml = (() => {
+			if (!featuredPost) return ''
+			const title = escapeHtml(featuredPost?.title || 'Articulo')
+			const excerpt = escapeHtml(featuredPost?.excerpt || '')
+			const href = escapeHtml(
+				withOriginQuery(
+					`/blog/${featuredPost.id}/${urlSafe(featuredPost?.title || 'articulo')}`,
+					origin
+				)
+			)
+			const coverImage = featuredPost?.coverImage?.url
+			const managerName = escapeHtml(featuredPost?.manager?.name || 'Equipo de la tienda')
+			const dateLabel = escapeHtml(formatDate(featuredPost?.createdAt))
+
+			return `
+				<article class="blog-list-item blog-list-item--featured">
+					<a class="blog-list-item__media" href="${href}">
+						${
+							coverImage
+								? `<img src="${escapeHtml(coverImage)}" alt="${title}" loading="lazy" />`
+								: '<div class="blog-card__media-fallback"><i data-lucide="file-text"></i></div>'
+						}
+					</a>
+					<div class="blog-list-item__body">
+						<span class="blog-list-item__tag">Ultimo articulo</span>
+						<p class="blog-list-item__meta">${dateLabel}${dateLabel ? ' - ' : ''}${managerName}</p>
+						<h2><a href="${href}">${title}</a></h2>
+						${excerpt ? `<p>${excerpt}</p>` : ''}
+						<a class="section__action" href="${href}">Leer articulo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
+					</div>
+				</article>
+			`
+		})()
+
+		const listHtml = remainingPosts
+			.map(post => {
+				const title = escapeHtml(post?.title || 'Articulo')
+				const excerpt = escapeHtml(post?.excerpt || '')
+				const href = escapeHtml(
+					withOriginQuery(`/blog/${post.id}/${urlSafe(post?.title || 'articulo')}`, origin)
+				)
+				const coverImage = post?.coverImage?.url
+				const managerName = escapeHtml(post?.manager?.name || 'Equipo de la tienda')
+				const dateLabel = escapeHtml(formatDate(post?.createdAt))
+
+				return `
+					<article class="blog-list-item">
+						<a class="blog-list-item__media" href="${href}">
+							${
+								coverImage
+									? `<img src="${escapeHtml(coverImage)}" alt="${title}" loading="lazy" />`
+									: '<div class="blog-card__media-fallback"><i data-lucide="file-text"></i></div>'
+							}
+						</a>
+						<div class="blog-list-item__body">
+							<p class="blog-list-item__meta">${dateLabel}${dateLabel ? ' - ' : ''}${managerName}</p>
+							<h2><a href="${href}">${title}</a></h2>
+							${excerpt ? `<p>${excerpt}</p>` : ''}
+							<a class="section__action" href="${href}">Leer articulo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
+						</div>
+					</article>
+				`
+			})
+			.join('')
+
+		renderState(
+			`${featuredHtml}${listHtml}`
 		)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'

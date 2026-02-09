@@ -48,6 +48,12 @@ const init = async () => {
 		if (titleNode) titleNode.textContent = title
 
 		const breadcrumbNode = document.getElementById('blog-post-breadcrumbs')
+		if (breadcrumbNode && typeof breadcrumbNode.setItems === 'function') {
+			breadcrumbNode.setItems([
+				{ label: 'Inicio', href: '/' },
+				{ label: 'Blog', href: '/blog' }
+			])
+		}
 		if (breadcrumbNode && typeof breadcrumbNode.setCurrentLabel === 'function') {
 			breadcrumbNode.setCurrentLabel(title)
 		}

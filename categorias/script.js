@@ -2,6 +2,10 @@
 
 import { tiendu } from '/shared/tiendu-client.js'
 import { withPageLoading } from '/shared/page-loading.js'
+import {
+	withOriginQuery,
+	getCurrentRelativeUrlWithoutOrigin
+} from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -26,11 +30,18 @@ const renderCategories = categories => {
 		return
 	}
 
+	const origin = {
+		url: getCurrentRelativeUrlWithoutOrigin(),
+		title: 'Categorias'
+	}
+
 	const html = categories
 		.slice()
 		.sort((a, b) => Number(b.productCount || 0) - Number(a.productCount || 0))
 		.map(category => {
-			const href = escapeHtml(`/categorias/${category.id}/${urlSafe(category.name || 'categoria')}`)
+			const href = escapeHtml(
+				withOriginQuery(`/categorias/${category.id}/${urlSafe(category.name || 'categoria')}`, origin)
+			)
 			const name = escapeHtml(category.name || 'Categoria')
 			const count = Number(category.productCount || 0)
 			

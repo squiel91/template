@@ -50,8 +50,8 @@ const ensureStyles = () => {
 		}
 
 		tiendu-button[variant='secondary'] button:hover:not(:disabled) {
-			background: #f8fafc;
-			border-color: #94a3b8;
+			background: #e2e8f0;
+			border-color: #64748b;
 		}
 
 		tiendu-button[variant='primary'] button {

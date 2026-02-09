@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import '/ui/app-button/app-button.js'
+import '/ui/attribute-select/attribute-select.js'
 import '/ui/rating-stars/rating-stars.js'
 import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
@@ -9,6 +10,7 @@ import { tiendu } from '/shared/tiendu-client.js'
 import { getPriceDataForVariant } from '/shared/product-pricing.js'
 import { getListingPriceData } from '/shared/product-pricing.js'
 import { withPageLoading } from '/shared/page-loading.js'
+import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
@@ -407,6 +409,14 @@ const renderProduct = (product, relatedProducts = []) => {
 	`
 
 	const breadcrumb = document.getElementById('product-breadcrumbs')
+	const origin = getOriginFromCurrentUrl()
+	if (breadcrumb && typeof breadcrumb.setItems === 'function') {
+		const items = [{ label: 'Inicio', href: '/' }]
+		if (origin) {
+			items.push({ label: origin.title, href: origin.url })
+		}
+		breadcrumb.setItems(items)
+	}
 	if (breadcrumb && typeof breadcrumb.setCurrentLabel === 'function') {
 		breadcrumb.setCurrentLabel(title)
 	}
@@ -432,6 +442,10 @@ const renderProduct = (product, relatedProducts = []) => {
 	const descriptionToggle = document.getElementById('description-toggle')
 	const descriptionNode = document.getElementById('product-description-text')
 	let isDescriptionExpanded = false
+	/** @type {Array<HTMLButtonElement>} */
+	let variantOptionButtons = []
+	/** @type {Array<any>} */
+	let variantSelects = []
 
 	let currentVariant = defaultVariant
 
@@ -470,6 +484,13 @@ const renderProduct = (product, relatedProducts = []) => {
 
 		const sectionHtml = attributes
 			.map(attribute => {
+				if (attribute.displayType === 'dropdown') {
+					return `<fieldset class="variant-group">
+						<legend>${escapeHtml(attribute.name)}</legend>
+						<tiendu-attribute-select class="variant-select" data-attribute-id="${attribute.id}"></tiendu-attribute-select>
+					</fieldset>`
+				}
+
 				const optionsHtml = attribute.values
 					.map(value => {
 						const safeColor = toSafeCssColor(value?.color)
@@ -491,12 +512,28 @@ const renderProduct = (product, relatedProducts = []) => {
 			.join('')
 
 		variantSelector.innerHTML = sectionHtml
+		variantOptionButtons = Array.from(variantSelector.querySelectorAll('.option-chip'))
+		variantSelects = Array.from(variantSelector.querySelectorAll('tiendu-attribute-select'))
+
+		for (const select of variantSelects) {
+			const attributeId = Number(select.dataset.attributeId)
+			const attribute = attributes.find(item => Number(item.id) === attributeId)
+			if (!attribute || !Array.isArray(attribute.values)) continue
+
+			select.options = attribute.values.map(value => ({
+				id: value.id,
+				label: value.value,
+				color: value.color || null,
+				imageUrl: value?.image?.url || null
+			}))
+		}
 	}
 
 	const updateVariantSelectorState = () => {
 		if (!variantSelector) return
-		const optionButtons = variantSelector.querySelectorAll('.option-chip')
-		for (const button of optionButtons) {
+		const attributes = Array.isArray(product.attributes) ? product.attributes : []
+
+		for (const button of variantOptionButtons) {
 			if (!(button instanceof HTMLButtonElement)) continue
 			const attributeId = Number(button.dataset.attributeId)
 			const valueId = Number(button.dataset.valueId)
@@ -506,6 +543,20 @@ const renderProduct = (product, relatedProducts = []) => {
 			const enabled = isValueEnabled(variants, attributeId, valueId, selectedValues)
 			button.setAttribute('aria-pressed', selected ? 'true' : 'false')
 			button.disabled = !enabled
+		}
+
+		for (const select of variantSelects) {
+			const attributeId = Number(select.dataset.attributeId)
+			const attribute = attributes.find(item => Number(item.id) === attributeId)
+			if (!attribute || !Array.isArray(attribute.values)) continue
+
+			const selectedValueId = selectedValues.get(attributeId)
+			select.setValue(Number.isFinite(Number(selectedValueId)) ? selectedValueId : null)
+
+			const disabledIds = attribute.values
+				.filter(value => !isValueEnabled(variants, attributeId, value.id, selectedValues))
+				.map(value => value.id)
+			select.setDisabledOptionIds(disabledIds)
 		}
 	}
 
@@ -520,7 +571,6 @@ const renderProduct = (product, relatedProducts = []) => {
 		}
 
 		updatePrice()
-		renderVariantSelector()
 		updateVariantSelectorState()
 		const unavailable = !currentVariant || currentVariant.stock === 0
 		if (addToCartButton) {
@@ -547,6 +597,17 @@ const renderProduct = (product, relatedProducts = []) => {
 		if (!(target instanceof HTMLButtonElement)) return
 		const attributeId = Number(target.dataset.attributeId)
 		const valueId = Number(target.dataset.valueId)
+		if (!Number.isFinite(attributeId) || !Number.isFinite(valueId)) return
+
+		selectedValues.set(attributeId, valueId)
+		syncVariantFromSelection()
+	})
+
+	variantSelector?.addEventListener('tiendu-select-change', event => {
+		const select = event.target
+		if (!(select instanceof HTMLElement)) return
+		const attributeId = Number(select.dataset.attributeId)
+		const valueId = Number(event?.detail?.valueId)
 		if (!Number.isFinite(attributeId) || !Number.isFinite(valueId)) return
 
 		selectedValues.set(attributeId, valueId)
@@ -635,8 +696,8 @@ const renderProduct = (product, relatedProducts = []) => {
 			.join('')
 	}
 
+	renderVariantSelector()
 	syncVariantFromSelection()
-	updatePrice()
 	refreshIcons()
 }
 

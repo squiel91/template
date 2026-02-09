@@ -36,6 +36,11 @@ const init = async () => {
 		const titleNode = document.getElementById('page-title')
 		if (titleNode) titleNode.textContent = title
 
+		const breadcrumbNode = document.getElementById('page-breadcrumbs')
+		if (breadcrumbNode && typeof breadcrumbNode.setCurrentLabel === 'function') {
+			breadcrumbNode.setCurrentLabel(title)
+		}
+
 		document.title = `${title} | Tienda Genérica`
 
 		const container = document.getElementById('page')

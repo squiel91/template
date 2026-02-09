@@ -3,10 +3,13 @@
 import { LitElement, html, nothing } from '/shared/lit.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getListingPriceLabel } from '/shared/product-pricing.js'
+import { withOriginQuery } from '/shared/navigation-origin.js'
 import { urlSafe } from '/shared/url-safe.js'
 import { refreshIcons } from '/shared/icons.js'
 
 const STYLE_ID = 'storefront-search-lit-styles'
+const DROPDOWN_ANIMATION_MS = 180
+const SEARCH_DROPDOWN_LIMIT = 8
 
 const ensureStyles = () => {
 	if (document.getElementById(STYLE_ID)) return
@@ -72,6 +75,10 @@ const ensureStyles = () => {
 			height: 18px;
 			color: #94a3b8;
 			flex-shrink: 0;
+		}
+
+		storefront-search .storefront-search__control .storefront-search__icon--loading {
+			animation: storefront-search-spin 1s linear infinite;
 		}
 
 		storefront-search .storefront-search__control input {
@@ -152,6 +159,48 @@ const ensureStyles = () => {
 			overflow: auto;
 			z-index: 50;
 			border: 1px solid #e2e8f0;
+			opacity: 0;
+			transform: translateY(-8px);
+			pointer-events: none;
+		}
+
+		storefront-search .storefront-search__dropdown[data-state='opening'] {
+			animation: storefront-search-dropdown-in 180ms ease forwards;
+		}
+
+		storefront-search .storefront-search__dropdown[data-state='open'] {
+			opacity: 1;
+			transform: translateY(0);
+			pointer-events: auto;
+		}
+
+		storefront-search .storefront-search__dropdown[data-state='closing'] {
+			animation: storefront-search-dropdown-out 180ms ease forwards;
+			opacity: 0;
+			transform: translateY(-8px);
+			pointer-events: none;
+		}
+
+		@keyframes storefront-search-dropdown-in {
+			from {
+				opacity: 0;
+				transform: translateY(-8px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		@keyframes storefront-search-dropdown-out {
+			from {
+				opacity: 1;
+				transform: translateY(0);
+			}
+			to {
+				opacity: 0;
+				transform: translateY(-8px);
+			}
 		}
 
 		storefront-search .storefront-search__results {
@@ -233,6 +282,30 @@ const ensureStyles = () => {
 			height: 16px;
 		}
 
+		storefront-search .storefront-search__more {
+			padding: 8px;
+			border-top: 1px solid #e2e8f0;
+		}
+
+		storefront-search .storefront-search__more-link {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 38px;
+			border-radius: 10px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: 600;
+			color: #0f172a;
+			background: #f8fafc;
+			transition: background 0.15s ease;
+		}
+
+		storefront-search .storefront-search__more-link:hover {
+			background: #e2e8f0;
+		}
+
 		storefront-search .storefront-search__status--loading i,
 		storefront-search .storefront-search__status--loading svg {
 			animation: storefront-search-spin 1s linear infinite;
@@ -296,6 +369,9 @@ class StorefrontSearch extends LitElement {
 		items: { type: Array },
 		loading: { type: Boolean },
 		open: { type: Boolean },
+		dropdownVisible: { type: Boolean },
+		dropdownOpening: { type: Boolean },
+		dropdownClosing: { type: Boolean },
 		mobileOpen: { type: Boolean, attribute: 'data-mobile-open', reflect: true }
 	}
 
@@ -305,9 +381,14 @@ class StorefrontSearch extends LitElement {
 		this.items = []
 		this.loading = false
 		this.open = false
+		this.dropdownVisible = false
+		this.dropdownOpening = false
+		this.dropdownClosing = false
 		this.mobileOpen = false
 		this.requestId = 0
 		this.debounceId = null
+		this.dropdownOpenTimer = null
+		this.dropdownHideTimer = null
 		this.viewportMedia = window.matchMedia('(max-width: 768px)')
 		this.handleDocumentClick = this.handleDocumentClick.bind(this)
 		this.handleDocumentKeydown = this.handleDocumentKeydown.bind(this)
@@ -334,6 +415,14 @@ class StorefrontSearch extends LitElement {
 			window.clearTimeout(this.debounceId)
 			this.debounceId = null
 		}
+		if (this.dropdownHideTimer) {
+			window.clearTimeout(this.dropdownHideTimer)
+			this.dropdownHideTimer = null
+		}
+		if (this.dropdownOpenTimer) {
+			window.clearTimeout(this.dropdownOpenTimer)
+			this.dropdownOpenTimer = null
+		}
 		document.removeEventListener('click', this.handleDocumentClick)
 		document.removeEventListener('keydown', this.handleDocumentKeydown)
 		this.viewportMedia.removeEventListener('change', this.handleViewportChange)
@@ -343,6 +432,47 @@ class StorefrontSearch extends LitElement {
 		refreshIcons()
 	}
 
+	setDropdownOpen(nextOpen) {
+		if (nextOpen) {
+			if (this.open && this.dropdownVisible && !this.dropdownClosing) {
+				return
+			}
+
+			if (this.dropdownOpenTimer) {
+				window.clearTimeout(this.dropdownOpenTimer)
+				this.dropdownOpenTimer = null
+			}
+			if (this.dropdownHideTimer) {
+				window.clearTimeout(this.dropdownHideTimer)
+				this.dropdownHideTimer = null
+			}
+			this.open = true
+			this.dropdownVisible = true
+			this.dropdownOpening = true
+			this.dropdownClosing = false
+			this.dropdownOpenTimer = window.setTimeout(() => {
+				this.dropdownOpening = false
+				this.dropdownOpenTimer = null
+			}, DROPDOWN_ANIMATION_MS)
+			return
+		}
+
+		if (!this.dropdownVisible) {
+			this.open = false
+			return
+		}
+
+		this.open = false
+		this.dropdownOpening = false
+		this.dropdownClosing = true
+		if (this.dropdownHideTimer) window.clearTimeout(this.dropdownHideTimer)
+		this.dropdownHideTimer = window.setTimeout(() => {
+			this.dropdownVisible = false
+			this.dropdownClosing = false
+			this.dropdownHideTimer = null
+		}, DROPDOWN_ANIMATION_MS)
+	}
+
 	isMobileView() {
 		return this.viewportMedia.matches
 	}
@@ -350,7 +480,7 @@ class StorefrontSearch extends LitElement {
 	openMobile() {
 		if (!this.isMobileView()) return
 		this.mobileOpen = true
-		this.open = this.loading || this.query.length > 0
+		this.setDropdownOpen(this.loading || this.query.length > 0)
 		window.requestAnimationFrame(() => {
 			const input = this.querySelector('#storefront-search-input')
 			if (input instanceof HTMLInputElement) input.focus()
@@ -359,20 +489,21 @@ class StorefrontSearch extends LitElement {
 
 	closeMobile() {
 		this.mobileOpen = false
-		this.open = false
+		this.setDropdownOpen(false)
 	}
 
 	clearAndCloseMobile() {
 		this.query = ''
 		this.items = []
 		this.loading = false
+		this.setDropdownOpen(false)
 		this.closeMobile()
 	}
 
 	handleViewportChange() {
 		if (this.isMobileView()) return
 		this.mobileOpen = false
-		this.open = false
+		this.setDropdownOpen(false)
 	}
 
 	handleInput(event) {
@@ -388,11 +519,11 @@ class StorefrontSearch extends LitElement {
 		if (!nextQuery) {
 			this.items = []
 			this.loading = false
-			this.open = false
+			this.setDropdownOpen(false)
 			return
 		}
 
-		this.open = true
+		this.setDropdownOpen(true)
 		this.loading = true
 		this.debounceId = window.setTimeout(() => {
 			this.fetchProducts(nextQuery)
@@ -405,7 +536,15 @@ class StorefrontSearch extends LitElement {
 			return
 		}
 		if (!this.query) return
-		this.open = true
+
+		if (!this.loading && this.items.length === 0) {
+			this.loading = true
+			this.setDropdownOpen(true)
+			void this.fetchProducts(this.query)
+			return
+		}
+
+		this.setDropdownOpen(true)
 	}
 
 	handleSubmit(event) {
@@ -417,7 +556,7 @@ class StorefrontSearch extends LitElement {
 	async fetchProducts(term) {
 		const currentRequestId = ++this.requestId
 		try {
-			const response = await tiendu.products.list({ search: term, page: 1, size: 6 })
+			const response = await tiendu.products.list({ search: term, page: 1, size: SEARCH_DROPDOWN_LIMIT })
 			if (currentRequestId !== this.requestId) return
 			this.items = Array.isArray(response?.data) ? response.data : []
 		} catch {
@@ -426,7 +565,7 @@ class StorefrontSearch extends LitElement {
 		} finally {
 			if (currentRequestId !== this.requestId) return
 			this.loading = false
-			this.open = true
+			this.setDropdownOpen(Boolean(this.query))
 		}
 	}
 
@@ -434,7 +573,7 @@ class StorefrontSearch extends LitElement {
 		if (this.isMobileView()) return
 		if (!(event.target instanceof Node)) return
 		if (this.contains(event.target)) return
-		this.open = false
+		this.setDropdownOpen(false)
 	}
 
 	handleDocumentKeydown(event) {
@@ -443,18 +582,15 @@ class StorefrontSearch extends LitElement {
 			this.closeMobile()
 			return
 		}
-		this.open = false
+		this.setDropdownOpen(false)
 	}
 
-	renderStatusLoading() {
-		return html`
-			<li class="storefront-search__item">
-				<div class="storefront-search__status storefront-search__status--loading">
-					<i data-lucide="loader-circle"></i>
-					<span>Buscando...</span>
-				</div>
-			</li>
-		`
+	renderControlIcon() {
+		if (this.loading) {
+			return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="storefront-search__icon--loading" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`
+		}
+
+		return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>`
 	}
 
 	renderStatusEmpty() {
@@ -469,9 +605,15 @@ class StorefrontSearch extends LitElement {
 	}
 
 	renderItem(product) {
+		const searchPageUrl = `/productos?q=${encodeURIComponent(this.query)}`
+		const productUrl = withOriginQuery(
+			`/productos/${product.id}/${urlSafe(product.title || '')}`,
+			{ url: searchPageUrl, title: 'Busqueda' }
+		)
+
 		return html`
 			<li class="storefront-search__item">
-				<a class="storefront-search__item-link" href=${`/productos/${product.id}/${urlSafe(product.title || '')}`}>
+				<a class="storefront-search__item-link" href=${productUrl}>
 					<div class="storefront-search__thumb">
 						${product.coverImage?.url
 							? html`<img src=${product.coverImage.url} alt=${product.coverImage.alt || product.title || 'Producto'} loading="lazy" />`
@@ -486,8 +628,20 @@ class StorefrontSearch extends LitElement {
 		`
 	}
 
+	renderMoreResultsLink() {
+		if (!this.query || this.loading || this.items.length !== SEARCH_DROPDOWN_LIMIT) return nothing
+		return html`
+			<div class="storefront-search__more">
+				<a class="storefront-search__more-link" href=${`/productos?q=${encodeURIComponent(this.query)}`}>
+					Ver mas resultados
+				</a>
+			</div>
+		`
+	}
+
 	render() {
-		const shouldShow = this.open && (this.query.length > 0 || this.loading)
+		const shouldShow = this.dropdownVisible && (this.query.length > 0 || this.loading || this.dropdownClosing)
+		const dropdownState = this.dropdownClosing ? 'closing' : this.dropdownOpening ? 'opening' : 'open'
 		return html`
 			<div class="storefront-search-shell">
 				<button class="storefront-search__mobile-trigger" type="button" aria-label="Abrir busqueda" @click=${this.openMobile}>
@@ -497,7 +651,7 @@ class StorefrontSearch extends LitElement {
 				<form class="storefront-search__form" action="/productos" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
 					<label class="sr-only" for="storefront-search-input">Buscar productos</label>
 					<div class="storefront-search__control">
-						<i data-lucide="search"></i>
+						${this.renderControlIcon()}
 						<input
 							id="storefront-search-input"
 							type="search"
@@ -512,15 +666,17 @@ class StorefrontSearch extends LitElement {
 							<i data-lucide="x"></i>
 						</button>
 					</div>
-					<div class="storefront-search__dropdown" ?hidden=${!shouldShow}>
-						<ul class="storefront-search__results">
-							${this.items.map(product => this.renderItem(product))}
-							${this.loading ? this.renderStatusLoading() : nothing}
-							${!this.loading && this.query && this.items.length === 0
-								? this.renderStatusEmpty()
-								: nothing}
-						</ul>
-					</div>
+					${shouldShow
+						? html`<div class="storefront-search__dropdown" data-state=${dropdownState}>
+							<ul class="storefront-search__results">
+								${this.items.map(product => this.renderItem(product))}
+								${!this.loading && this.query && this.items.length === 0
+									? this.renderStatusEmpty()
+									: nothing}
+							</ul>
+							${this.renderMoreResultsLink()}
+						</div>`
+						: nothing}
 				</form>
 			</div>
 		`

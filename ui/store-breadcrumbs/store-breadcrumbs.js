@@ -62,7 +62,7 @@ class StoreBreadcrumbs extends HTMLElement {
 					<li class="breadcrumbs__item">
 						<a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>
 					</li>
-					<li class="breadcrumbs__separator" aria-hidden="true"><i data-lucide="chevron-right"></i></li>
+					<li class="breadcrumbs__separator" aria-hidden="true"><i data-lucide="chevron-right" width="14" height="14"></i></li>
 				`
 			)
 			.join('')
