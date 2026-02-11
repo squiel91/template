@@ -22,45 +22,24 @@
 		</div>
 		<div class="hero-benefit">
 			<i data-lucide="refresh-cw"></i>
-			<span>Cambios sin vueltas</span>
+			<span>Cambios sencillos</span>
 		</div>
 	</div>
 </header>
 
-<div id="home-category-sections" aria-live="polite"></div>
+<div class="home-sections">
+	<div id="home-category-sections" aria-live="polite"></div>
+	<div id="home-categories-list" aria-live="polite"></div>
 
-<section class="section" aria-labelledby="home-subscribe-title">
-	<div class="subscribe-panel">
-		<div>
-			<h2 id="home-subscribe-title" class="section__title">Suscribite para ahorrar</h2>
-			<p class="subscribe-panel__copy">
-				Recibi novedades, lanzamientos y promociones exclusivas para suscriptores.
-			</p>
+	<section class="section" aria-labelledby="home-blog-title">
+		<div class="section__header">
+			<h2 id="home-blog-title" class="section__title section__title--large">Desde el blog</h2>
+			<a class="section__action" href="/blog">
+				Ver todos <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i>
+			</a>
 		</div>
-		<form id="home-subscribe-form" class="subscribe-panel__form" method="post" data-skip-overlay novalidate>
-			<label class="sr-only" for="home-subscribe-email">Email</label>
-			<input
-				id="home-subscribe-email"
-				type="email"
-				name="email"
-				required
-				autocomplete="email"
-				placeholder="tu@email.com"
-			/>
-			<button type="submit" class="btn btn--primary">Suscribirme</button>
-		</form>
-		<p id="home-subscribe-message" class="subscribe-panel__message" aria-live="polite"></p>
-	</div>
-</section>
-
-<section class="section" aria-labelledby="home-blog-title">
-	<div class="section__header">
-		<h2 id="home-blog-title" class="section__title section__title--large">Desde el blog</h2>
-		<a class="section__action" href="/blog">
-			Ver todos <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i>
-		</a>
-	</div>
-	<div id="home-blog-posts" class="blog-grid" aria-live="polite"></div>
-</section>
+		<div id="home-blog-posts" class="blog-grid" aria-live="polite"></div>
+	</section>
+</div>
 
 <script type="module" src="/index/script.js"></script>

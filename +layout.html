@@ -193,6 +193,10 @@
 			</div>
 		</div>
 		<a href="#contenido" class="skip-link">Saltar al contenido</a>
+
+		<div class="top-banner" role="status" aria-live="polite">
+			<div class="container top-banner__inner">Envío GRATIS en Uruguay para ordenes mayores a $ 2.000</div>
+		</div>
 		
 		<nav class="site-header" aria-label="Navegacion principal">
 			<div class="container site-header__inner">
@@ -259,12 +263,20 @@
 							Una tienda pensada para resolver compras del dia a dia con buen servicio,
 							entregas rapidas y atencion cercana.
 						</p>
-						<ul class="footer-details">
-							<li><strong>Horario:</strong> Lun a Vie 09:00 a 18:00</li>
-							<li><strong>Direccion:</strong> Calle Principal 123, Ciudad</li>
+						<ul class="footer-contact-list">
+							<li>
+								<i data-lucide="phone"></i>
+								<a href="tel:+598099123456">+(598) 099 123 456</a>
+							</li>
+							<li>
+								<i data-lucide="mail"></i>
+								<a href="mailto:contacto@tutienda.uy">contacto@tutienda.uy</a>
+							</li>
+							<li>
+								<i data-lucide="map-pin"></i>
+								<span>Calle Principal 123, Ciudad</span>
+							</li>
 						</ul>
-						<h3>+ Info</h3>
-						<ul id="footer-page-list" class="footer-links" aria-live="polite"></ul>
 					</section>
 
 					<section class="footer-column" aria-labelledby="footer-categories-title">
@@ -272,22 +284,56 @@
 						<ul id="footer-category-list" class="footer-links" aria-live="polite"></ul>
 					</section>
 
-					<section class="footer-column" aria-labelledby="footer-contact-title">
-						<h2 id="footer-contact-title">Contacto y redes</h2>
-						<ul class="footer-links">
-							<li><a href="#" aria-label="Instagram">Instagram</a></li>
-							<li><a href="#" aria-label="Facebook">Facebook</a></li>
-							<li><a href="#" aria-label="TikTok">TikTok</a></li>
-							<li><a href="mailto:contacto@mitienda.com">contacto@mitienda.com</a></li>
-							<li><a href="tel:+59800000000">+598 00 000 000</a></li>
-							<li><a href="https://wa.me/59800000000" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+					<section class="footer-column" aria-labelledby="footer-info-title">
+						<h2 id="footer-info-title">Información Útil</h2>
+						<ul id="footer-page-list" class="footer-links" aria-live="polite"></ul>
+					</section>
+
+					<section class="footer-column" aria-labelledby="footer-news-title">
+						<h2 id="footer-news-title">Mantente Informado</h2>
+						<p>Recibe las últimas novedades y ofertas exclusivas</p>
+						<form class="footer-subscribe-form" method="post" data-skip-overlay novalidate>
+							<label class="sr-only" for="footer-subscribe-email">Tu email</label>
+							<div class="inline-form-control">
+								<span id="footer-subscribe-icon" class="inline-form-control__icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>
+								</span>
+								<input
+									id="footer-subscribe-email"
+									type="email"
+									name="email"
+									autocomplete="email"
+									placeholder="Tu email"
+									class="inline-form-control__input"
+								/>
+								<button type="submit" class="inline-form-control__button">Unirme</button>
+							</div>
+						</form>
+						<ul class="footer-social-links">
+							<li>
+								<a href="#" aria-label="Facebook" title="Facebook"><i data-lucide="facebook"></i></a>
+							</li>
+							<li>
+								<a href="#" aria-label="Instagram" title="Instagram"><i data-lucide="instagram"></i></a>
+							</li>
+							<li>
+								<a href="#" aria-label="YouTube" title="YouTube"><i data-lucide="youtube"></i></a>
+							</li>
+							<li>
+								<a href="#" aria-label="LinkedIn" title="LinkedIn"><i data-lucide="linkedin"></i></a>
+							</li>
+							<li>
+								<a href="#" aria-label="Twitter" title="Twitter"><i data-lucide="twitter"></i></a>
+							</li>
 						</ul>
 					</section>
 				</div>
 
 				<p class="footer-legal">
-					<span id="footer-year"></span> Mi Tienda. Todos los derechos reservados. Hecho con
-					<a href="https://tiendu.uy" target="_blank" rel="noopener noreferrer">Tiendu</a>.
+					&copy; <span id="footer-year"></span> Mi Tienda. Todos los derechos reservados.
+					<br />
+					Tienda co-creada junto a
+					<a class="footer-legal__link" href="https://tiendu.uy" target="_blank" rel="noopener noreferrer">Tiendu</a>.
 				</p>
 			</div>
 		</footer>

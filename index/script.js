@@ -2,13 +2,18 @@
 
 import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
+import '/ui/category-item/category-item.js'
+import '/ui/category-list/category-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { storefrontConfig } from '/shared/storefront-config.js'
 import { withPageLoading } from '/shared/page-loading.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
+import { createCategoryItemElement } from '/shared/category-item-element.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
+
+const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
 
 const renderHomeState = html => {
 	const container = document.getElementById('home-category-sections')
@@ -17,6 +22,35 @@ const renderHomeState = html => {
 		return
 	}
 	container.innerHTML = html
+	refreshIcons()
+}
+
+const renderHomeCategories = categories => {
+	const container = document.getElementById('home-categories-list')
+	if (!container) return
+
+	if (!Array.isArray(categories) || categories.length === 0) {
+		container.innerHTML = ''
+		return
+	}
+
+	container.innerHTML = ''
+	const list = document.createElement('category-list')
+
+	for (const category of categories) {
+		if (!category || !category.id) continue
+		const item = createCategoryItemElement(category, {
+			origin: { url: '/', title: 'Inicio' }
+		})
+		list.appendChild(item)
+	}
+
+	if (list.childElementCount === 0) {
+		container.innerHTML = ''
+		return
+	}
+
+	container.appendChild(list)
 	refreshIcons()
 }
 
@@ -55,16 +89,13 @@ const renderBlogPosts = posts => {
 			const excerpt = escapeHtml(post?.excerpt || 'Leelo completo en nuestro blog.')
 			const href = escapeHtml(`/blog/${post.id}/${urlSafe(post?.title || 'articulo')}`)
 			const coverImage = post?.coverImage?.url
+			const coverImageSrc = escapeHtml(coverImage || FALLBACK_IMAGE_SRC)
 			const dateLabel = escapeHtml(formatDate(post?.createdAt))
 
 			return `
 				<article class="blog-card">
 					<a class="blog-card__media" href="${href}" aria-label="Leer ${title}">
-						${
-							coverImage
-								? `<img src="${escapeHtml(coverImage)}" alt="${title}" loading="lazy" />`
-								: '<div class="blog-card__media-fallback"><i data-lucide="file-text"></i></div>'
-						}
+						<img src="${coverImageSrc}" alt="${title}" loading="lazy" />
 					</a>
 					<div class="blog-card__body">
 						${dateLabel ? `<p class="blog-card__meta">${dateLabel}</p>` : ''}
@@ -77,51 +108,6 @@ const renderBlogPosts = posts => {
 		.join('')
 
 	refreshIcons()
-}
-
-const setSubscribeMessage = (message, tone = 'neutral') => {
-	const messageNode = document.getElementById('home-subscribe-message')
-	if (!messageNode) return
-	messageNode.textContent = message
-	messageNode.setAttribute('data-tone', tone)
-}
-
-const initSubscribeForm = () => {
-	const form = document.getElementById('home-subscribe-form')
-	if (!(form instanceof HTMLFormElement)) return
-
-	form.addEventListener('submit', async event => {
-		event.preventDefault()
-		const formData = new FormData(form)
-		const email = String(formData.get('email') || '').trim()
-
-		if (!email) {
-			setSubscribeMessage('Ingresa un email valido.', 'error')
-			return
-		}
-
-		const submitButton = form.querySelector('button[type="submit"]')
-		if (submitButton instanceof HTMLButtonElement) submitButton.disabled = true
-		setSubscribeMessage('Enviando...', 'neutral')
-
-		try {
-			const response = await tiendu.subscribers.add(email)
-			if (response?.success) {
-				setSubscribeMessage('Listo. Revisa tu email para confirmar la suscripcion.', 'success')
-				form.reset()
-			} else if (response?.errorCode === 'EXISTING_SUBSCRIBER') {
-				setSubscribeMessage('Ese email ya esta suscripto.', 'warning')
-			} else if (response?.errorCode === 'INVALID_EMAIL') {
-				setSubscribeMessage('El email no es valido.', 'error')
-			} else {
-				setSubscribeMessage('No pudimos procesar la suscripcion. Intenta nuevamente.', 'error')
-			}
-		} catch {
-			setSubscribeMessage('No pudimos procesar la suscripcion. Intenta nuevamente.', 'error')
-		} finally {
-			if (submitButton instanceof HTMLButtonElement) submitButton.disabled = false
-		}
-	})
 }
 
 const loadBlogPosts = async () => {
@@ -236,14 +222,16 @@ const renderCategorySections = sections => {
 }
 
 const init = async () => {
-	initSubscribeForm()
 	const blogPostsPromise = loadBlogPosts()
 
 	const configuredIds = Array.isArray(storefrontConfig.homeCategoryIds)
 		? storefrontConfig.homeCategoryIds
 		: []
+	const configuredListIds = Array.isArray(storefrontConfig.homeListCategoryIds)
+		? storefrontConfig.homeListCategoryIds
+		: []
 
-	if (configuredIds.length === 0) {
+	if (configuredIds.length === 0 && configuredListIds.length === 0) {
 		renderHomeState(
 			`<div class="empty-state">
 				<i data-lucide="layout-grid"></i>
@@ -261,30 +249,43 @@ const init = async () => {
 			: categoriesResponse?.data || []
 		const categoryById = new Map(categories.map(category => [Number(category.id), category]))
 
-		const sectionData = await Promise.all(
-			configuredIds.map(async categoryId => {
-				const category = categoryById.get(Number(categoryId))
-				if (!category) return null
+		if (configuredListIds.length > 0) {
+			const listCategories = configuredListIds
+				.map(categoryId => categoryById.get(Number(categoryId)))
+				.filter(Boolean)
+			renderHomeCategories(listCategories)
+		} else {
+			renderHomeCategories([])
+		}
 
-				const response = await tiendu.products.list({
-					categoryId: Number(category.id),
-					includeProductsFromSubcategories: true,
-					page: 1,
-					size: 8
+		if (configuredIds.length === 0) {
+			renderHomeState('')
+		} else {
+			const sectionData = await Promise.all(
+				configuredIds.map(async categoryId => {
+					const category = categoryById.get(Number(categoryId))
+					if (!category) return null
+
+					const response = await tiendu.products.list({
+						categoryId: Number(category.id),
+						includeProductsFromSubcategories: true,
+						page: 1,
+						size: 8
+					})
+
+					return {
+						category,
+						products: Array.isArray(response?.data) ? response.data : []
+					}
 				})
+			)
 
-				return {
-					category,
-					products: Array.isArray(response?.data) ? response.data : []
-				}
-			})
-		)
+			const validSections = sectionData.filter(
+				section => section && Array.isArray(section.products) && section.products.length > 0
+			)
 
-		const validSections = sectionData.filter(
-			section => section && Array.isArray(section.products) && section.products.length > 0
-		)
-
-		renderCategorySections(validSections)
+			renderCategorySections(validSections)
+		}
 	} catch (error) {
 		console.error('[Home] Error loading data:', error)
 		const message = error instanceof Error ? error.message : 'Error inesperado.'

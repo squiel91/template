@@ -10,6 +10,8 @@ import { refreshIcons } from '/shared/icons.js'
 const STYLE_ID = 'storefront-search-lit-styles'
 const DROPDOWN_ANIMATION_MS = 180
 const SEARCH_DROPDOWN_LIMIT = 8
+const SEARCH_MIN_QUERY_LENGTH = 2
+const SEARCH_DEBOUNCE_MS = 1500
 
 const ensureStyles = () => {
 	if (document.getElementById(STYLE_ID)) return
@@ -109,7 +111,6 @@ const ensureStyles = () => {
 			font-size: 14px;
 			font-weight: 600;
 			color: #0f172a;
-			background: transparent;
 			border: none;
 			border-left: 1px solid #cbd5e1;
 			border-radius: 0;
@@ -124,14 +125,13 @@ const ensureStyles = () => {
 		storefront-search .storefront-search__submit:focus-visible {
 			outline: none;
 			color: #1e293b;
-			background: #f8fafc;
+			background: #ffffff;
 			border-left-color: #94a3b8;
 		}
 
 		storefront-search .storefront-search__mobile-close {
 			display: none;
 			padding: 0 10px;
-			background: transparent;
 			border: none;
 			border-left: 1px solid #cbd5e1;
 			border-radius: 0;
@@ -480,7 +480,7 @@ class StorefrontSearch extends LitElement {
 	openMobile() {
 		if (!this.isMobileView()) return
 		this.mobileOpen = true
-		this.setDropdownOpen(this.loading || this.query.length > 0)
+		this.setDropdownOpen(this.items.length > 0)
 		window.requestAnimationFrame(() => {
 			const input = this.querySelector('#storefront-search-input')
 			if (input instanceof HTMLInputElement) input.focus()
@@ -523,11 +523,18 @@ class StorefrontSearch extends LitElement {
 			return
 		}
 
-		this.setDropdownOpen(true)
+		if (nextQuery.length < SEARCH_MIN_QUERY_LENGTH) {
+			this.items = []
+			this.loading = false
+			this.setDropdownOpen(false)
+			return
+		}
+
+		this.setDropdownOpen(this.dropdownVisible || this.items.length > 0)
 		this.loading = true
 		this.debounceId = window.setTimeout(() => {
 			this.fetchProducts(nextQuery)
-		}, 280)
+		}, SEARCH_DEBOUNCE_MS)
 	}
 
 	handleFocus() {
@@ -535,16 +542,19 @@ class StorefrontSearch extends LitElement {
 			this.openMobile()
 			return
 		}
-		if (!this.query) return
+		if (!this.query || this.query.length < SEARCH_MIN_QUERY_LENGTH) {
+			this.setDropdownOpen(false)
+			return
+		}
 
 		if (!this.loading && this.items.length === 0) {
 			this.loading = true
-			this.setDropdownOpen(true)
+			this.setDropdownOpen(false)
 			void this.fetchProducts(this.query)
 			return
 		}
 
-		this.setDropdownOpen(true)
+		this.setDropdownOpen(this.items.length > 0)
 	}
 
 	handleSubmit(event) {
@@ -554,6 +564,13 @@ class StorefrontSearch extends LitElement {
 	}
 
 	async fetchProducts(term) {
+		if (!term || term.length < SEARCH_MIN_QUERY_LENGTH) {
+			this.loading = false
+			this.items = []
+			this.setDropdownOpen(false)
+			return
+		}
+
 		const currentRequestId = ++this.requestId
 		try {
 			const response = await tiendu.products.list({ search: term, page: 1, size: SEARCH_DROPDOWN_LIMIT })
@@ -587,10 +604,10 @@ class StorefrontSearch extends LitElement {
 
 	renderControlIcon() {
 		if (this.loading) {
-			return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="storefront-search__icon--loading" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`
+			return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-form-control__icon storefront-search__icon--loading" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`
 		}
 
-		return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>`
+		return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-form-control__icon" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>`
 	}
 
 	renderStatusEmpty() {
@@ -598,7 +615,7 @@ class StorefrontSearch extends LitElement {
 			<li class="storefront-search__item">
 				<div class="storefront-search__status">
 					<i data-lucide="search-x"></i>
-					<span>Sin resultados</span>
+					<span>No se encontraron productos</span>
 				</div>
 			</li>
 		`
@@ -606,6 +623,7 @@ class StorefrontSearch extends LitElement {
 
 	renderItem(product) {
 		const searchPageUrl = `/productos?q=${encodeURIComponent(this.query)}`
+		const priceLabel = getListingPriceLabel(product)
 		const productUrl = withOriginQuery(
 			`/productos/${product.id}/${urlSafe(product.title || '')}`,
 			{ url: searchPageUrl, title: 'Busqueda' }
@@ -621,7 +639,9 @@ class StorefrontSearch extends LitElement {
 					</div>
 					<div class="storefront-search__meta">
 						<span class="storefront-search__title">${product.title || 'Producto'}</span>
-						<span class="storefront-search__price">${getListingPriceLabel(product)}</span>
+						${priceLabel
+							? html`<span class="storefront-search__price">${priceLabel}</span>`
+							: nothing}
 					</div>
 				</a>
 			</li>
@@ -640,7 +660,11 @@ class StorefrontSearch extends LitElement {
 	}
 
 	render() {
-		const shouldShow = this.dropdownVisible && (this.query.length > 0 || this.loading || this.dropdownClosing)
+		const hasNoResults = !this.loading && this.query.length > 0 && this.items.length === 0
+		const keepPreviousEmptyState =
+			this.loading && this.query.length > 0 && this.items.length === 0 && this.dropdownVisible
+		const shouldShow =
+			this.dropdownVisible && (this.items.length > 0 || hasNoResults || keepPreviousEmptyState || this.dropdownClosing)
 		const dropdownState = this.dropdownClosing ? 'closing' : this.dropdownOpening ? 'opening' : 'open'
 		return html`
 			<div class="storefront-search-shell">
@@ -650,18 +674,19 @@ class StorefrontSearch extends LitElement {
 				<button class="storefront-search__mobile-backdrop" type="button" aria-label="Cerrar busqueda" @click=${this.closeMobile}></button>
 				<form class="storefront-search__form" action="/productos" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
 					<label class="sr-only" for="storefront-search-input">Buscar productos</label>
-					<div class="storefront-search__control">
+					<div class="storefront-search__control inline-form-control">
 						${this.renderControlIcon()}
 						<input
 							id="storefront-search-input"
 							type="search"
 							name="q"
-							placeholder="Buscar productos..."
+							placeholder="Buscar..."
+							class="inline-form-control__input"
 							.value=${this.query}
 							@input=${this.handleInput}
 							@focus=${this.handleFocus}
 						/>
-						<button class="storefront-search__submit" type="submit">Buscar</button>
+						<button class="storefront-search__submit inline-form-control__button" type="submit">Buscar</button>
 						<button class="storefront-search__mobile-close" type="button" aria-label="Limpiar y cerrar busqueda" @click=${this.clearAndCloseMobile}>
 							<i data-lucide="x"></i>
 						</button>
@@ -670,9 +695,7 @@ class StorefrontSearch extends LitElement {
 						? html`<div class="storefront-search__dropdown" data-state=${dropdownState}>
 							<ul class="storefront-search__results">
 								${this.items.map(product => this.renderItem(product))}
-								${!this.loading && this.query && this.items.length === 0
-									? this.renderStatusEmpty()
-									: nothing}
+								${hasNoResults || keepPreviousEmptyState ? this.renderStatusEmpty() : nothing}
 							</ul>
 							${this.renderMoreResultsLink()}
 						</div>`

@@ -6,6 +6,8 @@ import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { renderContentBlocks } from '/shared/content-blocks.js'
 
+const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
+
 const formatDate = value => {
 	if (!value) return ''
 	const date = new Date(value)
@@ -74,13 +76,9 @@ const init = async () => {
 
 		const coverContainer = document.getElementById('blog-post-cover')
 		if (coverContainer) {
-			if (post?.coverImage?.url) {
-				coverContainer.innerHTML = `<img src="${escapeHtml(post.coverImage.url)}" alt="${escapeHtml(title)}" loading="eager" />`
-				coverContainer.style.display = ''
-			} else {
-				coverContainer.innerHTML = ''
-				coverContainer.style.display = 'none'
-			}
+			const coverImageSrc = escapeHtml(post?.coverImage?.url || FALLBACK_IMAGE_SRC)
+			coverContainer.innerHTML = `<img src="${coverImageSrc}" alt="${escapeHtml(title)}" loading="eager" />`
+			coverContainer.style.display = ''
 		}
 
 		const contentContainer = document.getElementById('blog-post-content')

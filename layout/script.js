@@ -3,6 +3,7 @@
 import '/ui/app-button/app-button.js'
 import '/ui/storefront-search/storefront-search.js'
 import '/ui/store-breadcrumbs/store-breadcrumbs.js'
+import '/ui/toast-stack/toast-stack.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { PAGE_READY_EVENT, isPageReady } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
@@ -12,8 +13,28 @@ import { urlSafe } from '/shared/url-safe.js'
 const CART_BUTTON_LOADING_TIMEOUT_MS = 4000
 const PAGE_NAVIGATION_DELAY_MS = 120
 const PAGE_OVERLAY_MAX_WAIT_MS = 3000
+const NEWSLETTER_SUCCESS_MESSAGE =
+	'¡Enviado el email de confirmacion! Subscribite al confirmar tu correo.'
+const NEWSLETTER_INVALID_EMAIL_MESSAGE = 'Ingresa un email valido para suscribirte.'
+const NEWSLETTER_ERROR_MESSAGE = 'No pudimos suscribirte. Intenta nuevamente.'
+const NEWSLETTER_ICON_MAIL =
+	'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>'
+const NEWSLETTER_ICON_LOADER =
+	'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>'
 
 const overlay = document.getElementById('boot-page-overlay')
+
+const ensureToastStack = () => {
+	let toastStack = document.getElementById('global-toast-stack')
+	if (toastStack instanceof HTMLElement) return toastStack
+
+	toastStack = document.createElement('tiendu-toast-stack')
+	toastStack.id = 'global-toast-stack'
+	document.body.appendChild(toastStack)
+	return toastStack
+}
+
+const isValidEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim())
 
 const showOverlay = () => {
 	if (window.__tienduPageOverlay && typeof window.__tienduPageOverlay.show === 'function') {
@@ -47,29 +68,25 @@ const hideOverlay = () => {
 	}
 }
 
-const renderMenuLinks = (targetId, items, emptyText, buildLabel, buildHref) => {
-	const list = document.getElementById(targetId)
-	if (!list) return
-
-	if (!Array.isArray(items) || items.length === 0) {
-		list.innerHTML = `<li><span>${escapeHtml(emptyText)}</span></li>`
-		return
+const setSectionVisibility = (list, isVisible) => {
+	const sideMenuSection = list.closest('.side-menu__section')
+	if (sideMenuSection instanceof HTMLElement) {
+		sideMenuSection.hidden = !isVisible
 	}
 
-	list.innerHTML = items
-		.map(
-			item =>
-				`<li><a href="${escapeHtml(buildHref(item))}">${escapeHtml(buildLabel(item))}</a></li>`
-		)
-		.join('')
+	const footerSection = list.closest('.footer-column')
+	if (footerSection instanceof HTMLElement) {
+		footerSection.hidden = !isVisible
+	}
 }
 
-const renderFooterLinks = (targetId, items, emptyText, buildLabel, buildHref) => {
+const renderMenuLinks = (targetId, items, buildLabel, buildHref) => {
 	const list = document.getElementById(targetId)
 	if (!list) return
 
 	if (!Array.isArray(items) || items.length === 0) {
-		list.innerHTML = `<li><span>${escapeHtml(emptyText)}</span></li>`
+		list.innerHTML = ''
+		setSectionVisibility(list, false)
 		return
 	}
 
@@ -79,6 +96,26 @@ const renderFooterLinks = (targetId, items, emptyText, buildLabel, buildHref) =>
 				`<li><a href="${escapeHtml(buildHref(item))}">${escapeHtml(buildLabel(item))}</a></li>`
 		)
 		.join('')
+	setSectionVisibility(list, true)
+}
+
+const renderFooterLinks = (targetId, items, buildLabel, buildHref) => {
+	const list = document.getElementById(targetId)
+	if (!list) return
+
+	if (!Array.isArray(items) || items.length === 0) {
+		list.innerHTML = ''
+		setSectionVisibility(list, false)
+		return
+	}
+
+	list.innerHTML = items
+		.map(
+			item =>
+				`<li><a href="${escapeHtml(buildHref(item))}">${escapeHtml(buildLabel(item))}</a></li>`
+		)
+		.join('')
+	setSectionVisibility(list, true)
 }
 
 const initMenuData = async () => {
@@ -91,14 +128,12 @@ const initMenuData = async () => {
 		renderMenuLinks(
 			'category-list',
 			categories,
-			'Sin categorias disponibles',
 			category => category.name,
 			category => `/categorias/${category.id}/${urlSafe(category.name)}`
 		)
 		renderMenuLinks(
 			'page-list',
 			pages,
-			'Sin paginas disponibles',
 			page => page.title || 'Pagina',
 			page => `/paginas/${page.id}/${urlSafe(page.title || 'pagina')}`
 		)
@@ -106,34 +141,20 @@ const initMenuData = async () => {
 		renderFooterLinks(
 			'footer-category-list',
 			categories,
-			'Sin categorias disponibles',
 			category => category.name,
 			category => `/categorias/${category.id}/${urlSafe(category.name)}`
 		)
 		renderFooterLinks(
 			'footer-page-list',
 			pages,
-			'Sin paginas disponibles',
 			page => page.title || 'Pagina',
 			page => `/paginas/${page.id}/${urlSafe(page.title || 'pagina')}`
 		)
 	} catch {
-		renderMenuLinks('category-list', [], 'No se pudieron cargar categorias', () => '', () => '#')
-		renderMenuLinks('page-list', [], 'No se pudieron cargar paginas', () => '', () => '#')
-		renderFooterLinks(
-			'footer-category-list',
-			[],
-			'No se pudieron cargar categorias',
-			() => '',
-			() => '#'
-		)
-		renderFooterLinks(
-			'footer-page-list',
-			[],
-			'No se pudieron cargar paginas',
-			() => '',
-			() => '#'
-		)
+		renderMenuLinks('category-list', [], () => '', () => '#')
+		renderMenuLinks('page-list', [], () => '', () => '#')
+		renderFooterLinks('footer-category-list', [], () => '', () => '#')
+		renderFooterLinks('footer-page-list', [], () => '', () => '#')
 	}
 
 	refreshIcons()
@@ -142,6 +163,63 @@ const initMenuData = async () => {
 const initFooter = () => {
 	const yearNode = document.getElementById('footer-year')
 	if (yearNode) yearNode.textContent = String(new Date().getFullYear())
+}
+
+const initNewsletterSubscription = () => {
+	const form = document.querySelector('.footer-subscribe-form')
+	if (!(form instanceof HTMLFormElement)) return
+
+	const emailInput = form.querySelector('input[type="email"]')
+	const submitButton = form.querySelector('button[type="submit"]')
+	const iconNode = form.querySelector('#footer-subscribe-icon')
+	if (
+		!(emailInput instanceof HTMLInputElement) ||
+		!(submitButton instanceof HTMLButtonElement) ||
+		!(iconNode instanceof HTMLElement)
+	) {
+		return
+	}
+
+	const toastStack = ensureToastStack()
+	let hasSubscribed = false
+
+	const setIconLoading = isLoading => {
+		iconNode.innerHTML = isLoading ? NEWSLETTER_ICON_LOADER : NEWSLETTER_ICON_MAIL
+		iconNode.classList.toggle('inline-form-control__icon--loading', isLoading)
+	}
+
+	const setSubmitting = isSubmitting => {
+		emailInput.disabled = isSubmitting || hasSubscribed
+		submitButton.disabled = isSubmitting || hasSubscribed
+		setIconLoading(isSubmitting)
+	}
+
+	form.addEventListener('submit', async event => {
+		event.preventDefault()
+
+		const email = emailInput.value.trim()
+		if (!isValidEmail(email)) {
+			if (toastStack && typeof toastStack.showError === 'function') {
+				toastStack.showError(NEWSLETTER_INVALID_EMAIL_MESSAGE, 5000)
+			}
+			return
+		}
+
+		setSubmitting(true)
+		try {
+			await tiendu.subscribers.add(email)
+			hasSubscribed = true
+			if (toastStack && typeof toastStack.showSuccess === 'function') {
+				toastStack.showSuccess(NEWSLETTER_SUCCESS_MESSAGE, 5000)
+			}
+		} catch {
+			if (toastStack && typeof toastStack.showError === 'function') {
+				toastStack.showError(NEWSLETTER_ERROR_MESSAGE, 5000)
+			}
+		} finally {
+			setSubmitting(false)
+		}
+	})
 }
 
 const initSideMenu = () => {
@@ -303,6 +381,7 @@ const initPageTransitionOverlay = () => {
 initMenuData()
 initSideMenu()
 initFooter()
+initNewsletterSubscription()
 initCartButton()
 initPageTransitionOverlay()
 refreshIcons()

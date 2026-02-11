@@ -66,6 +66,46 @@ const ensureStyles = () => {
 			padding: 0;
 		}
 
+		.tiendu-carousel__action-surface {
+			width: 40px;
+			height: 40px;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.96);
+			color: #0f172a;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+			transition: background-color 0.15s ease, box-shadow 0.15s ease;
+		}
+
+		.tiendu-carousel__open-indicator {
+			position: absolute;
+			top: 0.75rem;
+			right: 0.75rem;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+			pointer-events: none;
+		}
+
+		.tiendu-carousel__open-indicator svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.tiendu-carousel__viewport:hover .tiendu-carousel__open-indicator,
+		.tiendu-carousel__viewport:focus-within .tiendu-carousel__open-indicator {
+			opacity: 1;
+		}
+
+		.tiendu-carousel__open[disabled] {
+			pointer-events: none;
+		}
+
+		.tiendu-carousel__open[disabled] .tiendu-carousel__open-indicator {
+			display: none;
+		}
+
 		.tiendu-carousel__nav[hidden],
 		.tiendu-carousel__thumbs[hidden] {
 			display: none !important;
@@ -75,21 +115,14 @@ const ensureStyles = () => {
 			position: absolute;
 			top: 50%;
 			transform: translateY(-50%);
-			width: 38px;
-			height: 38px;
-			border-radius: 999px;
-			border: 1px solid rgba(148, 163, 184, 0.5);
-			background: rgba(255, 255, 255, 0.88);
-			color: #0f172a;
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			backdrop-filter: blur(2px);
-			transition: all 0.15s ease;
+			border: none;
+			padding: 0;
+			cursor: pointer;
 		}
 
-		.tiendu-carousel__nav:hover {
+		.tiendu-carousel__nav:hover:not(:disabled) {
 			background: rgba(255, 255, 255, 1);
+			box-shadow: 0 6px 14px rgba(15, 23, 42, 0.16);
 		}
 
 		.tiendu-carousel__nav:disabled {
@@ -102,8 +135,8 @@ const ensureStyles = () => {
 		}
 
 		.tiendu-carousel__nav svg {
-			width: 16px;
-			height: 16px;
+			width: 18px;
+			height: 18px;
 		}
 
 		.tiendu-carousel__nav--prev {
@@ -144,6 +177,12 @@ const ensureStyles = () => {
 			height: 100%;
 			object-fit: cover;
 		}
+
+		@media (max-width: 768px) {
+			.tiendu-carousel__thumbs {
+				display: none;
+			}
+		}
 	`
 	document.head.appendChild(style)
 }
@@ -162,7 +201,7 @@ const normalizeImage = image => {
 class TienduImageCarousel extends HTMLElement {
 	constructor() {
 		super()
-		this._images = [{ id: null, url: FALLBACK_IMAGE_SRC, alt: 'Sin imagen' }]
+		this._images = []
 		this._currentIndex = 0
 		this._drag = {
 			active: false,
@@ -171,6 +210,7 @@ class TienduImageCarousel extends HTMLElement {
 			offsetX: 0
 		}
 		this._suppressClick = false
+		this._canOpenLightbox = false
 		this._boundPointerDown = this.handlePointerDown.bind(this)
 		this._boundPointerMove = this.handlePointerMove.bind(this)
 		this._boundPointerEnd = this.handlePointerEnd.bind(this)
@@ -233,7 +273,9 @@ class TienduImageCarousel extends HTMLElement {
 			? images.map(normalizeImage).filter(Boolean)
 			: []
 
-		this._images = normalized.length
+		this._canOpenLightbox = normalized.length > 0
+
+		this._images = this._canOpenLightbox
 			? normalized
 			: [{ id: null, url: FALLBACK_IMAGE_SRC, alt: 'Sin imagen' }]
 		this._currentIndex = this.clampIndex(this._currentIndex)
@@ -330,6 +372,12 @@ class TienduImageCarousel extends HTMLElement {
 	}
 
 	handleOpenClick(event) {
+		if (!this._canOpenLightbox) {
+			event.preventDefault()
+			event.stopPropagation()
+			return
+		}
+
 		if (this._suppressClick) {
 			event.preventDefault()
 			event.stopPropagation()
@@ -363,12 +411,16 @@ class TienduImageCarousel extends HTMLElement {
 				<div class="tiendu-carousel__stage">
 					<div class="tiendu-carousel__viewport" data-role="viewport" data-dragging="false">
 						<div class="tiendu-carousel__track" data-role="track"></div>
-						<button class="tiendu-carousel__open" type="button" data-role="open-lightbox" aria-label="Ampliar imagen"></button>
+						<button class="tiendu-carousel__open" type="button" data-role="open-lightbox" aria-label="Ampliar imagen">
+							<span class="tiendu-carousel__open-indicator tiendu-carousel__action-surface" aria-hidden="true">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+							</span>
+						</button>
 					</div>
-					<button class="tiendu-carousel__nav tiendu-carousel__nav--prev" type="button" data-role="prev-image" aria-label="Imagen anterior">
+					<button class="tiendu-carousel__nav tiendu-carousel__nav--prev tiendu-carousel__action-surface" type="button" data-role="prev-image" aria-label="Imagen anterior">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
 					</button>
-					<button class="tiendu-carousel__nav tiendu-carousel__nav--next" type="button" data-role="next-image" aria-label="Imagen siguiente">
+					<button class="tiendu-carousel__nav tiendu-carousel__nav--next tiendu-carousel__action-surface" type="button" data-role="next-image" aria-label="Imagen siguiente">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
 					</button>
 				</div>
@@ -452,6 +504,7 @@ class TienduImageCarousel extends HTMLElement {
 		if (this._nextButton) this._nextButton.hidden = !hasMultiple
 		if (this._prevButton) this._prevButton.disabled = !hasMultiple || this._currentIndex === 0
 		if (this._nextButton) this._nextButton.disabled = !hasMultiple || this._currentIndex === this.maxIndex
+		if (this._openButton) this._openButton.disabled = !this._canOpenLightbox
 	}
 
 	syncLightbox() {

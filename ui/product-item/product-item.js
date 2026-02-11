@@ -9,6 +9,7 @@ const STYLE_ID = 'product-item-lit-styles'
 const CART_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2h3l2.68 12.39a2 2 0 0 0 1.95 1.61h7.72a2 2 0 0 0 1.95-1.57L22 7H6"></path></svg>`
 const SPINNER_ICON = html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="product-item__spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
 const QUICK_ACTION_LOADING_TIMEOUT_MS = 3000
+const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
 
 const ensureStyles = () => {
 	if (document.getElementById(STYLE_ID)) return
@@ -155,7 +156,7 @@ const ensureStyles = () => {
 		}
 
 		.product-item__compare {
-			font-size: 13px;
+			font-size: 15px;
 			color: #94a3b8;
 			text-decoration: line-through;
 			font-weight: 500;
@@ -288,11 +289,13 @@ class ProductItem extends LitElement {
 		return nothing
 	}
 
-	render() {
-		if (!this.title || !this.price) return nothing
+		render() {
+		if (!this.title) return nothing
 
 		const href = this.url || `/productos/${this.productId}`
-		const alt = this.imageAlt || this.title
+		const hasImage = Boolean(this.imageUrl)
+		const imageSrc = this.imageUrl || FALLBACK_IMAGE_SRC
+		const alt = hasImage ? this.imageAlt || this.title : 'Sin imagen'
 		const averageRating = Number.isFinite(this.averageRating)
 			? this.averageRating
 			: 0
@@ -304,9 +307,7 @@ class ProductItem extends LitElement {
 		return html`
 			<a href=${href} class=${linkClass}>
 				<div class="product-item__media">
-					${this.imageUrl
-						? html`<img src=${this.imageUrl} alt=${alt} loading="lazy" />`
-						: nothing}
+					<img src=${imageSrc} alt=${alt} loading="lazy" />
 					${this.renderQuickAction()}
 				</div>
 				<div class="product-item__meta">
@@ -315,12 +316,14 @@ class ProductItem extends LitElement {
 						<rating-stars value=${String(averageRating)} size="18"></rating-stars>
 						<span>${averageRating.toFixed(1)} (${reviewsQuantity})</span>
 					</div>
-					<div class="product-item__price-line">
-						<span class="product-item__price">${this.price}</span>
-						${this.comparePrice
-							? html`<span class="product-item__compare">${this.comparePrice}</span>`
-							: nothing}
-					</div>
+					${this.price
+						? html`<div class="product-item__price-line">
+								<span class="product-item__price">${this.price}</span>
+								${this.comparePrice
+									? html`<span class="product-item__compare">${this.comparePrice}</span>`
+									: nothing}
+						  </div>`
+						: nothing}
 				</div>
 			</a>
 		`

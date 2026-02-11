@@ -10,6 +10,8 @@ import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
 
+const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
+
 const formatDate = value => {
 	if (!value) return ''
 	const date = new Date(value)
@@ -63,17 +65,14 @@ const init = async () => {
 				)
 			)
 			const coverImage = featuredPost?.coverImage?.url
+			const featuredCoverImageSrc = escapeHtml(coverImage || FALLBACK_IMAGE_SRC)
 			const managerName = escapeHtml(featuredPost?.manager?.name || 'Equipo de la tienda')
 			const dateLabel = escapeHtml(formatDate(featuredPost?.createdAt))
 
 			return `
 				<article class="blog-list-item blog-list-item--featured">
 					<a class="blog-list-item__media" href="${href}">
-						${
-							coverImage
-								? `<img src="${escapeHtml(coverImage)}" alt="${title}" loading="lazy" />`
-								: '<div class="blog-card__media-fallback"><i data-lucide="file-text"></i></div>'
-						}
+						<img src="${featuredCoverImageSrc}" alt="${title}" loading="lazy" />
 					</a>
 					<div class="blog-list-item__body">
 						<span class="blog-list-item__tag">Ultimo articulo</span>
@@ -94,18 +93,15 @@ const init = async () => {
 					withOriginQuery(`/blog/${post.id}/${urlSafe(post?.title || 'articulo')}`, origin)
 				)
 				const coverImage = post?.coverImage?.url
+				const postCoverImageSrc = escapeHtml(coverImage || FALLBACK_IMAGE_SRC)
 				const managerName = escapeHtml(post?.manager?.name || 'Equipo de la tienda')
 				const dateLabel = escapeHtml(formatDate(post?.createdAt))
 
 				return `
 					<article class="blog-list-item">
-						<a class="blog-list-item__media" href="${href}">
-							${
-								coverImage
-									? `<img src="${escapeHtml(coverImage)}" alt="${title}" loading="lazy" />`
-									: '<div class="blog-card__media-fallback"><i data-lucide="file-text"></i></div>'
-							}
-						</a>
+					<a class="blog-list-item__media" href="${href}">
+						<img src="${postCoverImageSrc}" alt="${title}" loading="lazy" />
+					</a>
 						<div class="blog-list-item__body">
 							<p class="blog-list-item__meta">${dateLabel}${dateLabel ? ' - ' : ''}${managerName}</p>
 							<h2><a href="${href}">${title}</a></h2>

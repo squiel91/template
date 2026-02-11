@@ -33,12 +33,12 @@ const ensureStyles = () => {
 			height: 100%;
 			display: grid;
 			place-items: center;
-			padding: 1.25rem;
+			padding: 0;
 		}
 
 		.tiendu-lightbox__image {
-			max-width: min(92vw, 980px);
-			max-height: 90vh;
+			max-width: 100vw;
+			max-height: 100vh;
 			object-fit: contain;
 			user-select: none;
 			-webkit-user-drag: none;

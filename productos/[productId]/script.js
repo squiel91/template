@@ -6,6 +6,8 @@ import '/ui/rating-stars/rating-stars.js'
 import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import '/ui/tiendu-image-carousel/tiendu-image-carousel.js'
+import '/ui/quantity-input/quantity-input.js'
+import '/ui/toast-stack/toast-stack.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getPriceDataForVariant } from '/shared/product-pricing.js'
 import { getListingPriceData } from '/shared/product-pricing.js'
@@ -14,6 +16,13 @@ import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
+
+const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899424414'
+
+const hasPurchasablePrice = (product, variant) => {
+	if (variant) return typeof variant?.priceInCents === 'number'
+	return typeof product?.basePriceInCents === 'number'
+}
 
 /**
  * @param {Array<any> | null | undefined} variants
@@ -54,35 +63,6 @@ const buildVariantIndex = variants => {
 		index.set(serializeMap(extractVariantValueMap(variant)), variant)
 	}
 	return index
-}
-
-/**
- * @param {Array<any>} variants
- * @param {Map<number, number>} selection
- */
-const findBestMatchingVariant = (variants, selection) => {
-	let best = null
-	let bestScore = -1
-
-	for (const variant of variants) {
-		const map = extractVariantValueMap(variant)
-		let isCompatible = true
-		let score = 0
-		for (const [attributeId, valueId] of selection.entries()) {
-			if (!map.has(attributeId)) continue
-			if (map.get(attributeId) !== valueId) {
-				isCompatible = false
-				break
-			}
-			score += 1
-		}
-		if (isCompatible && score > bestScore) {
-			best = variant
-			bestScore = score
-		}
-	}
-
-	return best
 }
 
 /**
@@ -231,9 +211,12 @@ const renderProduct = (product, relatedProducts = []) => {
 	if (!container) return
 
 	const variants = normalizeVariants(product.variants)
+	const productAttributes = Array.isArray(product.attributes) ? product.attributes : []
 	const variantIndex = buildVariantIndex(variants)
 	const defaultVariant = variants[0] || null
-	const selectedValues = defaultVariant ? extractVariantValueMap(defaultVariant) : new Map()
+	const requiresVariantSelection = variants.length > 1 && productAttributes.length > 0
+	const selectedValues =
+		requiresVariantSelection || !defaultVariant ? new Map() : extractVariantValueMap(defaultVariant)
 
 	const title = product.title || 'Producto'
 	const description = product.description || ''
@@ -255,6 +238,7 @@ const renderProduct = (product, relatedProducts = []) => {
 	const reviews = Array.isArray(product.reviews) ? product.reviews : []
 	const reviewsQuantity =
 		typeof product.reviewsQuantity === 'number' ? product.reviewsQuantity : reviews.length
+	const reviewsLabel = `${reviewsQuantity} ${reviewsQuantity === 1 ? 'reseña' : 'reseñas'}`
 	const averageRating =
 		typeof product.averageRating === 'number' ? product.averageRating : reviews.length
 			? reviews.reduce((sum, review) => sum + (Number(review?.rating) || 0), 0) /
@@ -336,7 +320,7 @@ const renderProduct = (product, relatedProducts = []) => {
 				}
 				<button type="button" id="go-to-reviews-button" class="product-rating-summary" aria-label="Ver reseñas">
 					<rating-stars value="${Number(averageRating).toFixed(2)}" size="22"></rating-stars>
-					<span>${Number(averageRating || 0).toFixed(1)} (${reviewsQuantity})</span>
+					<span>${Number(averageRating || 0).toFixed(1)} (${reviewsLabel})</span>
 				</button>
 				<div class="product-price-line">
 					<span class="product-price" id="product-price">-</span>
@@ -345,6 +329,7 @@ const renderProduct = (product, relatedProducts = []) => {
 				<div id="variant-selector" class="variant-selector"></div>
 				<div class="stock-note" id="stock-note"></div>
 				<div class="product-actions">
+					<tiendu-quantity-input id="product-quantity-input" min="1" value="1" aria-label="Cantidad"></tiendu-quantity-input>
 					<tiendu-button id="add-to-cart-button" variant="primary" label="Agregar al carrito" loading-label="Agregar al carrito" icon="plus" loading-icon="loader-2" duration="4000"></tiendu-button>
 					<tiendu-button id="share-product-button" variant="secondary" label="Compartir" icon="forward" aria-label="Compartir producto"></tiendu-button>
 				</div>
@@ -359,16 +344,21 @@ const renderProduct = (product, relatedProducts = []) => {
 			</div>
 			${
 				hasDescription
-					? `<p id="product-description-text" class="product-description" data-full="${escapeHtml(descriptionText)}">${escapeHtml(
+					? `<div id="product-description-wrap" class="product-description-wrap ${
+							hasLongDescription ? 'product-description-wrap--collapsible is-collapsed' : ''
+						}">
+						<p id="product-description-text" class="product-description" data-full="${escapeHtml(descriptionText)}">${escapeHtml(descriptionText)}</p>
+						${
 							hasLongDescription
-								? `${descriptionText.slice(0, descriptionPreviewLength).trimEnd()}...`
-								: descriptionText
-						)}</p>`
+								? '<div id="product-description-fade" class="product-description-fade" aria-hidden="true"></div>'
+								: ''
+						}
+					</div>`
 					: ''
 			}
 			${
 				hasLongDescription && hasDescription
-					? '<button type="button" id="description-toggle" class="description-toggle">Ver mas</button>'
+					? '<button type="button" id="description-toggle" class="description-toggle"><span id="description-toggle-label">Ver mas</span><i data-lucide="chevron-down"></i></button>'
 					: ''
 			}
 			${hasSpecifications ? '<dl class="product-specs" id="product-specs"></dl>' : ''}
@@ -386,7 +376,7 @@ const renderProduct = (product, relatedProducts = []) => {
 				<div class="reviews-overview__score">
 					<strong>${Number(averageRating || 0).toFixed(1)}</strong>
 					<rating-stars value="${Number(averageRating).toFixed(2)}" size="28"></rating-stars>
-					<span>${reviewsQuantity} ${reviewsQuantity === 1 ? 'resena' : 'reseñas'}</span>
+					<span>${reviewsLabel}</span>
 				</div>
 				<div class="reviews-overview__distribution">
 					${reviewRowsHtml}
@@ -406,6 +396,8 @@ const renderProduct = (product, relatedProducts = []) => {
 		</section>`
 				: ''
 		}
+
+		<tiendu-toast-stack id="product-toast-stack"></tiendu-toast-stack>
 	`
 
 	const breadcrumb = document.getElementById('product-breadcrumbs')
@@ -433,29 +425,105 @@ const renderProduct = (product, relatedProducts = []) => {
 	}
 
 	const variantSelector = document.getElementById('variant-selector')
+	const priceLineNode = container.querySelector('.product-price-line')
 	const priceNode = document.getElementById('product-price')
 	const compareNode = document.getElementById('product-compare')
 	const stockNode = document.getElementById('stock-note')
 	const addToCartButton = document.getElementById('add-to-cart-button')
+	const quantityInput = document.getElementById('product-quantity-input')
+	const toastStack = document.getElementById('product-toast-stack')
 	const goToReviewsButton = document.getElementById('go-to-reviews-button')
 	const shareProductButton = document.getElementById('share-product-button')
 	const descriptionToggle = document.getElementById('description-toggle')
 	const descriptionNode = document.getElementById('product-description-text')
+	const descriptionWrap = document.getElementById('product-description-wrap')
+	const descriptionFade = document.getElementById('product-description-fade')
+	const descriptionToggleLabel = document.getElementById('description-toggle-label')
 	let isDescriptionExpanded = false
 	/** @type {Array<HTMLButtonElement>} */
 	let variantOptionButtons = []
 	/** @type {Array<any>} */
 	let variantSelects = []
 
-	let currentVariant = defaultVariant
+	let currentVariant = requiresVariantSelection ? null : defaultVariant
+	let quantity = 1
+
+	const getVariantMaxQuantity = () => {
+		const stock = currentVariant?.stock
+		if (typeof stock !== 'number') return null
+		if (stock <= 0) return 0
+		return Math.floor(stock)
+	}
+
+	const clampQuantity = value => {
+		const numericValue = Number(value)
+		const normalizedValue = Number.isFinite(numericValue) ? Math.floor(numericValue) : 1
+		const maxQuantity = getVariantMaxQuantity()
+		if (typeof maxQuantity === 'number' && maxQuantity > 0) {
+			return Math.max(1, Math.min(maxQuantity, normalizedValue))
+		}
+		return Math.max(1, normalizedValue)
+	}
+
+	const syncQuantityUi = () => {
+		const hasPrice = hasPurchasablePrice(product, currentVariant)
+		const maxQuantity = getVariantMaxQuantity()
+		const hasStock = typeof maxQuantity !== 'number' || maxQuantity > 0
+		const shouldEnable = hasPrice && hasStock
+
+		if (quantityInput instanceof HTMLElement) {
+			quantityInput.hidden = !hasPrice
+		}
+
+		quantity = clampQuantity(quantity)
+
+		if (quantityInput && typeof quantityInput.setMin === 'function') {
+			quantityInput.setMin(1)
+		}
+
+		if (quantityInput && typeof quantityInput.setMax === 'function') {
+			quantityInput.setMax(typeof maxQuantity === 'number' && maxQuantity > 0 ? maxQuantity : null)
+		}
+
+		if (quantityInput && typeof quantityInput.setDisabled === 'function') {
+			quantityInput.setDisabled(!shouldEnable)
+		}
+
+		if (quantityInput && typeof quantityInput.setValue === 'function') {
+			quantityInput.setValue(quantity)
+		}
+
+		if (quantityInput && typeof quantityInput.getValue === 'function') {
+			quantity = clampQuantity(quantityInput.getValue())
+		}
+	}
+
+	const isVariantSelectionComplete = () => {
+		if (!requiresVariantSelection) return true
+		return productAttributes.every(attribute => selectedValues.has(Number(attribute.id)))
+	}
 
 	const updatePrice = () => {
 		const priceData = getPriceDataForVariant(product, currentVariant)
-		if (priceNode) priceNode.textContent = priceData.label
+		const hasPrice = hasPurchasablePrice(product, currentVariant)
+
+		if (priceLineNode) {
+			priceLineNode.hidden = !hasPrice
+		}
+
+		if (priceNode) {
+			priceNode.textContent = hasPrice ? priceData.label : ''
+		}
 		if (compareNode) {
-			compareNode.textContent = priceData.compareLabel || ''
+			compareNode.textContent = hasPrice ? priceData.compareLabel || '' : ''
 		}
 		if (stockNode) {
+			if (requiresVariantSelection && !currentVariant) {
+				stockNode.textContent = 'Selecciona una variante para ver stock'
+				stockNode.style.color = '#64748b'
+				return priceData
+			}
+
 			const stock = currentVariant?.stock
 			if (typeof stock === 'number') {
 				if (stock === 0) {
@@ -470,19 +538,74 @@ const renderProduct = (product, relatedProducts = []) => {
 				stockNode.style.color = '#64748b'
 			}
 		}
+		return priceData
+	}
+
+	const updateAddToCartAction = () => {
+		if (!addToCartButton) return
+
+		if (requiresVariantSelection && !currentVariant) {
+			addToCartButton.setAttribute('label', 'Agregar al carrito')
+			addToCartButton.setAttribute('loading-label', 'Agregar al carrito')
+			addToCartButton.setAttribute('icon', 'plus')
+			addToCartButton.setAttribute('aria-label', 'Agregar al carrito')
+			if (typeof addToCartButton.setDisabled === 'function') {
+				addToCartButton.setDisabled(false)
+			} else {
+				addToCartButton.removeAttribute('disabled')
+			}
+			syncQuantityUi()
+			return
+		}
+
+		const hasPrice = hasPurchasablePrice(product, currentVariant)
+		if (!hasPrice) {
+			addToCartButton.setAttribute('label', 'Consultar precio')
+			addToCartButton.setAttribute('loading-label', 'Consultar precio')
+			addToCartButton.setAttribute('icon', 'message-square')
+			addToCartButton.setAttribute('aria-label', 'Consultar precio')
+			if (typeof addToCartButton.setDisabled === 'function') {
+				addToCartButton.setDisabled(false)
+			} else {
+				addToCartButton.removeAttribute('disabled')
+			}
+			syncQuantityUi()
+			return
+		}
+
+		addToCartButton.setAttribute('label', 'Agregar al carrito')
+		addToCartButton.setAttribute('loading-label', 'Agregar al carrito')
+		addToCartButton.setAttribute('icon', 'plus')
+		addToCartButton.setAttribute('aria-label', 'Agregar al carrito')
+
+		const unavailable = !currentVariant || currentVariant.stock === 0
+		if (typeof addToCartButton.setDisabled === 'function') {
+			addToCartButton.setDisabled(unavailable)
+		} else if (unavailable) {
+			addToCartButton.setAttribute('disabled', '')
+		} else {
+			addToCartButton.removeAttribute('disabled')
+		}
+
+		syncQuantityUi()
+	}
+
+	const showVariantSelectionWarning = () => {
+		if (toastStack && typeof toastStack.showWarning === 'function') {
+			toastStack.showWarning('Elegí una variantes antes de agregarlo al carrito', 5000)
+		}
 	}
 
 	const renderVariantSelector = () => {
 		if (!variantSelector) return
-		const attributes = Array.isArray(product.attributes) ? product.attributes : []
-		if (attributes.length === 0 || variants.length === 0) {
+		if (productAttributes.length === 0 || variants.length === 0) {
 			variantSelector.style.display = 'none'
 			return
 		}
 
 		if (variantSelector.childElementCount > 0) return
 
-		const sectionHtml = attributes
+		const sectionHtml = productAttributes
 			.map(attribute => {
 				if (attribute.displayType === 'dropdown') {
 					return `<fieldset class="variant-group">
@@ -517,8 +640,10 @@ const renderProduct = (product, relatedProducts = []) => {
 
 		for (const select of variantSelects) {
 			const attributeId = Number(select.dataset.attributeId)
-			const attribute = attributes.find(item => Number(item.id) === attributeId)
+			const attribute = productAttributes.find(item => Number(item.id) === attributeId)
 			if (!attribute || !Array.isArray(attribute.values)) continue
+
+			select.setAttribute('placeholder', 'Selecciona una opción')
 
 			select.options = attribute.values.map(value => ({
 				id: value.id,
@@ -531,7 +656,6 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	const updateVariantSelectorState = () => {
 		if (!variantSelector) return
-		const attributes = Array.isArray(product.attributes) ? product.attributes : []
 
 		for (const button of variantOptionButtons) {
 			if (!(button instanceof HTMLButtonElement)) continue
@@ -547,7 +671,7 @@ const renderProduct = (product, relatedProducts = []) => {
 
 		for (const select of variantSelects) {
 			const attributeId = Number(select.dataset.attributeId)
-			const attribute = attributes.find(item => Number(item.id) === attributeId)
+			const attribute = productAttributes.find(item => Number(item.id) === attributeId)
 			if (!attribute || !Array.isArray(attribute.values)) continue
 
 			const selectedValueId = selectedValues.get(attributeId)
@@ -561,27 +685,16 @@ const renderProduct = (product, relatedProducts = []) => {
 	}
 
 	const syncVariantFromSelection = () => {
-		const selectedKey = serializeMap(selectedValues)
-		currentVariant = variantIndex.get(selectedKey) || findBestMatchingVariant(variants, selectedValues)
-
-		if (currentVariant) {
-			for (const [attributeId, valueId] of extractVariantValueMap(currentVariant).entries()) {
-				selectedValues.set(attributeId, valueId)
-			}
+		if (requiresVariantSelection && !isVariantSelectionComplete()) {
+			currentVariant = null
+		} else {
+			const selectedKey = serializeMap(selectedValues)
+			currentVariant = variantIndex.get(selectedKey) || (requiresVariantSelection ? null : defaultVariant)
 		}
 
 		updatePrice()
 		updateVariantSelectorState()
-		const unavailable = !currentVariant || currentVariant.stock === 0
-		if (addToCartButton) {
-			if (typeof addToCartButton.setDisabled === 'function') {
-				addToCartButton.setDisabled(unavailable)
-			} else if (unavailable) {
-				addToCartButton.setAttribute('disabled', '')
-			} else {
-				addToCartButton.removeAttribute('disabled')
-			}
-		}
+		updateAddToCartAction()
 
 		if (
 			imageCarousel &&
@@ -616,12 +729,21 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	if (addToCartButton) {
 		addToCartButton.addEventListener('app-click', () => {
+			if (requiresVariantSelection && !currentVariant) {
+				showVariantSelectionWarning()
+				return
+			}
+
+			if (!hasPurchasablePrice(product, currentVariant)) {
+				window.open(PRICE_CONTACT_WHATSAPP_URL, '_blank', 'noopener,noreferrer')
+				return
+			}
 			if (!currentVariant || currentVariant.stock === 0) return
 			if (typeof addToCartButton.startLoading === 'function') {
 				addToCartButton.startLoading()
 			}
 			tiendu.cart
-				.addProductVariant(currentVariant, 1, () => {
+				.addProductVariant(currentVariant, clampQuantity(quantity), () => {
 					if (typeof addToCartButton.stopLoading === 'function') {
 						addToCartButton.stopLoading()
 					}
@@ -631,6 +753,15 @@ const renderProduct = (product, relatedProducts = []) => {
 						addToCartButton.stopLoading()
 					}
 				})
+		})
+	}
+
+	if (quantityInput instanceof HTMLElement) {
+		quantityInput.addEventListener('quantity-change', event => {
+			quantity = clampQuantity(Number(event?.detail?.value))
+			if (typeof quantityInput.setValue === 'function') {
+				quantityInput.setValue(quantity)
+			}
 		})
 	}
 
@@ -671,12 +802,23 @@ const renderProduct = (product, relatedProducts = []) => {
 		descriptionToggle.addEventListener('click', () => {
 			isDescriptionExpanded = !isDescriptionExpanded
 			if (isDescriptionExpanded) {
-				descriptionNode.textContent = descriptionText
-				descriptionToggle.textContent = 'Ver menos'
+				if (descriptionToggleLabel) {
+					descriptionToggleLabel.textContent = 'Ver menos'
+				}
+				descriptionToggle.classList.add('is-expanded')
+				descriptionWrap?.classList.remove('is-collapsed')
+				descriptionWrap?.classList.add('is-expanded')
+				descriptionFade?.setAttribute('hidden', 'true')
 			} else {
-				descriptionNode.textContent = `${descriptionText.slice(0, descriptionPreviewLength).trimEnd()}...`
-				descriptionToggle.textContent = 'Ver mas'
+				if (descriptionToggleLabel) {
+					descriptionToggleLabel.textContent = 'Ver mas'
+				}
+				descriptionToggle.classList.remove('is-expanded')
+				descriptionWrap?.classList.remove('is-expanded')
+				descriptionWrap?.classList.add('is-collapsed')
+				descriptionFade?.removeAttribute('hidden')
 			}
+			refreshIcons()
 		})
 	}
 

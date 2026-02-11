@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 export const formatCurrency = value => {
-	if (typeof value !== 'number') return 'Precio no disponible'
+	if (typeof value !== 'number') return ''
 	return new Intl.NumberFormat('es-AR', {
 		style: 'currency',
 		currency: 'ARS',

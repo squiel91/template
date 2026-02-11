@@ -8,6 +8,8 @@ const toSafeCssColor = value => {
 	return null
 }
 
+const MENU_ANIMATION_MS = 180
+
 class TienduAttributeSelect extends HTMLElement {
 	constructor() {
 		super()
@@ -16,6 +18,8 @@ class TienduAttributeSelect extends HTMLElement {
 		this._valueId = null
 		this._disabledOptionIds = new Set()
 		this._open = false
+		this._closing = false
+		this._closeTimer = null
 		this._boundOutsideClick = this.handleOutsideClick.bind(this)
 	}
 
@@ -26,6 +30,10 @@ class TienduAttributeSelect extends HTMLElement {
 
 	disconnectedCallback() {
 		document.removeEventListener('click', this._boundOutsideClick)
+		if (this._closeTimer) {
+			clearTimeout(this._closeTimer)
+			this._closeTimer = null
+		}
 	}
 
 	set options(value) {
@@ -52,13 +60,37 @@ class TienduAttributeSelect extends HTMLElement {
 	handleOutsideClick(event) {
 		if (!this._open) return
 		if (event.composedPath().includes(this)) return
-		this._open = false
-		this.render()
+		this.closeMenu()
 	}
 
 	toggleOpen() {
-		this._open = !this._open
+		if (this._open) {
+			this.closeMenu()
+			return
+		}
+
+		if (this._closeTimer) {
+			clearTimeout(this._closeTimer)
+			this._closeTimer = null
+		}
+
+		this._closing = false
+		this._open = true
 		this.render()
+	}
+
+	closeMenu() {
+		if ((!this._open && !this._closing) || this._closing) return
+		this._open = false
+		this._closing = true
+		this.render()
+
+		if (this._closeTimer) clearTimeout(this._closeTimer)
+		this._closeTimer = window.setTimeout(() => {
+			this._closing = false
+			this._closeTimer = null
+			this.render()
+		}, MENU_ANIMATION_MS)
 	}
 
 	selectOption(valueId) {
@@ -66,8 +98,7 @@ class TienduAttributeSelect extends HTMLElement {
 		if (!Number.isFinite(normalized)) return
 		if (this._disabledOptionIds.has(normalized)) return
 		this._valueId = normalized
-		this._open = false
-		this.render()
+		this.closeMenu()
 		this.dispatchEvent(
 			new CustomEvent('tiendu-select-change', {
 				bubbles: true,
@@ -89,9 +120,13 @@ class TienduAttributeSelect extends HTMLElement {
 		return ''
 	}
 
-	render() {
+		render() {
+		const isMenuVisible = this._open || this._closing
+		const menuState = this._closing ? 'closing' : 'open'
 		const selectedOption = this.selectedOption
-		const selectedLabel = selectedOption?.label || 'Seleccionar'
+		const isPlaceholder = !selectedOption
+		const placeholder = this.getAttribute('placeholder') || 'Seleccionar'
+		const selectedLabel = selectedOption?.label || placeholder
 		const selectedSwatch = this.renderSwatch(selectedOption)
 
 		this.shadowRoot.innerHTML = `
@@ -149,6 +184,11 @@ class TienduAttributeSelect extends HTMLElement {
 					text-overflow: ellipsis;
 				}
 
+				.label--placeholder {
+					font-weight: 500;
+					color: #64748b;
+				}
+
 				.chevron {
 					width: 16px;
 					height: 16px;
@@ -170,6 +210,50 @@ class TienduAttributeSelect extends HTMLElement {
 					box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
 					max-height: 240px;
 					overflow: auto;
+					transform-origin: top center;
+				}
+
+				.menu[data-state='open'] {
+					opacity: 0;
+					transform: translateY(-8px);
+					animation: attribute-select-menu-in 180ms ease forwards;
+				}
+
+				.menu[data-state='closing'] {
+					opacity: 1;
+					transform: translateY(0);
+					animation: attribute-select-menu-out 180ms ease forwards;
+					pointer-events: none;
+				}
+
+				@keyframes attribute-select-menu-in {
+					from {
+						opacity: 0;
+						transform: translateY(-8px);
+					}
+					to {
+						opacity: 1;
+						transform: translateY(0);
+					}
+				}
+
+				@keyframes attribute-select-menu-out {
+					from {
+						opacity: 1;
+						transform: translateY(0);
+					}
+					to {
+						opacity: 0;
+						transform: translateY(-8px);
+					}
+				}
+
+				@media (prefers-reduced-motion: reduce) {
+					.menu {
+						animation: none;
+						opacity: ${this._open ? '1' : '0'};
+						transform: none;
+					}
 				}
 
 				.option {
@@ -230,13 +314,13 @@ class TienduAttributeSelect extends HTMLElement {
 
 			<button class="trigger" type="button" aria-haspopup="listbox" aria-expanded="${this._open ? 'true' : 'false'}">
 				${selectedSwatch}
-				<span class="label">${selectedLabel}</span>
+				<span class="label ${isPlaceholder ? 'label--placeholder' : ''}">${selectedLabel}</span>
 				<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
 			</button>
 
 			${
-				this._open
-					? `<div class="menu" role="listbox">
+				isMenuVisible
+					? `<div class="menu" data-state="${menuState}" role="listbox">
 						${this._options
 							.map(option => {
 								const optionId = Number(option.id)
