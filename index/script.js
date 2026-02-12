@@ -70,7 +70,7 @@ const renderBlogPosts = posts => {
 	if (!container) return
 
 	if (!Array.isArray(posts) || posts.length === 0) {
-		container.innerHTML = `<div class="empty-state"><i data-lucide="newspaper"></i><span class="empty-state__title">No hay articulos publicados aun.</span></div>`
+		container.innerHTML = `<div class="empty-state"><i data-lucide="newspaper"></i><span class="empty-state__title">No hay artículos publicados aún.</span></div>`
 		refreshIcons()
 		return
 	}
@@ -85,8 +85,8 @@ const renderBlogPosts = posts => {
 
 	container.innerHTML = topPosts
 		.map(post => {
-			const title = escapeHtml(post?.title || 'Articulo')
-			const excerpt = escapeHtml(post?.excerpt || 'Leelo completo en nuestro blog.')
+			const title = escapeHtml(post?.title || 'Artículo')
+			const excerpt = escapeHtml(post?.excerpt || 'Léelo completo en nuestro blog.')
 			const href = escapeHtml(`/blog/${post.id}/${urlSafe(post?.title || 'articulo')}`)
 			const coverImage = post?.coverImage?.url
 			const coverImageSrc = escapeHtml(coverImage || FALLBACK_IMAGE_SRC)
@@ -131,7 +131,7 @@ const renderProductsInContainer = (containerId, products) => {
 		container.innerHTML =
 			`<div class="empty-state">
 				<i data-lucide="package-search"></i>
-				<span class="empty-state__title">No hay productos publicados aun</span>
+				<span class="empty-state__title">No hay productos publicados aún</span>
 			</div>`
 		refreshIcons()
 		return
@@ -185,7 +185,7 @@ const renderCategorySections = sections => {
 		renderHomeState(
 			`<div class="empty-state">
 				<i data-lucide="layout-grid"></i>
-				<span class="empty-state__title">No hay productos para las categorias configuradas.</span>
+				<span class="empty-state__title">No hay productos para las categorías configuradas.</span>
 			</div>`
 		)
 		return
@@ -193,7 +193,7 @@ const renderCategorySections = sections => {
 
 	const html = sections
 		.map(({ category }) => {
-			const categoryName = escapeHtml(category.name || 'Categoria')
+			const categoryName = escapeHtml(category.name || 'Categoría')
 			const categoryHref = escapeHtml(
 				`/categorias/${category.id}/${urlSafe(category.name || 'categoria')}`
 			)
@@ -235,7 +235,7 @@ const init = async () => {
 		renderHomeState(
 			`<div class="empty-state">
 				<i data-lucide="layout-grid"></i>
-				<span class="empty-state__title">No hay categorias configuradas para la portada.</span>
+				<span class="empty-state__title">No hay categorías configuradas para la portada.</span>
 			</div>`
 		)
 		await blogPostsPromise
@@ -292,7 +292,7 @@ const init = async () => {
 		renderHomeState(
 			`<div class="empty-state">
 				<i data-lucide="alert-circle"></i>
-				<span class="empty-state__title">Error al cargar las categorias de portada: ${escapeHtml(message)}</span>
+				<span class="empty-state__title">Error al cargar las categorías de portada: ${escapeHtml(message)}</span>
 			</div>`
 		)
 	} finally {

@@ -146,7 +146,7 @@ export const initPaginatedProductListing = async ({
 			scroller = createInfiniteScroll({
 				container,
 				onLoadMore: loadNextPage,
-				loadingText: 'Cargando mas productos...'
+				loadingText: 'Cargando más productos...'
 			})
 			scroller.start()
 			if (!shouldKeepLoading) scroller.setDone(true)

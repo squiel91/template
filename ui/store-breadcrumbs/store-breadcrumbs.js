@@ -1,14 +1,7 @@
 // @ts-nocheck
 
 import { refreshIcons } from '/shared/icons.js'
-
-const escapeHtml = value =>
-	String(value)
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;')
+import { escapeHtml } from '/shared/sanitize.js'
 
 const parseItemsAttribute = value => {
 	if (!value) return []

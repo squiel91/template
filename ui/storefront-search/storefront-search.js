@@ -495,9 +495,14 @@ class StorefrontSearch extends LitElement {
 	clearAndCloseMobile() {
 		this.query = ''
 		this.items = []
+		this.invalidatePendingRequests()
 		this.loading = false
 		this.setDropdownOpen(false)
 		this.closeMobile()
+	}
+
+	invalidatePendingRequests() {
+		this.requestId += 1
 	}
 
 	handleViewportChange() {
@@ -508,8 +513,12 @@ class StorefrontSearch extends LitElement {
 
 	handleInput(event) {
 		const input = event.target
+		const previousQuery = this.query
 		const nextQuery = input instanceof HTMLInputElement ? input.value.trim() : ''
 		this.query = nextQuery
+		if (nextQuery !== previousQuery) {
+			this.invalidatePendingRequests()
+		}
 
 		if (this.debounceId) {
 			window.clearTimeout(this.debounceId)
@@ -626,7 +635,7 @@ class StorefrontSearch extends LitElement {
 		const priceLabel = getListingPriceLabel(product)
 		const productUrl = withOriginQuery(
 			`/productos/${product.id}/${urlSafe(product.title || '')}`,
-			{ url: searchPageUrl, title: 'Busqueda' }
+			{ url: searchPageUrl, title: 'Búsqueda' }
 		)
 
 		return html`
@@ -653,7 +662,7 @@ class StorefrontSearch extends LitElement {
 		return html`
 			<div class="storefront-search__more">
 				<a class="storefront-search__more-link" href=${`/productos?q=${encodeURIComponent(this.query)}`}>
-					Ver mas resultados
+					Ver más resultados
 				</a>
 			</div>
 		`
@@ -668,10 +677,10 @@ class StorefrontSearch extends LitElement {
 		const dropdownState = this.dropdownClosing ? 'closing' : this.dropdownOpening ? 'opening' : 'open'
 		return html`
 			<div class="storefront-search-shell">
-				<button class="storefront-search__mobile-trigger" type="button" aria-label="Abrir busqueda" @click=${this.openMobile}>
+				<button class="storefront-search__mobile-trigger" type="button" aria-label="Abrir búsqueda" @click=${this.openMobile}>
 					<i data-lucide="search"></i>
 				</button>
-				<button class="storefront-search__mobile-backdrop" type="button" aria-label="Cerrar busqueda" @click=${this.closeMobile}></button>
+				<button class="storefront-search__mobile-backdrop" type="button" aria-label="Cerrar búsqueda" @click=${this.closeMobile}></button>
 				<form class="storefront-search__form" action="/productos" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
 					<label class="sr-only" for="storefront-search-input">Buscar productos</label>
 					<div class="storefront-search__control inline-form-control">
@@ -687,7 +696,7 @@ class StorefrontSearch extends LitElement {
 							@focus=${this.handleFocus}
 						/>
 						<button class="storefront-search__submit inline-form-control__button" type="submit">Buscar</button>
-						<button class="storefront-search__mobile-close" type="button" aria-label="Limpiar y cerrar busqueda" @click=${this.clearAndCloseMobile}>
+						<button class="storefront-search__mobile-close" type="button" aria-label="Limpiar y cerrar búsqueda" @click=${this.clearAndCloseMobile}>
 							<i data-lucide="x"></i>
 						</button>
 					</div>

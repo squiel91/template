@@ -14,9 +14,9 @@ const CART_BUTTON_LOADING_TIMEOUT_MS = 4000
 const PAGE_NAVIGATION_DELAY_MS = 120
 const PAGE_OVERLAY_MAX_WAIT_MS = 3000
 const NEWSLETTER_SUCCESS_MESSAGE =
-	'¡Enviado el email de confirmacion! Subscribite al confirmar tu correo.'
-const NEWSLETTER_INVALID_EMAIL_MESSAGE = 'Ingresa un email valido para suscribirte.'
-const NEWSLETTER_ERROR_MESSAGE = 'No pudimos suscribirte. Intenta nuevamente.'
+	'¡Enviado el email de confirmación! Suscribite al confirmar tu correo.'
+const NEWSLETTER_INVALID_EMAIL_MESSAGE = 'Ingresá un email válido para suscribirte.'
+const NEWSLETTER_ERROR_MESSAGE = 'No pudimos suscribirte. Intentá nuevamente.'
 const NEWSLETTER_ICON_MAIL =
 	'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>'
 const NEWSLETTER_ICON_LOADER =
@@ -80,26 +80,7 @@ const setSectionVisibility = (list, isVisible) => {
 	}
 }
 
-const renderMenuLinks = (targetId, items, buildLabel, buildHref) => {
-	const list = document.getElementById(targetId)
-	if (!list) return
-
-	if (!Array.isArray(items) || items.length === 0) {
-		list.innerHTML = ''
-		setSectionVisibility(list, false)
-		return
-	}
-
-	list.innerHTML = items
-		.map(
-			item =>
-				`<li><a href="${escapeHtml(buildHref(item))}">${escapeHtml(buildLabel(item))}</a></li>`
-		)
-		.join('')
-	setSectionVisibility(list, true)
-}
-
-const renderFooterLinks = (targetId, items, buildLabel, buildHref) => {
+const renderLinkList = (targetId, items, buildLabel, buildHref) => {
 	const list = document.getElementById(targetId)
 	if (!list) return
 
@@ -125,36 +106,36 @@ const initMenuData = async () => {
 			tiendu.pages.list()
 		])
 
-		renderMenuLinks(
+		renderLinkList(
 			'category-list',
 			categories,
 			category => category.name,
 			category => `/categorias/${category.id}/${urlSafe(category.name)}`
 		)
-		renderMenuLinks(
+		renderLinkList(
 			'page-list',
 			pages,
-			page => page.title || 'Pagina',
+			page => page.title || 'Página',
 			page => `/paginas/${page.id}/${urlSafe(page.title || 'pagina')}`
 		)
 
-		renderFooterLinks(
+		renderLinkList(
 			'footer-category-list',
 			categories,
 			category => category.name,
 			category => `/categorias/${category.id}/${urlSafe(category.name)}`
 		)
-		renderFooterLinks(
+		renderLinkList(
 			'footer-page-list',
 			pages,
-			page => page.title || 'Pagina',
+			page => page.title || 'Página',
 			page => `/paginas/${page.id}/${urlSafe(page.title || 'pagina')}`
 		)
 	} catch {
-		renderMenuLinks('category-list', [], () => '', () => '#')
-		renderMenuLinks('page-list', [], () => '', () => '#')
-		renderFooterLinks('footer-category-list', [], () => '', () => '#')
-		renderFooterLinks('footer-page-list', [], () => '', () => '#')
+		renderLinkList('category-list', [], () => '', () => '#')
+		renderLinkList('page-list', [], () => '', () => '#')
+		renderLinkList('footer-category-list', [], () => '', () => '#')
+		renderLinkList('footer-page-list', [], () => '', () => '#')
 	}
 
 	refreshIcons()
@@ -329,6 +310,8 @@ const initCartButton = async () => {
 
 const initPageTransitionOverlay = () => {
 	document.addEventListener('click', event => {
+		if (event.defaultPrevented) return
+		if ('button' in event && event.button !== 0) return
 		const target = event.target instanceof Element ? event.target.closest('a') : null
 		if (!(target instanceof HTMLAnchorElement)) return
 		if (target.target === '_blank' || target.hasAttribute('download')) return

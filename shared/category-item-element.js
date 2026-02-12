@@ -10,7 +10,7 @@ export const createCategoryItemElement = (category, options = {}) => {
 	const linkWithOrigin = withOriginQuery(targetUrl, options.origin)
 
 	item.setAttribute('category-id', String(category.id))
-	item.setAttribute('title', String(category.name || 'Categoria'))
+	item.setAttribute('title', String(category.name || 'Categoría'))
 	item.setAttribute('count', String(Number(category.productCount || 0)))
 	item.setAttribute('url', linkWithOrigin)
 

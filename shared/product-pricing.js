@@ -2,9 +2,9 @@
 
 export const formatCurrency = value => {
 	if (typeof value !== 'number') return ''
-	return new Intl.NumberFormat('es-AR', {
+	return new Intl.NumberFormat('es-UY', {
 		style: 'currency',
-		currency: 'ARS',
+		currency: 'UYU',
 		maximumFractionDigits: 0
 	}).format(value / 100)
 }

@@ -315,7 +315,7 @@ class ProductItem extends LitElement {
 		return html`<span class="product-item__soldout">Agotado</span>`
 	}
 
-		render() {
+	render() {
 		if (!this.title) return nothing
 
 		const href = this.url || `/productos/${this.productId}`
@@ -339,7 +339,7 @@ class ProductItem extends LitElement {
 				</div>
 				<div class="product-item__meta">
 					<h3 class="product-item__title">${this.title}</h3>
-					<div class="product-item__rating-line" aria-label="Calificacion del producto">
+					<div class="product-item__rating-line" aria-label="Calificación del producto">
 						<rating-stars value=${String(averageRating)} size="18"></rating-stars>
 						<span>${averageRating.toFixed(1)} (${reviewsQuantity})</span>
 					</div>

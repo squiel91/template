@@ -1,12 +1,6 @@
 // @ts-nocheck
 
-const toSafeCssColor = value => {
-	const color = String(value || '').trim()
-	if (!color) return null
-	if (/^#([0-9a-fA-F]{3,8})$/.test(color)) return color
-	if (/^[a-zA-Z]+$/.test(color)) return color
-	return null
-}
+import { toSafeCssColor } from '/shared/css-color.js'
 
 const MENU_ANIMATION_MS = 180
 
@@ -120,7 +114,7 @@ class TienduAttributeSelect extends HTMLElement {
 		return ''
 	}
 
-		render() {
+	render() {
 		const isMenuVisible = this._open || this._closing
 		const menuState = this._closing ? 'closing' : 'open'
 		const selectedOption = this.selectedOption

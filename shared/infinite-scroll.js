@@ -7,7 +7,7 @@ export const createInfiniteScroll = ({
 	container,
 	onLoadMore,
 	rootMargin = '360px',
-	loadingText = 'Cargando mas productos...'
+	loadingText = 'Cargando más productos...'
 }) => {
 	if (!(container instanceof HTMLElement)) {
 		return {
@@ -56,7 +56,7 @@ export const createInfiniteScroll = ({
 			}
 		} catch {
 			isDone = true
-			setStatus({ text: 'No pudimos cargar mas productos.' })
+			setStatus({ text: 'No pudimos cargar más productos.' })
 			observer.disconnect()
 		} finally {
 			isLoading = false

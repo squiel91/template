@@ -25,7 +25,7 @@ const init = async () => {
 	const search = url.searchParams.get('q')?.trim() || ''
 	const origin = {
 		url: getCurrentRelativeUrlWithoutOrigin(),
-		title: search ? 'Busqueda' : 'Productos'
+		title: search ? 'Búsqueda' : 'Productos'
 	}
 
 	await initPaginatedProductListing({
@@ -35,7 +35,7 @@ const init = async () => {
 		sortParamName: 'orden',
 		pageSize: PAGE_SIZE,
 		emptyMessage: 'No encontramos productos con ese criterio.',
-		errorPrefix: 'Error al cargar el catalogo',
+		errorPrefix: 'Error al cargar el catálogo',
 		buildOrigin: () => origin,
 		formatResultsCopy: totalLoaded => formatResultsCopy(totalLoaded, search),
 		fetchPage: async ({ page, size, sort }) => {

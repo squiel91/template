@@ -34,7 +34,7 @@ const init = async () => {
 	const origin = getOriginFromCurrentUrl()
 
 	if (!Number.isFinite(categoryId) || categoryId < 1) {
-		renderState('Categoria no valida.')
+		renderState('Categoría no válida.')
 		return
 	}
 
@@ -58,14 +58,14 @@ const init = async () => {
 
 		const categoryDescription = document.getElementById('category-description')
 		if (categoryDescription) {
-			categoryDescription.textContent = category.description || `${category.productCount || 0} productos en esta categoria`
+			categoryDescription.textContent = category.description || `${category.productCount || 0} productos en esta categoría`
 		}
 
 		document.title = `${category.name} | Tienda Genérica`
 
 		const productOrigin = {
 			url: getCurrentRelativeUrlWithoutOrigin(),
-			title: category.name || 'Categoria'
+			title: category.name || 'Categoría'
 		}
 
 		await initPaginatedProductListing({
@@ -73,8 +73,8 @@ const init = async () => {
 			sortSelectId: 'category-sort-select',
 			sortParamName: 'orden',
 			pageSize: PAGE_SIZE,
-			emptyMessage: 'No hay productos publicados en esta categoria.',
-			errorPrefix: 'Error al cargar la categoria',
+			emptyMessage: 'No hay productos publicados en esta categoría.',
+			errorPrefix: 'Error al cargar la categoría',
 			buildOrigin: () => productOrigin,
 			fetchPage: async ({ page, size, sort }) => {
 				const response = await tiendu.products.list({
@@ -90,7 +90,7 @@ const init = async () => {
 		})
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
-		renderState(`Error al cargar la categoria: ${message}`)
+		renderState(`Error al cargar la categoría: ${message}`)
 	}
 }
 

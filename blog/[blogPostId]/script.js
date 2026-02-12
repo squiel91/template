@@ -25,13 +25,13 @@ const init = async () => {
 	const blogPostId = Number(params.blogPostId)
 
 	if (!Number.isFinite(blogPostId) || blogPostId < 1) {
-		renderMessage('Articulo no valido.')
+		renderMessage('Artículo no válido.')
 		return
 	}
 
 	try {
 		const post = await tiendu.blogPosts.get(blogPostId)
-		const title = post?.title || 'Articulo'
+		const title = post?.title || 'Artículo'
 
 		const breadcrumbNode = document.getElementById('blog-post-breadcrumbs')
 		if (breadcrumbNode && typeof breadcrumbNode.setItems === 'function') {
@@ -52,7 +52,7 @@ const init = async () => {
 		refreshIcons()
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
-		renderMessage(`Error al cargar el articulo: ${message}`)
+		renderMessage(`Error al cargar el artículo: ${message}`)
 	}
 }
 

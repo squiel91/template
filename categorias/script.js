@@ -21,7 +21,7 @@ const renderCategories = categories => {
 		renderState(
 			`<div class="empty-state">
 				<i data-lucide="layout-grid"></i>
-				<span class="empty-state__title">No hay categorias disponibles</span>
+				<span class="empty-state__title">No hay categorías disponibles</span>
 			</div>`
 		)
 		return
@@ -29,7 +29,7 @@ const renderCategories = categories => {
 
 	const origin = {
 		url: getCurrentRelativeUrlWithoutOrigin(),
-		title: 'Categorias'
+		title: 'Categorías'
 	}
 
 	const sortedCategories = categories
@@ -62,7 +62,7 @@ const init = async () => {
 		renderState(
 			`<div class="empty-state">
 				<i data-lucide="alert-circle"></i>
-				<span class="empty-state__title">Error al cargar categorias: ${escapeHtml(message)}</span>
+				<span class="empty-state__title">Error al cargar categorías: ${escapeHtml(message)}</span>
 			</div>`
 		)
 	}

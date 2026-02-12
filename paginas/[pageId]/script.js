@@ -25,13 +25,13 @@ const init = async () => {
 	const pageId = Number(params.pageId)
 
 	if (!Number.isFinite(pageId) || pageId < 1) {
-		renderMessage('Pagina no valida.')
+		renderMessage('Página no válida.')
 		return
 	}
 
 	try {
 		const page = await tiendu.pages.get(pageId)
-		const title = page.title || 'Pagina'
+		const title = page.title || 'Página'
 
 		const titleNode = document.getElementById('page-title')
 		if (titleNode) titleNode.textContent = title
@@ -48,7 +48,7 @@ const init = async () => {
 		renderContentBlocks(container, page.content)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
-		renderMessage(`Error al cargar la pagina: ${message}`)
+		renderMessage(`Error al cargar la página: ${message}`)
 	}
 }
 

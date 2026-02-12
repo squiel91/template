@@ -36,7 +36,7 @@ const init = async () => {
 
 		if (!Array.isArray(blogPosts) || blogPosts.length === 0) {
 			renderState(
-				`<div class="empty-state"><i data-lucide="newspaper"></i><span class="empty-state__title">Todavia no hay articulos en el blog.</span></div>`
+				`<div class="empty-state"><i data-lucide="newspaper"></i><span class="empty-state__title">Todavía no hay artículos en el blog.</span></div>`
 			)
 			return
 		}
@@ -56,7 +56,7 @@ const init = async () => {
 
 		const featuredHtml = (() => {
 			if (!featuredPost) return ''
-			const title = escapeHtml(featuredPost?.title || 'Articulo')
+			const title = escapeHtml(featuredPost?.title || 'Artículo')
 			const excerpt = escapeHtml(featuredPost?.excerpt || '')
 			const href = escapeHtml(
 				withOriginQuery(
@@ -75,11 +75,11 @@ const init = async () => {
 						<img src="${featuredCoverImageSrc}" alt="${title}" loading="lazy" />
 					</a>
 					<div class="blog-list-item__body">
-						<span class="blog-list-item__tag">Ultimo articulo</span>
+						<span class="blog-list-item__tag">Último artículo</span>
 						<p class="blog-list-item__meta">${dateLabel}${dateLabel ? ' - ' : ''}${managerName}</p>
 						<h2><a href="${href}">${title}</a></h2>
 						${excerpt ? `<p>${excerpt}</p>` : ''}
-						<a class="section__action" href="${href}">Leer articulo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
+						<a class="section__action" href="${href}">Leer artículo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
 					</div>
 				</article>
 			`
@@ -87,7 +87,7 @@ const init = async () => {
 
 		const listHtml = remainingPosts
 			.map(post => {
-				const title = escapeHtml(post?.title || 'Articulo')
+				const title = escapeHtml(post?.title || 'Artículo')
 				const excerpt = escapeHtml(post?.excerpt || '')
 				const href = escapeHtml(
 					withOriginQuery(`/blog/${post.id}/${urlSafe(post?.title || 'articulo')}`, origin)
@@ -106,7 +106,7 @@ const init = async () => {
 							<p class="blog-list-item__meta">${dateLabel}${dateLabel ? ' - ' : ''}${managerName}</p>
 							<h2><a href="${href}">${title}</a></h2>
 							${excerpt ? `<p>${excerpt}</p>` : ''}
-							<a class="section__action" href="${href}">Leer articulo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
+							<a class="section__action" href="${href}">Leer artículo <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
 						</div>
 					</article>
 				`

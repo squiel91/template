@@ -195,8 +195,9 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 const trackMetaAddToCart = () => {}
 const trackMetaInitiateCheckout = () => {}
 const trackMetaPurchase = () => {}
+let activeCartOverlayCleanup = null
 
-	const up = baseFetch => {
+const up = baseFetch => {
 	const buildUrl = (url, queryParams) => {
 		if (!queryParams) return url
 		const resolved = new URL(url, window.location.origin)
@@ -391,13 +392,42 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			},
 			open: async onClose => {
 				const shopperSessionToken = await methods.shoppers.getToken()
+				const checkoutOrigin = new URL(baseUrl, window.location.href).origin
+
+				if (typeof activeCartOverlayCleanup === 'function') {
+					activeCartOverlayCleanup()
+					activeCartOverlayCleanup = null
+				}
 
 				const iframe = document.createElement('iframe')
 				iframe.src = `${baseUrl}/stores/${storeId}/embedded-checkout`
 				iframe.id = 'left-iframe'
 				let hasSentToken = false
 				let isIframeReady = false
+				let isClosed = false
+
+				const isTrustedIframeMessage = event => {
+					if (event.origin !== checkoutOrigin) return false
+					return iframe.contentWindow && event.source === iframe.contentWindow
+				}
+
+				const cleanup = () => {
+					if (isClosed) return
+					isClosed = true
+					window.removeEventListener('message', handleIframeMessage)
+					iframe.onload = null
+					if (iframe.parentNode) {
+						iframe.parentNode.removeChild(iframe)
+					}
+					if (activeCartOverlayCleanup === cleanup) {
+						activeCartOverlayCleanup = null
+					}
+				}
+
+				activeCartOverlayCleanup = cleanup
+
 				const sendTokenToIframe = () => {
+					if (isClosed) return
 					if (hasSentToken) return
 					if (!iframe.contentWindow) {
 						return
@@ -407,19 +437,52 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 							type: 'SHOPPER_SESSION_TOKEN',
 							token: shopperSessionToken || null
 						},
-						baseUrl
+						checkoutOrigin
 					)
 					hasSentToken = true
-					window.removeEventListener('message', handleIframeReady)
 				}
-				const handleIframeReady = event => {
-					if (event.data && event.data.type === 'IFRAME_READY') {
+
+				const handleIframeMessage = event => {
+					if (!isTrustedIframeMessage(event)) return
+					if (event.data?.type === 'IFRAME_READY') {
 						isIframeReady = true
 						sendTokenToIframe()
+						return
+					}
+
+					if (event.data?.type === 'close') {
+						if (onClose && typeof event.data.updatedCartItemsQuantity === 'number') {
+							onClose({
+								updatedCartItemsQuantity: event.data.updatedCartItemsQuantity
+							})
+						}
+						cleanup()
+						return
+					}
+
+					if (event.data?.type !== 'step-changed') return
+					if (
+						!(
+							'totalPriceInCents' in event.data &&
+							typeof event.data.totalPriceInCents === 'number'
+						) ||
+						!(
+							'items' in event.data &&
+							Array.isArray(event.data.items)
+						)
+					) {
+						console.error('Invalid event data', event.data)
+						return
+					}
+					const { totalPriceInCents, items } = event.data
+					if (event.data.step === 'delivery') {
+						trackMetaInitiateCheckout(totalPriceInCents, items)
+					} else if (event.data.step === 'success') {
+						trackMetaPurchase(totalPriceInCents, items)
 					}
 				}
 
-				window.addEventListener('message', handleIframeReady)
+				window.addEventListener('message', handleIframeMessage)
 
 				iframe.style.position = 'fixed'
 				iframe.style.top = '0'
@@ -429,48 +492,12 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				iframe.style.zIndex = '9999'
 				iframe.style.border = 'none'
 
-				function closeIframe() {
-					if (iframe.parentNode) {
-						iframe.parentNode.removeChild(iframe)
-					}
-				}
-
 				iframe.onload = () => {
+					if (isClosed) return
 					if (isIframeReady) {
 						sendTokenToIframe()
 					}
 				}
-
-				window.addEventListener('message', event => {
-					if (event.data?.type === 'close') {
-						if (onClose && typeof event.data.updatedCartItemsQuantity === 'number') {
-							onClose({
-								updatedCartItemsQuantity: event.data.updatedCartItemsQuantity
-							})
-						}
-						closeIframe()
-					} else if (event.data?.type === 'step-changed') {
-						if (
-							!(
-								'totalPriceInCents' in event.data &&
-								typeof event.data.totalPriceInCents === 'number'
-							) ||
-							!(
-								'items' in event.data &&
-								Array.isArray(event.data.items)
-							)
-						) {
-							console.error('Invalid event data', event.data)
-							return
-						}
-						const { totalPriceInCents, items } = event.data
-						if (event.data.step === 'delivery') {
-							trackMetaInitiateCheckout(totalPriceInCents, items)
-						} else if (event.data.step === 'success') {
-							trackMetaPurchase(totalPriceInCents, items)
-						}
-					}
-				})
 
 				document.body.appendChild(iframe)
 

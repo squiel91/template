@@ -16,10 +16,23 @@ import { withPageLoading } from '/shared/page-loading.js'
 import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
+import { toSafeCssColor } from '/shared/css-color.js'
 import { urlSafe } from '/shared/url-safe.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
+import {
+	PRICE_CONTACT_WHATSAPP_URL,
+	buildOutOfStockWhatsAppUrl,
+	hasPurchasablePrice,
+	normalizeVariants,
+	extractVariantValueMap,
+	serializeMap,
+	buildVariantIndex,
+	isValueEnabled,
+	formatRelativeTime,
+	getUnitsSoldCopy,
+	buildGalleryImages
+} from '/productos/[productId]/helpers.js'
 
-const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899424414'
 const PAYMENT_METHOD_LOGOS = [
 	{ src: '/public/payment-methods/mercadopago.svg', alt: 'Mercado Pago' },
 	{ src: '/public/payment-methods/visa.svg', alt: 'Visa' },
@@ -32,148 +45,6 @@ const PAYMENT_METHOD_LOGOS = [
 	{ src: '/public/payment-methods/cabal.svg', alt: 'Cabal' },
 	{ src: '/public/payment-methods/lider.svg', alt: 'Líder' }
 ]
-
-const buildOutOfStockWhatsAppUrl = productTitle => {
-	const message = `¡Hola! Quiero consultarles sobre el producto "${productTitle}" que vi que ya no tienen en stock.`
-	return `${PRICE_CONTACT_WHATSAPP_URL}?text=${encodeURIComponent(message)}`
-}
-
-const hasPurchasablePrice = (product, variant) => {
-	if (variant) return typeof variant?.priceInCents === 'number'
-	return typeof product?.basePriceInCents === 'number'
-}
-
-/**
- * @param {Array<any> | null | undefined} variants
- */
-const normalizeVariants = variants => {
-	if (!Array.isArray(variants)) return []
-	return variants.filter(variant => variant && typeof variant.id === 'number')
-}
-
-/** @param {any} variant */
-const extractVariantValueMap = variant => {
-	/** @type {Map<number, number>} */
-	const selectedMap = new Map()
-	for (const attribute of variant.attributes || []) {
-		const selectedValue = attribute.values?.[0]
-		if (selectedValue?.id) {
-			selectedMap.set(attribute.id, selectedValue.id)
-		}
-	}
-	return selectedMap
-}
-
-/** @param {Map<number, number>} map */
-const serializeMap = map =>
-	Array.from(map.entries())
-		.sort((a, b) => a[0] - b[0])
-		.map(([key, value]) => `${key}:${value}`)
-		.join('|')
-
-/**
- * @param {Array<any>} variants
- * @returns {Map<string, any>}
- */
-const buildVariantIndex = variants => {
-	/** @type {Map<string, any>} */
-	const index = new Map()
-	for (const variant of variants) {
-		index.set(serializeMap(extractVariantValueMap(variant)), variant)
-	}
-	return index
-}
-
-/**
- * @param {Array<any>} variants
- * @param {number} attributeId
- * @param {number} valueId
- * @param {Map<number, number>} selectedValues
- */
-const isValueEnabled = (variants, attributeId, valueId, selectedValues) => {
-	return variants.some(variant => {
-		const map = extractVariantValueMap(variant)
-		if (map.get(attributeId) !== valueId) return false
-
-		for (const [selectedAttrId, selectedValueId] of selectedValues.entries()) {
-			if (selectedAttrId === attributeId) continue
-			if (map.has(selectedAttrId) && map.get(selectedAttrId) !== selectedValueId) {
-				return false
-			}
-		}
-
-		return true
-	})
-}
-
-const formatRelativeTime = value => {
-	if (!value) return 'hace un momento'
-	const date = new Date(value)
-	if (Number.isNaN(date.getTime())) return 'hace un momento'
-
-	const diffMs = Math.max(0, Date.now() - date.getTime())
-	const minutes = Math.floor(diffMs / 60000)
-	const hours = Math.floor(diffMs / 3600000)
-	const days = Math.floor(diffMs / 86400000)
-	const weeks = Math.floor(days / 7)
-	const months = Math.floor(days / 30)
-	const years = Math.floor(days / 365)
-
-	if (minutes < 1) return 'hace un momento'
-	if (minutes < 60) return `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`
-	if (hours < 24) return `hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`
-	if (days < 7) return `hace ${days} ${days === 1 ? 'dia' : 'dias'}`
-	if (weeks < 5) return `hace ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`
-	if (months < 12) return `hace ${months} ${months === 1 ? 'mes' : 'meses'}`
-	return `hace ${years} ${years === 1 ? 'ano' : 'anos'}`
-}
-
-const getUnitsSoldCopy = unitsSold => {
-	if (!Number.isFinite(unitsSold) || unitsSold <= 0) return ''
-	if (unitsSold < 5) return '3 vendidos'
-	if (unitsSold < 10) return 'Más de 5 vendidos'
-	if (unitsSold < 20) return 'Más de 10 vendidos'
-	if (unitsSold < 30) return 'Más de 20 vendidos'
-	return 'Más de 30 vendidos'
-}
-
-const toSafeCssColor = value => {
-	const color = String(value || '').trim()
-	if (!color) return null
-	if (/^#([0-9a-fA-F]{3,8})$/.test(color)) return color
-	if (/^[a-zA-Z]+$/.test(color)) return color
-	return null
-}
-
-const buildGalleryImages = (images, variants, fallbackAlt) => {
-	const result = []
-	const seen = new Set()
-
-	const addImage = image => {
-		if (!image || typeof image.url !== 'string' || !image.url.trim()) return
-		const key =
-			typeof image.id === 'number'
-				? `id:${image.id}`
-				: `url:${image.url.trim()}`
-		if (seen.has(key)) return
-		seen.add(key)
-		result.push({
-			id: typeof image.id === 'number' ? image.id : null,
-			url: image.url,
-			alt: image.alt || fallbackAlt || ''
-		})
-	}
-
-	if (Array.isArray(images)) {
-		for (const image of images) addImage(image)
-	}
-
-	if (Array.isArray(variants)) {
-		for (const variant of variants) addImage(variant?.coverImage)
-	}
-
-	return result
-}
 
 const renderRelatedProducts = products => {
 	const container = document.getElementById('related-products-list')
@@ -290,7 +161,7 @@ const renderProduct = (product, relatedProducts = []) => {
 					`
 				})
 				.join('')
-		: `<div class="empty-state"><i data-lucide="messages-square"></i><span class="empty-state__title">Este producto aun no tiene reseñas.</span></div>`
+		: `<div class="empty-state"><i data-lucide="messages-square"></i><span class="empty-state__title">Este producto aún no tiene reseñas.</span></div>`
 
 	const paymentMethodsHtml = PAYMENT_METHOD_LOGOS.map(
 		method =>
@@ -359,7 +230,7 @@ const renderProduct = (product, relatedProducts = []) => {
 			}
 			${
 				hasLongDescription && hasDescription
-					? '<button type="button" id="description-toggle" class="description-toggle"><span id="description-toggle-label">Ver mas</span><i data-lucide="chevron-down"></i></button>'
+					? '<button type="button" id="description-toggle" class="description-toggle"><span id="description-toggle-label">Ver más</span><i data-lucide="chevron-down"></i></button>'
 					: ''
 			}
 			${hasSpecifications ? '<dl class="product-specs" id="product-specs"></dl>' : ''}
@@ -396,7 +267,7 @@ const renderProduct = (product, relatedProducts = []) => {
 			hasRelatedProducts
 				? `<section id="related-products-section" class="related-products section" aria-labelledby="related-products-title">
 			<div class="section__header">
-				<h2 id="related-products-title" class="section__title section__title--large">Tambien te puede interesar</h2>
+				<h2 id="related-products-title" class="section__title section__title--large">También te puede interesar</h2>
 			</div>
 			<div id="related-products-list" aria-live="polite"></div>
 		</section>`
@@ -647,7 +518,7 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	const showVariantSelectionWarning = () => {
 		if (toastStack && typeof toastStack.showWarning === 'function') {
-			toastStack.showWarning('Elegí una variantes antes de agregarlo al carrito', 5000)
+			toastStack.showWarning('Elegí una variante antes de agregarla al carrito', 5000)
 		}
 	}
 
@@ -884,7 +755,7 @@ const renderProduct = (product, relatedProducts = []) => {
 				descriptionFade?.setAttribute('hidden', 'true')
 			} else {
 				if (descriptionToggleLabel) {
-					descriptionToggleLabel.textContent = 'Ver mas'
+					descriptionToggleLabel.textContent = 'Ver más'
 				}
 				descriptionToggle.classList.remove('is-expanded')
 				descriptionWrap?.classList.remove('is-expanded')
@@ -934,7 +805,7 @@ const init = async () => {
 	)
 	const productId = Number(params.productId)
 	if (!Number.isFinite(productId) || productId < 1) {
-		renderMessage('Producto invalido.')
+		renderMessage('Producto inválido.')
 		return
 	}
 
