@@ -92,6 +92,74 @@ const renderProduct = (product, relatedProducts = []) => {
 	const normalizedRelatedProducts = (Array.isArray(relatedProducts) ? relatedProducts : [])
 		.filter(item => item && Number(item.id) !== Number(product.id))
 		.slice(0, 4)
+
+	const warningContext = Number.isFinite(Number(product?.id))
+		? `[product:${Number(product.id)}]`
+		: '[product:unknown]'
+	const warnInvalidMetadata = (message, payload) => {
+		if (typeof console?.warn !== 'function') return
+		console.warn(`${warningContext} ${message}`, payload)
+	}
+
+	let metadata = null
+	if (product?.metadata && typeof product.metadata === 'object' && !Array.isArray(product.metadata)) {
+		metadata = product.metadata
+	} else if (typeof product?.metadata === 'string') {
+		try {
+			const parsedMetadata = JSON.parse(product.metadata)
+			if (parsedMetadata && typeof parsedMetadata === 'object' && !Array.isArray(parsedMetadata)) {
+				metadata = parsedMetadata
+			} else {
+				warnInvalidMetadata('`metadata` should be an object.', parsedMetadata)
+			}
+		} catch (error) {
+			warnInvalidMetadata('`metadata` string is not valid JSON.', product.metadata)
+		}
+	} else if (product?.metadata != null) {
+		warnInvalidMetadata('`metadata` has an unsupported type.', product.metadata)
+	}
+
+	const normalizeColorsMetadata = rawColors => {
+		if (rawColors == null) return []
+		if (!Array.isArray(rawColors)) {
+			warnInvalidMetadata('`metadata.colors` should be an array.', rawColors)
+			return []
+		}
+
+		return rawColors.reduce((result, item, index) => {
+			if (!item || typeof item !== 'object' || Array.isArray(item)) {
+				warnInvalidMetadata('Invalid color item. Expected object.', {
+					index,
+					item
+				})
+				return result
+			}
+
+			const name = typeof item.name === 'string' ? item.name.trim() : ''
+			const value = typeof item.value === 'string' ? item.value.trim() : ''
+			const safeColor = toSafeCssColor(value)
+
+			if (!name || !value || !safeColor) {
+				warnInvalidMetadata('Invalid color item. Expected non-empty `name` and valid css `value`.', {
+					index,
+					item
+				})
+				return result
+			}
+
+			result.push({ name, value: safeColor })
+			return result
+		}, [])
+	}
+
+	const colorsMetadata = normalizeColorsMetadata(metadata?.colors)
+	const requiresMetadataColorSelection = colorsMetadata.length > 0
+	const metadataColorOptions = colorsMetadata.map((color, index) => ({
+		id: index + 1,
+		name: color.name,
+		value: color.value
+	}))
+
 	const hasRelatedProducts = normalizedRelatedProducts.length > 0
 	const images = Array.isArray(product.images) ? product.images : []
 	const galleryImages = buildGalleryImages(images, variants, title)
@@ -324,8 +392,10 @@ const renderProduct = (product, relatedProducts = []) => {
 	let variantOptionButtons = []
 	/** @type {Array<any>} */
 	let variantSelects = []
+	let metadataColorSelect = null
 
 	let currentVariant = requiresVariantSelection ? null : defaultVariant
+	let selectedMetadataColorOptionId = null
 	let quantity = 1
 
 	const getVariantMaxQuantity = () => {
@@ -412,6 +482,15 @@ const renderProduct = (product, relatedProducts = []) => {
 	const isVariantSelectionComplete = () => {
 		if (!requiresVariantSelection) return true
 		return productAttributes.every(attribute => selectedValues.has(Number(attribute.id)))
+	}
+
+	const isMetadataColorSelectionComplete = () => {
+		if (!requiresMetadataColorSelection) return true
+		return (
+			typeof selectedMetadataColorOptionId === 'number' &&
+			Number.isFinite(selectedMetadataColorOptionId) &&
+			selectedMetadataColorOptionId > 0
+		)
 	}
 
 	const updatePrice = () => {
@@ -524,15 +603,18 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	const renderVariantSelector = () => {
 		if (!variantSelector) return
-		if (productAttributes.length === 0 || variants.length === 0) {
+		const hasVariantAttributes = productAttributes.length > 0 && variants.length > 0
+		if (!hasVariantAttributes && !requiresMetadataColorSelection) {
 			variantSelector.style.display = 'none'
 			return
 		}
+		variantSelector.style.display = ''
 
 		if (variantSelector.childElementCount > 0) return
 
-		const sectionHtml = productAttributes
-			.map(attribute => {
+		const variantAttributesHtml = hasVariantAttributes
+			? productAttributes
+				.map(attribute => {
 				if (attribute.displayType === 'dropdown') {
 					return `<fieldset class="variant-group">
 						<legend>${escapeHtml(attribute.name)}</legend>
@@ -558,11 +640,34 @@ const renderProduct = (product, relatedProducts = []) => {
 					${optionsHtml}
 				</fieldset>`
 			})
-			.join('')
+				.join('')
+			: ''
+
+		const colorsMetadataHtml = requiresMetadataColorSelection
+			? `<fieldset class="variant-group variant-group--metadata-colors">
+				<legend>Color</legend>
+				<tiendu-attribute-select class="variant-select" data-metadata-colors="true"></tiendu-attribute-select>
+			</fieldset>`
+			: ''
+
+		const sectionHtml = `${variantAttributesHtml}${colorsMetadataHtml}`
 
 		variantSelector.innerHTML = sectionHtml
-		variantOptionButtons = Array.from(variantSelector.querySelectorAll('.option-chip'))
+		variantOptionButtons = Array.from(
+			variantSelector.querySelectorAll('.option-chip')
+		)
 		variantSelects = Array.from(variantSelector.querySelectorAll('tiendu-attribute-select'))
+		metadataColorSelect = variantSelector.querySelector('tiendu-attribute-select[data-metadata-colors="true"]')
+		if (metadataColorSelect) {
+			variantSelects = variantSelects.filter(select => select !== metadataColorSelect)
+			metadataColorSelect.setAttribute('placeholder', 'Selecciona una opción')
+			metadataColorSelect.options = metadataColorOptions.map(option => ({
+				id: option.id,
+				label: option.name,
+				color: option.value,
+				imageUrl: null
+			}))
+		}
 
 		for (const select of variantSelects) {
 			const attributeId = Number(select.dataset.attributeId)
@@ -608,6 +713,16 @@ const renderProduct = (product, relatedProducts = []) => {
 				.map(value => value.id)
 			select.setDisabledOptionIds(disabledIds)
 		}
+
+		if (metadataColorSelect && typeof metadataColorSelect.setValue === 'function') {
+			metadataColorSelect.setValue(
+				typeof selectedMetadataColorOptionId === 'number' &&
+				Number.isFinite(selectedMetadataColorOptionId) &&
+				selectedMetadataColorOptionId > 0
+					? selectedMetadataColorOptionId
+					: null
+			)
+		}
 	}
 
 	const syncVariantFromSelection = () => {
@@ -634,6 +749,7 @@ const renderProduct = (product, relatedProducts = []) => {
 	variantSelector?.addEventListener('click', event => {
 		const target = event.target instanceof Element ? event.target.closest('button') : null
 		if (!(target instanceof HTMLButtonElement)) return
+
 		const attributeId = Number(target.dataset.attributeId)
 		const valueId = Number(target.dataset.valueId)
 		if (!Number.isFinite(attributeId) || !Number.isFinite(valueId)) return
@@ -645,6 +761,15 @@ const renderProduct = (product, relatedProducts = []) => {
 	variantSelector?.addEventListener('tiendu-select-change', event => {
 		const select = event.target
 		if (!(select instanceof HTMLElement)) return
+
+		if (select.dataset.metadataColors === 'true') {
+			const selectedOptionId = Number(event?.detail?.valueId)
+			const selectedOption = metadataColorOptions.find(option => option.id === selectedOptionId)
+			selectedMetadataColorOptionId = selectedOption ? selectedOption.id : null
+			updateVariantSelectorState()
+			return
+		}
+
 		const attributeId = Number(select.dataset.attributeId)
 		const valueId = Number(event?.detail?.valueId)
 		if (!Number.isFinite(attributeId) || !Number.isFinite(valueId)) return
@@ -655,7 +780,10 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	if (addToCartButton) {
 		addToCartButton.addEventListener('app-click', () => {
-			if (requiresVariantSelection && !currentVariant) {
+			if (
+				(requiresVariantSelection && !currentVariant) ||
+				(requiresMetadataColorSelection && !isMetadataColorSelectionComplete())
+			) {
 				showVariantSelectionWarning()
 				return
 			}
