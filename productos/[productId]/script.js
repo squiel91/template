@@ -7,17 +7,36 @@ import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import '/ui/tiendu-image-carousel/tiendu-image-carousel.js'
 import '/ui/quantity-input/quantity-input.js'
+import '/ui/stock-note/stock-note.js'
 import '/ui/toast-stack/toast-stack.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getPriceDataForVariant } from '/shared/product-pricing.js'
-import { getListingPriceData } from '/shared/product-pricing.js'
+import { getProductStockOverview } from '/shared/product-pricing.js'
 import { withPageLoading } from '/shared/page-loading.js'
 import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
+import { createProductItemElement } from '/shared/product-item-element.js'
 
 const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899424414'
+const PAYMENT_METHOD_LOGOS = [
+	{ src: '/public/payment-methods/visa.svg', alt: 'Visa' },
+	{ src: '/public/payment-methods/master.svg', alt: 'Mastercard' },
+	{ src: '/public/payment-methods/amex.svg', alt: 'American Express' },
+	{ src: '/public/payment-methods/oca.svg', alt: 'OCA' },
+	{ src: '/public/payment-methods/diners.svg', alt: 'Diners Club' },
+	{ src: '/public/payment-methods/cabal.svg', alt: 'Cabal' },
+	{ src: '/public/payment-methods/mercadopago.svg', alt: 'Mercado Pago' },
+	{ src: '/public/payment-methods/brou.svg', alt: 'BROU' },
+	{ src: '/public/payment-methods/itau.svg', alt: 'Itaú' },
+	{ src: '/public/payment-methods/lider.svg', alt: 'Líder' }
+]
+
+const buildOutOfStockWhatsAppUrl = productTitle => {
+	const message = `¡Hola! Quiero consultarles sobre el producto "${productTitle}" que vi que ya no tienen en stock.`
+	return `${PRICE_CONTACT_WHATSAPP_URL}?text=${encodeURIComponent(message)}`
+}
 
 const hasPurchasablePrice = (product, variant) => {
 	if (variant) return typeof variant?.priceInCents === 'number'
@@ -171,33 +190,9 @@ const renderRelatedProducts = products => {
 	const list = document.createElement('product-list')
 
 	for (const product of relatedProducts) {
-		const item = document.createElement('product-item')
-		const priceData = getListingPriceData(product)
-		const validVariants = (product.variants || []).filter(v => typeof v?.priceInCents === 'number')
-
-		item.setAttribute('product-id', String(product.id))
-		item.setAttribute('title', product.title || 'Producto')
-		item.setAttribute('price', priceData.label || '')
-		item.setAttribute('average-rating', String(Number(product.averageRating) || 0))
-		item.setAttribute('reviews-quantity', String(Number(product.reviewsQuantity) || 0))
-		item.setAttribute('url', `/productos/${product.id}/${urlSafe(product.title || 'producto')}`)
-
-		if (priceData.compareLabel) {
-			item.setAttribute('compare-price', priceData.compareLabel)
-		}
-
-		if (product.coverImage?.url) {
-			item.setAttribute('image-url', product.coverImage.url)
-			item.setAttribute('image-alt', product.coverImage.alt || product.title || '')
-		}
-
-		if (validVariants.length === 1) {
-			item.setAttribute('has-single-variant', 'true')
-			item.setAttribute('variant-id', String(validVariants[0].id))
-		} else if (validVariants.length > 1) {
-			item.setAttribute('has-multiple-variants', 'true')
-		}
-
+		const item = createProductItemElement(product, {
+			url: `/productos/${product.id}/${urlSafe(product.title || 'producto')}`
+		})
 		list.appendChild(item)
 	}
 
@@ -306,6 +301,11 @@ const renderProduct = (product, relatedProducts = []) => {
 				.join('')
 		: `<div class="empty-state"><i data-lucide="messages-square"></i><span class="empty-state__title">Este producto aun no tiene reseñas.</span></div>`
 
+	const paymentMethodsHtml = PAYMENT_METHOD_LOGOS.map(
+		method =>
+			`<li class="payment-methods__item"><img src="${method.src}" alt="${escapeHtml(method.alt)}" loading="lazy" decoding="async" /></li>`
+	).join('')
+
 	container.innerHTML = `
 		<div class="product-detail">
 			<div class="product-gallery">
@@ -327,10 +327,20 @@ const renderProduct = (product, relatedProducts = []) => {
 					<span class="product-compare" id="product-compare"></span>
 				</div>
 				<div id="variant-selector" class="variant-selector"></div>
-				<div class="stock-note" id="stock-note"></div>
+				<tiendu-stock-note id="stock-note"></tiendu-stock-note>
 				<div class="product-actions">
-					<tiendu-quantity-input id="product-quantity-input" min="1" value="1" aria-label="Cantidad"></tiendu-quantity-input>
-					<tiendu-button id="add-to-cart-button" variant="primary" label="Agregar al carrito" loading-label="Agregar al carrito" icon="plus" loading-icon="loader-2" duration="4000"></tiendu-button>
+					<div class="product-actions__primary">
+						<tiendu-quantity-input id="product-quantity-input" min="1" value="1" aria-label="Cantidad"></tiendu-quantity-input>
+						<tiendu-button id="add-to-cart-button" variant="primary" label="Agregar al carrito" loading-label="Agregar al carrito" icon="plus" loading-icon="loader-2" duration="4000"></tiendu-button>
+					</div>
+					<ul class="purchase-notes" aria-label="Beneficios de compra">
+						<li class="purchase-notes__item"><i data-lucide="truck" aria-hidden="true"></i><span>Envío gratis en pedidos superiores a $ 2.000</span></li>
+						<li class="purchase-notes__item"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Devolución simplificada</span></li>
+						<li class="purchase-notes__item"><i data-lucide="credit-card" aria-hidden="true"></i><span>Pagalo hasta en 12 cuotas sin recargo con tarjeta de crédito</span></li>
+					</ul>
+					<ul class="payment-methods" aria-label="Medios de pago disponibles">
+						${paymentMethodsHtml}
+					</ul>
 					<tiendu-button id="share-product-button" variant="secondary" label="Compartir" icon="forward" aria-label="Compartir producto"></tiendu-button>
 				</div>
 			</div>
@@ -455,6 +465,37 @@ const renderProduct = (product, relatedProducts = []) => {
 		return Math.floor(stock)
 	}
 
+	const stockOverview = getProductStockOverview(product)
+
+	const setStockNote = (tone, messageHtml, options = {}) => {
+		if (!stockNode) return
+		const icon = options.icon || ''
+		const pulse = Boolean(options.pulse)
+		if (typeof stockNode.setState === 'function') {
+			stockNode.setState({ tone, message: messageHtml, icon, pulse })
+			return
+		}
+		stockNode.textContent = messageHtml
+	}
+
+	const setStockFromQuantity = stock => {
+		if (stock === 0) {
+			setStockNote('error', 'Temporalmente agotado', { pulse: true })
+			return
+		}
+
+		if (stock <= 4) {
+			setStockNote('warning', `Quedan ${stock} ${stock === 1 ? 'unidad' : 'unidades'} en stock`, {
+				pulse: true
+			})
+			return
+		}
+
+		setStockNote('success', `${stock} ${stock === 1 ? 'unidad' : 'unidades'} en stock`, {
+			pulse: true
+		})
+	}
+
 	const clampQuantity = value => {
 		const numericValue = Number(value)
 		const normalizedValue = Number.isFinite(numericValue) ? Math.floor(numericValue) : 1
@@ -519,23 +560,22 @@ const renderProduct = (product, relatedProducts = []) => {
 		}
 		if (stockNode) {
 			if (requiresVariantSelection && !currentVariant) {
-				stockNode.textContent = 'Selecciona una variante para ver stock'
-				stockNode.style.color = '#64748b'
+				const sharedStock = stockOverview.sharedVariantStock
+				if (typeof sharedStock === 'number') {
+					setStockFromQuantity(sharedStock)
+				} else if (stockOverview.allVariantsUntracked) {
+					setStockNote('success', 'Tenemos en stock', { pulse: true })
+				} else {
+					setStockNote('neutral', 'Selecciona una variante para ver stock', { pulse: true })
+				}
 				return priceData
 			}
 
 			const stock = currentVariant?.stock
 			if (typeof stock === 'number') {
-				if (stock === 0) {
-					stockNode.innerHTML = 'Actualmente sin stock. Consultar por <a href="https://wa.me/59899424414" target="_blank" rel="noopener noreferrer">WhatsApp</a>'
-					stockNode.style.color = '#ef4444'
-				} else {
-					stockNode.textContent = `${stock} ${stock === 1 ? 'unidad' : 'unidades'} en stock`
-					stockNode.style.color = '#10b981'
-				}
+				setStockFromQuantity(Math.max(0, Math.floor(stock)))
 			} else {
-				stockNode.textContent = 'Tenemos en stock'
-				stockNode.style.color = '#64748b'
+				setStockNote('success', 'Tenemos en stock', { pulse: true })
 			}
 		}
 		return priceData
@@ -559,6 +599,22 @@ const renderProduct = (product, relatedProducts = []) => {
 		}
 
 		const hasPrice = hasPurchasablePrice(product, currentVariant)
+		const isOutOfStock = Boolean(currentVariant && currentVariant.stock === 0)
+
+		if (isOutOfStock) {
+			addToCartButton.setAttribute('label', 'Consultar')
+			addToCartButton.setAttribute('loading-label', 'Consultar')
+			addToCartButton.setAttribute('icon', 'message-square')
+			addToCartButton.setAttribute('aria-label', 'Consultar por WhatsApp')
+			if (typeof addToCartButton.setDisabled === 'function') {
+				addToCartButton.setDisabled(false)
+			} else {
+				addToCartButton.removeAttribute('disabled')
+			}
+			syncQuantityUi()
+			return
+		}
+
 		if (!hasPrice) {
 			addToCartButton.setAttribute('label', 'Consultar precio')
 			addToCartButton.setAttribute('loading-label', 'Consultar precio')
@@ -578,7 +634,7 @@ const renderProduct = (product, relatedProducts = []) => {
 		addToCartButton.setAttribute('icon', 'plus')
 		addToCartButton.setAttribute('aria-label', 'Agregar al carrito')
 
-		const unavailable = !currentVariant || currentVariant.stock === 0
+		const unavailable = !currentVariant
 		if (typeof addToCartButton.setDisabled === 'function') {
 			addToCartButton.setDisabled(unavailable)
 		} else if (unavailable) {
@@ -734,11 +790,16 @@ const renderProduct = (product, relatedProducts = []) => {
 				return
 			}
 
+			if (currentVariant && currentVariant.stock === 0) {
+				window.open(buildOutOfStockWhatsAppUrl(title), '_blank', 'noopener,noreferrer')
+				return
+			}
+
 			if (!hasPurchasablePrice(product, currentVariant)) {
 				window.open(PRICE_CONTACT_WHATSAPP_URL, '_blank', 'noopener,noreferrer')
 				return
 			}
-			if (!currentVariant || currentVariant.stock === 0) return
+			if (!currentVariant) return
 			if (typeof addToCartButton.startLoading === 'function') {
 				addToCartButton.startLoading()
 			}

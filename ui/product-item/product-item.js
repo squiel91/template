@@ -162,6 +162,25 @@ const ensureStyles = () => {
 			font-weight: 500;
 		}
 
+		.product-item__soldout {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0.5rem 0.75rem;
+			border-radius: 0;
+			background: rgba(220, 38, 38, 0.95);
+			color: #fff;
+			font-weight: 700;
+			font-size: 12px;
+			line-height: 1;
+			letter-spacing: 0.01em;
+			box-shadow: 0 3px 10px rgba(127, 29, 29, 0.2);
+		}
+
 		@keyframes product-item-spin {
 			from { transform: rotate(0deg); }
 			to { transform: rotate(360deg); }
@@ -189,6 +208,7 @@ class ProductItem extends LitElement {
 		hasSingleVariant: { type: Boolean, attribute: 'has-single-variant' },
 		hasMultipleVariants: { type: Boolean, attribute: 'has-multiple-variants' },
 		variantId: { type: String, attribute: 'variant-id' },
+		outOfStock: { type: Boolean, attribute: 'out-of-stock' },
 		averageRating: { type: Number, attribute: 'average-rating' },
 		reviewsQuantity: { type: Number, attribute: 'reviews-quantity' }
 	}
@@ -205,6 +225,7 @@ class ProductItem extends LitElement {
 		this.hasSingleVariant = false
 		this.hasMultipleVariants = false
 		this.variantId = ''
+		this.outOfStock = false
 		this.averageRating = 0
 		this.reviewsQuantity = 0
 		this.isLoading = false
@@ -253,7 +274,7 @@ class ProductItem extends LitElement {
 		event.preventDefault()
 		event.stopPropagation()
 
-		if (!this.variantId || this.isLoading) return
+		if (!this.variantId || this.isLoading || this.outOfStock) return
 
 		this.startLoading()
 
@@ -270,7 +291,7 @@ class ProductItem extends LitElement {
 	}
 
 	renderQuickAction() {
-		if (this.hasSingleVariant) {
+		if (this.hasSingleVariant && !this.outOfStock) {
 			return html`
 				<div class="product-item__quick-action">
 					<button
@@ -287,6 +308,11 @@ class ProductItem extends LitElement {
 		}
 
 		return nothing
+	}
+
+	renderOutOfStockBadge() {
+		if (!this.outOfStock) return nothing
+		return html`<span class="product-item__soldout">Agotado</span>`
 	}
 
 		render() {
@@ -309,6 +335,7 @@ class ProductItem extends LitElement {
 				<div class="product-item__media">
 					<img src=${imageSrc} alt=${alt} loading="lazy" />
 					${this.renderQuickAction()}
+					${this.renderOutOfStockBadge()}
 				</div>
 				<div class="product-item__meta">
 					<h3 class="product-item__title">${this.title}</h3>

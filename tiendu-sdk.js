@@ -189,7 +189,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {{ includeProductsFromSubcategories: boolean }} filters
 	* @property {Array<ProductListing>} data
 	* @property {{ total: number; page: number; size: number }} pagination
-	* @property {{ criteria?: string; order?: string }} sort
+	* @property {{ criteria?: 'name' | 'created' | 'updated' | 'sales' | 'price'; order?: 'asc' | 'desc' }} sort
 	*/
 
 const trackMetaAddToCart = () => {}
@@ -265,10 +265,17 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			 *   size?: number
 			 *   categoryId?: number
 			 *   includeProductsFromSubcategories?: boolean
+			 *   criteria?: 'name' | 'created' | 'updated' | 'sales' | 'price'
+			 *   order?: 'asc' | 'desc'
 			 * }=} options
 			 * @returns {Promise<PaginatedProductsResponse>}
 			 */
 			list: async (options = {}) => {
+				const validCriteria = ['name', 'created', 'updated', 'sales', 'price']
+				const validOrder = ['asc', 'desc']
+				const criteria = validCriteria.includes(options.criteria) ? options.criteria : null
+				const order = validOrder.includes(options.order) ? options.order : null
+
 				const response = await upFetch.get(`${baseApiUrl}/products`, {
 					queryParams: {
 						...(options.search ? { q: options.search } : {}),
@@ -279,6 +286,8 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 						...(options.includeProductsFromSubcategories
 							? { includeProductsFromSubcategories: 'true' }
 							: {}),
+						...(criteria ? { criteria } : {}),
+						...(order ? { order } : {}),
 						...(options.page ? { page: options.page.toString() } : { page: '1' }),
 						...(options.size ? { size: options.size.toString() } : { size: '100' })
 					}

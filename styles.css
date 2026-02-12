@@ -232,6 +232,33 @@ button {
 	width: min(480px, 44vw);
 }
 
+.whatsapp-fab {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	width: 62px;
+	height: 62px;
+	border-radius: var(--radius-full);
+	background: #25d366;
+	box-shadow: 0 10px 24px rgba(9, 94, 46, 0.35);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 55;
+	transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.whatsapp-fab:hover {
+	transform: translateY(-2px) scale(1.03);
+	box-shadow: 0 14px 28px rgba(9, 94, 46, 0.38);
+}
+
+.whatsapp-fab img {
+	width: 34px;
+	height: 34px;
+	object-fit: contain;
+}
+
 /* Menu Toggle */
 .menu-toggle {
 	width: 40px;
@@ -1171,6 +1198,36 @@ button {
 	margin-bottom: var(--space-8);
 }
 
+.listing-controls {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-sm);
+	color: var(--text-secondary);
+}
+
+.listing-controls label {
+	font-weight: 600;
+}
+
+.listing-controls select {
+	height: 38px;
+	border: 1px solid var(--border-medium);
+	border-radius: 12px;
+	background: #fff;
+	color: var(--text-primary);
+	padding: 0 0.75rem;
+	font-family: inherit;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	outline: none;
+}
+
+.listing-controls select:focus {
+	border-color: #64748b;
+	box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18);
+}
+
 .listing-meta {
 	margin-bottom: var(--space-6);
 }
@@ -1268,12 +1325,22 @@ button {
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: var(--space-8);
-	margin-top: var(--space-6);
+	margin-top: var(--space-2);
 }
 
 @media (min-width: 900px) {
 	.product-detail {
 		grid-template-columns: minmax(400px, 1.2fr) 1fr;
+	}
+
+	.product-info {
+		margin-top: 32px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 899px) {
+	.product-info {
+		margin-top: 16px;
 	}
 }
 
@@ -1295,11 +1362,27 @@ button {
 }
 
 .product-info__title {
-	font-size: var(--text-5xl);
+	font-size: clamp(1.8rem, 7.2vw, 2.2rem);
 	font-weight: 800;
 	letter-spacing: -0.03em;
-	line-height: 1.2;
+	line-height: 1.14;
 	color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+	.product-info__title {
+		font-size: clamp(2rem, 4.2vw, 2.45rem);
+	}
+}
+
+@media (min-width: 1200px) {
+	.product-info__title {
+		font-size: 2.6rem;
+	}
+}
+
+.product-info tiendu-stock-note {
+	margin-top: var(--space-5);
 }
 
 .product-price-line {
@@ -1401,6 +1484,7 @@ button {
 	font-size: var(--text-sm);
 	font-weight: 600;
 	color: var(--text-primary);
+	margin-bottom: var(--space-1);
 	margin-right: var(--space-2);
 }
 
@@ -1475,16 +1559,90 @@ button {
 
 .product-actions {
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	gap: var(--space-4);
-	flex-wrap: wrap;
+	flex-direction: column;
 	padding-top: var(--space-4);
 }
 
-.stock-note {
-	font-size: var(--text-base);
-	font-weight: 500;
-	color: var(--text-tertiary);
+.product-actions__primary {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	width: 100%;
+}
+
+.product-actions__primary tiendu-quantity-input {
+	flex-shrink: 0;
+}
+
+.product-actions__primary tiendu-button {
+	flex: 1 1 auto;
+}
+
+.product-actions__primary tiendu-button button {
+	width: 100%;
+}
+
+.product-actions > #share-product-button {
+	width: fit-content;
+}
+
+
+.purchase-notes {
+	list-style: none;
+	display: grid;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.purchase-notes__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.purchase-notes__item i {
+	width: 16px;
+	height: 16px;
+	color: var(--text-primary);
+	flex-shrink: 0;
+}
+
+.payment-methods {
+	list-style: none;
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: var(--space-2);
+	max-width: 100%;
+}
+
+.payment-methods__item {
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-md);
+	background: #fff;
+	padding: 0.4rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 42px;
+}
+
+.payment-methods__item img {
+	max-height: 24px;
+	width: auto;
+	object-fit: contain;
+	filter: grayscale(1) saturate(0) brightness(0.85);
+	transition: filter var(--transition-base), transform var(--transition-base);
+}
+
+.payment-methods__item:hover img,
+.payment-methods__item:focus-within img {
+	filter: grayscale(0) saturate(1) brightness(1);
+	transform: translateY(-1px);
 }
 
 .product-specs {
@@ -2031,6 +2189,18 @@ button {
 		width: auto;
 	}
 
+	.whatsapp-fab {
+		right: 14px;
+		bottom: 14px;
+		width: 52px;
+		height: 52px;
+	}
+
+	.whatsapp-fab img {
+		width: 28px;
+		height: 28px;
+	}
+
 	.subscribe-panel {
 		padding: var(--space-6);
 	}
@@ -2045,6 +2215,10 @@ button {
 
 	.article-cover {
 		aspect-ratio: 16 / 10;
+	}
+
+	.payment-methods {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
 
@@ -2061,5 +2235,21 @@ button {
 	
 	.listing-meta h1 {
 		font-size: var(--text-2xl);
+	}
+
+	.listing-controls {
+		width: 100%;
+	}
+
+	.listing-controls select {
+		width: 100%;
+	}
+
+	.product-actions__primary {
+		gap: var(--space-2);
+	}
+
+	.payment-methods {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }

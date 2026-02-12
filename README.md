@@ -62,7 +62,13 @@ Recommended usage through shared client:
 ```js
 import { tiendu } from '/shared/tiendu-client.js'
 
-const productsRes = await tiendu.products.list({ search: 'camisa', page: 1, size: 20 })
+const productsRes = await tiendu.products.list({
+  search: 'camisa',
+  page: 1,
+  size: 20,
+  criteria: 'price',
+  order: 'asc'
+})
 const products = productsRes.data
 
 const product = await tiendu.products.get(323)

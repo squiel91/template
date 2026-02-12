@@ -4,8 +4,7 @@ import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { withPageLoading } from '/shared/page-loading.js'
-import { createInfiniteScroll } from '/shared/infinite-scroll.js'
-import { createProductItemElement } from '/shared/product-item-element.js'
+import { initPaginatedProductListing } from '/shared/product-listing.js'
 import {
 	getCurrentRelativeUrlWithoutOrigin,
 	getOriginFromCurrentUrl
@@ -27,21 +26,6 @@ const renderState = message => {
 	refreshIcons()
 }
 
-const renderProducts = (list, products, origin) => {
-	const container = document.getElementById('category-products')
-	if (!container) return
-
-	if (!Array.isArray(products) || products.length === 0) {
-		renderState('No hay productos publicados en esta categoria.')
-		return
-	}
-
-	for (const product of products) {
-		list.appendChild(createProductItemElement(product, { origin }))
-	}
-	refreshIcons()
-}
-
 const init = async () => {
 	const params = /** @type {{ categoryId?: string }} */ (
 		/** @type {any} */ (window).PARAMS ?? {}
@@ -55,15 +39,7 @@ const init = async () => {
 	}
 
 	try {
-		const [category] = await Promise.all([
-			tiendu.categories.get(categoryId),
-			tiendu.products.list({
-				categoryId,
-				includeProductsFromSubcategories: true,
-				page: 1,
-				size: PAGE_SIZE
-			})
-		])
+		const category = await tiendu.categories.get(categoryId)
 
 		const categoryTitle = document.getElementById('category-title')
 		if (categoryTitle) categoryTitle.textContent = category.name
@@ -87,51 +63,31 @@ const init = async () => {
 
 		document.title = `${category.name} | Tienda Genérica`
 
-		const container = document.getElementById('category-products')
-		if (!container) return
-		container.innerHTML = ''
-		const list = document.createElement('product-list')
-		container.appendChild(list)
-
-		let page = 0
-		let hasMore = true
 		const productOrigin = {
 			url: getCurrentRelativeUrlWithoutOrigin(),
 			title: category.name || 'Categoria'
 		}
 
-		const loadNextPage = async () => {
-			if (!hasMore) return false
-			page += 1
-			const response = await tiendu.products.list({
-				categoryId,
-				includeProductsFromSubcategories: true,
-				page,
-				size: PAGE_SIZE
-			})
-			const products = response?.data || []
-
-			if (page === 1 && products.length === 0) {
-				renderState('No hay productos publicados en esta categoria.')
-				hasMore = false
-				return false
+		await initPaginatedProductListing({
+			containerId: 'category-products',
+			sortSelectId: 'category-sort-select',
+			sortParamName: 'orden',
+			pageSize: PAGE_SIZE,
+			emptyMessage: 'No hay productos publicados en esta categoria.',
+			errorPrefix: 'Error al cargar la categoria',
+			buildOrigin: () => productOrigin,
+			fetchPage: async ({ page, size, sort }) => {
+				const response = await tiendu.products.list({
+					categoryId,
+					includeProductsFromSubcategories: true,
+					page,
+					size,
+					criteria: sort.criteria,
+					order: sort.order
+				})
+				return Array.isArray(response?.data) ? response.data : []
 			}
-
-			renderProducts(list, products, productOrigin)
-			hasMore = products.length === PAGE_SIZE
-			return hasMore
-		}
-
-		const shouldKeepLoading = await loadNextPage()
-		if (!hasMore) return
-
-		const scroller = createInfiniteScroll({
-			container,
-			onLoadMore: loadNextPage,
-			loadingText: 'Cargando mas productos...'
 		})
-		scroller.start()
-		if (!shouldKeepLoading) scroller.setDone(true)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
 		renderState(`Error al cargar la categoria: ${message}`)
