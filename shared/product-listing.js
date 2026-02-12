@@ -1,17 +1,17 @@
 // @ts-nocheck
 
+import '/ui/tiendu-select/tiendu-select.js'
 import { createInfiniteScroll } from '/shared/infinite-scroll.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 
 export const PRODUCT_SORT_OPTIONS = [
-	{ value: 'updated-desc', label: 'Más recientes', criteria: 'updated', order: 'desc' },
+	{ value: 'sales-desc', label: 'Más vendido', criteria: 'sales', order: 'desc' },
 	{ value: 'name-asc', label: 'Nombre A-Z', criteria: 'name', order: 'asc' },
 	{ value: 'name-desc', label: 'Nombre Z-A', criteria: 'name', order: 'desc' },
 	{ value: 'price-asc', label: 'Precio: menor a mayor', criteria: 'price', order: 'asc' },
 	{ value: 'price-desc', label: 'Precio: mayor a menor', criteria: 'price', order: 'desc' },
-	{ value: 'sales-desc', label: 'Más vendidos', criteria: 'sales', order: 'desc' },
 	{ value: 'created-desc', label: 'Más nuevos', criteria: 'created', order: 'desc' }
 ]
 
@@ -25,11 +25,23 @@ export const getSortFromCurrentUrl = (paramName = 'orden') => {
 }
 
 export const renderSortOptions = (selectNode, selectedValue) => {
-	if (!(selectNode instanceof HTMLSelectElement)) return
-	selectNode.innerHTML = PRODUCT_SORT_OPTIONS.map(
-		option => `<option value="${option.value}">${option.label}</option>`
-	).join('')
-	selectNode.value = getSortByValue(selectedValue).value
+	if (!(selectNode instanceof HTMLElement)) return
+	const normalizedValue = getSortByValue(selectedValue).value
+
+	if (typeof selectNode.setOptions === 'function') {
+		selectNode.setOptions(PRODUCT_SORT_OPTIONS)
+		if (typeof selectNode.setValue === 'function') {
+			selectNode.setValue(normalizedValue)
+		}
+		return
+	}
+
+	if (selectNode instanceof HTMLSelectElement) {
+		selectNode.innerHTML = PRODUCT_SORT_OPTIONS.map(
+			option => `<option value="${option.value}">${option.label}</option>`
+		).join('')
+		selectNode.value = normalizedValue
+	}
 }
 
 const setSortInUrl = (sortValue, paramName = 'orden') => {
@@ -67,7 +79,7 @@ export const initPaginatedProductListing = async ({
 	const resultsCopyNode = resultsCopyId ? document.getElementById(resultsCopyId) : null
 
 	let currentSort = getSortFromCurrentUrl(sortParamName)
-	if (sortSelect instanceof HTMLSelectElement) {
+	if (sortSelect instanceof HTMLElement) {
 		renderSortOptions(sortSelect, currentSort.value)
 	}
 
@@ -145,12 +157,23 @@ export const initPaginatedProductListing = async ({
 		}
 	}
 
-	if (sortSelect instanceof HTMLSelectElement) {
-		sortSelect.addEventListener('change', () => {
-			currentSort = getSortByValue(sortSelect.value)
+	if (sortSelect instanceof HTMLElement) {
+		const handleSortChange = nextValue => {
+			currentSort = getSortByValue(nextValue)
 			setSortInUrl(currentSort.value, sortParamName)
 			void loadListing()
+		}
+
+		sortSelect.addEventListener('tiendu-select-change', event => {
+			const nextValue = event?.detail?.value
+			handleSortChange(nextValue)
 		})
+
+		if (sortSelect instanceof HTMLSelectElement) {
+			sortSelect.addEventListener('change', () => {
+				handleSortChange(sortSelect.value)
+			})
+		}
 	}
 
 	await loadListing()

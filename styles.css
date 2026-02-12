@@ -663,7 +663,7 @@ button {
 	padding: var(--space-3) var(--space-6);
 	font-size: var(--text-base);
 	font-weight: 600;
-	border-radius: var(--radius-full);
+	border-radius: var(--radius-xl);
 	transition: all var(--transition-fast);
 	white-space: nowrap;
 }
@@ -737,6 +737,10 @@ button {
 
 .home-sections > * {
 	flex: 1 1 100%;
+}
+
+.home-sections__injected {
+	display: contents;
 }
 
 .home-sections .section {
@@ -1195,41 +1199,30 @@ button {
    ========================================================================== */
 
 .listing-head {
+	display: grid;
+	gap: 0;
 	margin-bottom: var(--space-8);
 }
 
-.listing-controls {
-	display: inline-flex;
+.listing-subhead {
+	display: flex;
 	align-items: center;
-	gap: var(--space-2);
-	font-size: var(--text-sm);
-	color: var(--text-secondary);
+	justify-content: space-between;
+	gap: var(--space-3);
 }
 
-.listing-controls label {
-	font-weight: 600;
+.listing-controls {
+	display: flex;
+	align-items: center;
+	margin-left: auto;
 }
 
-.listing-controls select {
-	height: 38px;
-	border: 1px solid var(--border-medium);
-	border-radius: 12px;
-	background: #fff;
-	color: var(--text-primary);
-	padding: 0 0.75rem;
-	font-family: inherit;
-	font-size: var(--text-sm);
-	font-weight: 600;
-	outline: none;
-}
-
-.listing-controls select:focus {
-	border-color: #64748b;
-	box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18);
+.listing-controls tiendu-select {
+	min-width: 240px;
 }
 
 .listing-meta {
-	margin-bottom: var(--space-6);
+	margin-bottom: 0;
 }
 
 .listing-meta h1 {
@@ -1362,7 +1355,7 @@ button {
 }
 
 .product-info__title {
-	font-size: clamp(1.8rem, 7.2vw, 2.2rem);
+	font-size: clamp(1.48rem, 5.7vw, 1.86rem);
 	font-weight: 800;
 	letter-spacing: -0.03em;
 	line-height: 1.14;
@@ -1371,13 +1364,13 @@ button {
 
 @media (min-width: 768px) {
 	.product-info__title {
-		font-size: clamp(2rem, 4.2vw, 2.45rem);
+		font-size: clamp(1.68rem, 2.8vw, 1.98rem);
 	}
 }
 
 @media (min-width: 1200px) {
 	.product-info__title {
-		font-size: 2.6rem;
+		font-size: 2.12rem;
 	}
 }
 
@@ -1448,14 +1441,10 @@ button {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
+	margin-top: var(--space-2);
 	font-size: var(--text-sm);
 	font-weight: 600;
-	color: #1d4ed8;
-	background: #eff6ff;
-	border: 1px solid #bfdbfe;
-	border-radius: var(--radius-full);
-	padding: 0.3rem 0.65rem;
-	width: fit-content;
+	color: #15803d;
 }
 
 .product-units-sold i {
@@ -1753,6 +1742,14 @@ button {
 	flex-wrap: wrap;
 }
 
+.reviews-section__header-layout {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
 .reviews-section__verified {
 	display: inline-flex;
 	align-items: center;
@@ -1836,29 +1833,45 @@ button {
 
 .reviews-list {
 	display: grid;
-	gap: var(--space-4);
+	gap: 0;
+	padding: var(--space-3) var(--space-4) 0;
 }
 
 .review-item {
-	border: 1px solid var(--border-light);
-	border-radius: var(--radius-xl);
-	padding: var(--space-5);
-	background: #fff;
+	padding: var(--space-4) 0;
 	display: grid;
-	gap: var(--space-4);
+	gap: var(--space-2);
+	border-bottom: 1px solid var(--border-light);
+}
+
+.review-item:last-child {
+	border-bottom: none;
 }
 
 .review-item__header {
 	display: flex;
+	align-items: flex-start;
 	justify-content: space-between;
-	gap: var(--space-4);
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+.review-item__author {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.review-item__name-line {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
 	flex-wrap: wrap;
 }
 
 .review-item__header h3 {
 	font-size: var(--text-base);
 	font-weight: 700;
-	margin-bottom: 2px;
+	line-height: 1.25;
 }
 
 .review-item__header p {
@@ -1870,6 +1883,7 @@ button {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
+	align-self: flex-start;
 }
 
 .review-item__verified {
@@ -1878,10 +1892,10 @@ button {
 	gap: 0.35rem;
 	font-size: var(--text-xs);
 	font-weight: 600;
-	color: #075985;
-	background: #eff6ff;
-	border: 1px solid #bfdbfe;
-	padding: 0.2rem 0.5rem;
+	color: #047857;
+	background: #ecfdf5;
+	border: 1px solid #a7f3d0;
+	padding: 0.18rem 0.48rem;
 	border-radius: var(--radius-full);
 }
 
@@ -1891,33 +1905,57 @@ button {
 }
 
 .review-item__content {
-	color: var(--text-secondary);
-	line-height: 1.7;
+	color: #0f172a;
+	font-size: 1.06rem;
+	font-weight: 500;
+	line-height: 1.65;
+	max-width: 70ch;
+	padding-left: 0;
 }
 
-.review-item__actions {
+@media (max-width: 640px) {
+	.review-item {
+		padding: var(--space-3) 0;
+	}
+
+	.review-item__name-line {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.3rem;
+	}
+
+	.review-item__content {
+		font-size: var(--text-base);
+		font-weight: 500;
+	}
+}
+
+.review-item--extra {
+	display: none;
+}
+
+.reviews-list[data-expanded='true'] .review-item--extra {
 	display: grid;
-	gap: var(--space-2);
-	padding-top: var(--space-2);
-	border-top: 1px dashed var(--border-light);
 }
 
-.review-item__report {
+.reviews-toggle {
+	margin-top: var(--space-2);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
 	font-size: var(--text-sm);
 	font-weight: 600;
-	color: #b91c1c;
-	width: fit-content;
+	color: var(--text-secondary);
 }
 
-.review-item__report:hover {
-	text-decoration: underline;
-	text-underline-offset: 2px;
+.reviews-toggle i {
+	width: 16px;
+	height: 16px;
+	transition: transform var(--transition-fast);
 }
 
-.review-item__report-link {
-	font-size: var(--text-xs);
-	color: var(--text-tertiary);
-	word-break: break-word;
+.reviews-toggle.is-expanded i {
+	transform: rotate(180deg);
 }
 
 .related-products {
@@ -2228,6 +2266,14 @@ button {
 		align-items: flex-start;
 		gap: var(--space-3);
 	}
+
+	.reviews-section__header-layout {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		flex-wrap: wrap;
+	}
 	
 	.category-grid {
 		grid-template-columns: repeat(2, 1fr);
@@ -2237,11 +2283,25 @@ button {
 		font-size: var(--text-2xl);
 	}
 
+	.listing-head {
+		gap: var(--space-2);
+	}
+
+	#products-results-summary {
+		display: none;
+	}
+
+	.listing-subhead {
+		justify-content: flex-end;
+	}
+
 	.listing-controls {
+		margin-left: 0;
 		width: 100%;
 	}
 
-	.listing-controls select {
+	.listing-controls tiendu-select {
+		min-width: 0;
 		width: 100%;
 	}
 
@@ -2252,4 +2312,5 @@ button {
 	.payment-methods {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
+
 }

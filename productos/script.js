@@ -31,7 +31,7 @@ const init = async () => {
 	await initPaginatedProductListing({
 		containerId: 'products-list',
 		sortSelectId: 'products-sort-select',
-		resultsCopyId: 'products-results-copy',
+		resultsCopyId: 'products-results-summary',
 		sortParamName: 'orden',
 		pageSize: PAGE_SIZE,
 		emptyMessage: 'No encontramos productos con ese criterio.',

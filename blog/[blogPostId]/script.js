@@ -6,19 +6,6 @@ import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { renderContentBlocks } from '/shared/content-blocks.js'
 
-const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
-
-const formatDate = value => {
-	if (!value) return ''
-	const date = new Date(value)
-	if (Number.isNaN(date.getTime())) return ''
-	return new Intl.DateTimeFormat('es-UY', {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	}).format(date)
-}
-
 const renderMessage = message => {
 	const container = document.getElementById('blog-post-content')
 	if (!container) return
@@ -46,9 +33,6 @@ const init = async () => {
 		const post = await tiendu.blogPosts.get(blogPostId)
 		const title = post?.title || 'Articulo'
 
-		const titleNode = document.getElementById('blog-post-title')
-		if (titleNode) titleNode.textContent = title
-
 		const breadcrumbNode = document.getElementById('blog-post-breadcrumbs')
 		if (breadcrumbNode && typeof breadcrumbNode.setItems === 'function') {
 			breadcrumbNode.setItems([
@@ -60,26 +44,7 @@ const init = async () => {
 			breadcrumbNode.setCurrentLabel(title)
 		}
 
-		const excerptNode = document.getElementById('blog-post-excerpt')
-		if (excerptNode) excerptNode.textContent = post?.excerpt || ''
-
-		const metaNode = document.getElementById('blog-post-meta')
-		if (metaNode) {
-			const pieces = [
-				formatDate(post?.createdAt),
-				post?.manager?.name || ''
-			].filter(Boolean)
-			metaNode.textContent = pieces.join(' - ')
-		}
-
 		document.title = `${title} | Blog`
-
-		const coverContainer = document.getElementById('blog-post-cover')
-		if (coverContainer) {
-			const coverImageSrc = escapeHtml(post?.coverImage?.url || FALLBACK_IMAGE_SRC)
-			coverContainer.innerHTML = `<img src="${coverImageSrc}" alt="${escapeHtml(title)}" loading="eager" />`
-			coverContainer.style.display = ''
-		}
 
 		const contentContainer = document.getElementById('blog-post-content')
 		if (!contentContainer) return

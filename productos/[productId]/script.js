@@ -21,15 +21,15 @@ import { createProductItemElement } from '/shared/product-item-element.js'
 
 const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899424414'
 const PAYMENT_METHOD_LOGOS = [
+	{ src: '/public/payment-methods/mercadopago.svg', alt: 'Mercado Pago' },
 	{ src: '/public/payment-methods/visa.svg', alt: 'Visa' },
 	{ src: '/public/payment-methods/master.svg', alt: 'Mastercard' },
-	{ src: '/public/payment-methods/amex.svg', alt: 'American Express' },
 	{ src: '/public/payment-methods/oca.svg', alt: 'OCA' },
+	{ src: '/public/payment-methods/amex.svg', alt: 'American Express' },
 	{ src: '/public/payment-methods/diners.svg', alt: 'Diners Club' },
-	{ src: '/public/payment-methods/cabal.svg', alt: 'Cabal' },
-	{ src: '/public/payment-methods/mercadopago.svg', alt: 'Mercado Pago' },
 	{ src: '/public/payment-methods/brou.svg', alt: 'BROU' },
 	{ src: '/public/payment-methods/itau.svg', alt: 'Itaú' },
+	{ src: '/public/payment-methods/cabal.svg', alt: 'Cabal' },
 	{ src: '/public/payment-methods/lider.svg', alt: 'Líder' }
 ]
 
@@ -106,12 +106,6 @@ const isValueEnabled = (variants, attributeId, valueId, selectedValues) => {
 	})
 }
 
-const buildReviewReportHref = reviewId => {
-	const subject = 'Reportar resena'
-	const body = `Creo que la resena ${reviewId} viola las politicas de Tiendu. Por favor revisen esta resena.`
-	return `mailto:hello@tiendu.lat?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-}
-
 const formatRelativeTime = value => {
 	if (!value) return 'hace un momento'
 	const date = new Date(value)
@@ -136,11 +130,11 @@ const formatRelativeTime = value => {
 
 const getUnitsSoldCopy = unitsSold => {
 	if (!Number.isFinite(unitsSold) || unitsSold <= 0) return ''
-	if (unitsSold < 5) return '3 unidades vendidas'
-	if (unitsSold < 10) return 'Mas de 5 unidades vendidas'
-	if (unitsSold < 20) return 'Mas de 10 unidades vendidas'
-	if (unitsSold < 30) return 'Mas de 20 unidades vendidas'
-	return 'Mas de 30 unidades vendidas'
+	if (unitsSold < 5) return '3 vendidos'
+	if (unitsSold < 10) return 'Más de 5 vendidos'
+	if (unitsSold < 20) return 'Más de 10 vendidos'
+	if (unitsSold < 30) return 'Más de 20 vendidos'
+	return 'Más de 30 vendidos'
 }
 
 const toSafeCssColor = value => {
@@ -260,41 +254,38 @@ const renderProduct = (product, relatedProducts = []) => {
 		})
 		.join('')
 
+	const hasReviewToggle = reviews.length > 3
+
 	const reviewItemsHtml = reviews.length
 		? reviews
-				.map(review => {
-					const reviewId = Number(review?.id) || 0
-					const reportHref = buildReviewReportHref(reviewId)
+				.map((review, index) => {
 					const authorName = escapeHtml(review?.authorName || 'Cliente')
 					const content = escapeHtml(review?.content || '')
 					const reviewTime = escapeHtml(
 						formatRelativeTime(review?.createdAt || review?.updatedAt)
 					)
 					const isVerified = Boolean(review?.isVerifiedPurchase)
+					const extraClass = hasReviewToggle && index >= 3 ? ' review-item--extra' : ''
 
 					return `
-						<article class="review-item">
+						<article class="review-item${extraClass}">
 							<header class="review-item__header">
-								<div>
-									<h3>${authorName}</h3>
+								<div class="review-item__author">
+									<div class="review-item__name-line">
+										<h3>${authorName}</h3>
+										${
+											isVerified
+												? '<span class="review-item__verified"><i data-lucide="badge-check"></i>Compra verificada</span>'
+												: ''
+										}
+									</div>
 									<p>${reviewTime}</p>
 								</div>
 								<div class="review-item__meta">
-									<rating-stars value="${Math.max(1, Math.min(5, Number(review?.rating) || 0))}" size="18"></rating-stars>
-									${
-										isVerified
-											? '<span class="review-item__verified"><i data-lucide="badge-check"></i>Compra verificada</span>'
-											: ''
-									}
+									<rating-stars value="${Math.max(1, Math.min(5, Number(review?.rating) || 0))}" size="22"></rating-stars>
 								</div>
 							</header>
 							<p class="review-item__content">${content}</p>
-							<footer class="review-item__actions">
-								<a class="review-item__report" href="${reportHref}">Reportar</a>
-								<a class="review-item__report-link" href="${reportHref}">
-									mailto:hello@tiendu.lat?subject=Reportar resena&body=Creo que la resena ${reviewId} viola las politicas de Tiendu. Por favor revisen esta resena.
-								</a>
-							</footer>
 						</article>
 					`
 				})
@@ -377,7 +368,7 @@ const renderProduct = (product, relatedProducts = []) => {
 		}
 
 		<section id="reviews-section" class="reviews-section" aria-labelledby="reviews-title">
-			<div class="section__header reviews-section__header">
+			<div class="section__header reviews-section__header reviews-section__header-layout">
 				<h2 id="reviews-title" class="section__title section__title--large">Reseñas</h2>
 				<span class="reviews-section__verified"><i data-lucide="shield-check"></i>Verificadas por Tiendu</span>
 			</div>
@@ -393,7 +384,12 @@ const renderProduct = (product, relatedProducts = []) => {
 				</div>
 			</div>
 
-			<div class="reviews-list">${reviewItemsHtml}</div>
+			<div class="reviews-list" id="reviews-list" data-expanded="false">${reviewItemsHtml}</div>
+			${
+				hasReviewToggle
+					? `<button type="button" id="reviews-toggle" class="reviews-toggle" aria-expanded="false"><span id="reviews-toggle-label">Ver más reseñas</span><i data-lucide="chevron-down"></i></button>`
+					: ''
+			}
 		</section>
 
 		${
@@ -445,6 +441,9 @@ const renderProduct = (product, relatedProducts = []) => {
 	const goToReviewsButton = document.getElementById('go-to-reviews-button')
 	const shareProductButton = document.getElementById('share-product-button')
 	const descriptionToggle = document.getElementById('description-toggle')
+	const reviewsList = document.getElementById('reviews-list')
+	const reviewsToggle = document.getElementById('reviews-toggle')
+	const reviewsToggleLabel = document.getElementById('reviews-toggle-label')
 	const descriptionNode = document.getElementById('product-description-text')
 	const descriptionWrap = document.getElementById('product-description-wrap')
 	const descriptionFade = document.getElementById('product-description-fade')
@@ -831,6 +830,19 @@ const renderProduct = (product, relatedProducts = []) => {
 			const section = document.getElementById('reviews-section')
 			if (!section) return
 			section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+		})
+	}
+
+	if (reviewsToggle && reviewsList) {
+		reviewsToggle.addEventListener('click', () => {
+			const expanded = reviewsList.getAttribute('data-expanded') === 'true'
+			const nextExpanded = !expanded
+			reviewsList.setAttribute('data-expanded', nextExpanded ? 'true' : 'false')
+			reviewsToggle.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false')
+			reviewsToggle.classList.toggle('is-expanded', nextExpanded)
+			if (reviewsToggleLabel) {
+				reviewsToggleLabel.textContent = nextExpanded ? 'Mostrar menos' : 'Ver más reseñas'
+			}
 		})
 	}
 

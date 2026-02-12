@@ -62,37 +62,48 @@ class RatingStars extends HTMLElement {
 				}
 
 				.layer {
-					position: absolute;
-					inset: 0;
-					display: inline-flex;
+					display: flex;
 					align-items: center;
 					gap: ${gap}px;
+					width: ${totalWidth}px;
+					height: ${size}px;
 				}
 
 				.layer svg {
 					width: ${size}px;
 					height: ${size}px;
+					flex: 0 0 auto;
 					display: block;
 					fill: currentColor;
 					stroke: none;
 				}
 
 				.layer--base {
+					position: absolute;
+					left: 0;
+					top: 0;
 					color: #cbd5e1;
 				}
 
 				.layer--fill-wrap {
+					position: absolute;
+					left: 0;
+					top: 0;
+					height: ${size}px;
 					overflow: hidden;
 					width: ${fillPercent}%;
 				}
 
 				.layer--fill {
+					position: absolute;
+					left: 0;
+					top: 0;
 					color: #f59e0b;
 				}
 			</style>
 			<div class="stars" role="img" aria-label="${label}">
 				<div class="layer layer--base">${this.renderStars(max)}</div>
-				<div class="layer layer--fill-wrap">
+				<div class="layer--fill-wrap">
 					<div class="layer layer--fill">${this.renderStars(max)}</div>
 				</div>
 			</div>
