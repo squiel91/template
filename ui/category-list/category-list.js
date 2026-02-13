@@ -11,13 +11,12 @@ const ensureStyles = () => {
 	style.textContent = `
 		category-list {
 			display: grid;
-			grid-template-columns: repeat(2, 1fr);
 			gap: 24px;
 		}
 
 		@media (min-width: 640px) {
 			category-list {
-				grid-template-columns: repeat(3, 1fr);
+				grid-template-columns: repeat(2, 1fr);
 			}
 		}
 

@@ -17,6 +17,7 @@ import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { toSafeCssColor } from '/shared/css-color.js'
+import { getNormalizedMetadataColors } from '/shared/product-metadata.js'
 import { urlSafe } from '/shared/url-safe.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
 import {
@@ -93,66 +94,7 @@ const renderProduct = (product, relatedProducts = []) => {
 		.filter(item => item && Number(item.id) !== Number(product.id))
 		.slice(0, 4)
 
-	const warningContext = Number.isFinite(Number(product?.id))
-		? `[product:${Number(product.id)}]`
-		: '[product:unknown]'
-	const warnInvalidMetadata = (message, payload) => {
-		if (typeof console?.warn !== 'function') return
-		console.warn(`${warningContext} ${message}`, payload)
-	}
-
-	let metadata = null
-	if (product?.metadata && typeof product.metadata === 'object' && !Array.isArray(product.metadata)) {
-		metadata = product.metadata
-	} else if (typeof product?.metadata === 'string') {
-		try {
-			const parsedMetadata = JSON.parse(product.metadata)
-			if (parsedMetadata && typeof parsedMetadata === 'object' && !Array.isArray(parsedMetadata)) {
-				metadata = parsedMetadata
-			} else {
-				warnInvalidMetadata('`metadata` should be an object.', parsedMetadata)
-			}
-		} catch (error) {
-			warnInvalidMetadata('`metadata` string is not valid JSON.', product.metadata)
-		}
-	} else if (product?.metadata != null) {
-		warnInvalidMetadata('`metadata` has an unsupported type.', product.metadata)
-	}
-
-	const normalizeColorsMetadata = rawColors => {
-		if (rawColors == null) return []
-		if (!Array.isArray(rawColors)) {
-			warnInvalidMetadata('`metadata.colors` should be an array.', rawColors)
-			return []
-		}
-
-		return rawColors.reduce((result, item, index) => {
-			if (!item || typeof item !== 'object' || Array.isArray(item)) {
-				warnInvalidMetadata('Invalid color item. Expected object.', {
-					index,
-					item
-				})
-				return result
-			}
-
-			const name = typeof item.name === 'string' ? item.name.trim() : ''
-			const value = typeof item.value === 'string' ? item.value.trim() : ''
-			const safeColor = toSafeCssColor(value)
-
-			if (!name || !value || !safeColor) {
-				warnInvalidMetadata('Invalid color item. Expected non-empty `name` and valid css `value`.', {
-					index,
-					item
-				})
-				return result
-			}
-
-			result.push({ name, value: safeColor })
-			return result
-		}, [])
-	}
-
-	const colorsMetadata = normalizeColorsMetadata(metadata?.colors)
+	const colorsMetadata = getNormalizedMetadataColors(product)
 	const requiresMetadataColorSelection = colorsMetadata.length > 0
 	const metadataColorOptions = colorsMetadata.map((color, index) => ({
 		id: index + 1,
@@ -397,6 +339,32 @@ const renderProduct = (product, relatedProducts = []) => {
 	let currentVariant = requiresVariantSelection ? null : defaultVariant
 	let selectedMetadataColorOptionId = null
 	let quantity = 1
+
+	const getSelectedMetadataColorOption = () => {
+		if (!requiresMetadataColorSelection) return null
+		if (
+			typeof selectedMetadataColorOptionId !== 'number' ||
+			!Number.isFinite(selectedMetadataColorOptionId) ||
+			selectedMetadataColorOptionId <= 0
+		) {
+			return null
+		}
+
+		return (
+			metadataColorOptions.find(option => option.id === selectedMetadataColorOptionId) ??
+			null
+		)
+	}
+
+	const getAddToCartNote = () => {
+		const selectedColorOption = getSelectedMetadataColorOption()
+		if (!selectedColorOption) return null
+
+		return {
+			text: `color: ${selectedColorOption.name}`,
+			isNoteVisible: true
+		}
+	}
 
 	const getVariantMaxQuantity = () => {
 		const stock = currentVariant?.stock
@@ -801,12 +769,20 @@ const renderProduct = (product, relatedProducts = []) => {
 			if (typeof addToCartButton.startLoading === 'function') {
 				addToCartButton.startLoading()
 			}
+			const addToCartNote = getAddToCartNote()
 			tiendu.cart
-				.addProductVariant(currentVariant, clampQuantity(quantity), () => {
-					if (typeof addToCartButton.stopLoading === 'function') {
-						addToCartButton.stopLoading()
+				.addProductVariant(
+					currentVariant,
+					{
+						quantity: clampQuantity(quantity),
+						onClose: () => {
+							if (typeof addToCartButton.stopLoading === 'function') {
+								addToCartButton.stopLoading()
+							}
+						},
+						...(addToCartNote ? { note: addToCartNote } : {})
 					}
-				})
+				)
 				.catch(() => {
 					if (typeof addToCartButton.stopLoading === 'function') {
 						addToCartButton.stopLoading()

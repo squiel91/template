@@ -65,6 +65,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {number} reviewsQuantity
 	* @property {number | null} averageRating
 	* @property {Array<{ name: string; value: string }> | null} specifications
+	* @property {Record<string, unknown> | null} metadata
 	* @property {string | null} videoUrl
 	* @property {Array<ProductAttribute>} attributes
 	* @property {number} unitsSold
@@ -81,6 +82,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {Array<PublicImage> | null} images
 	* @property {string | null} description
 	* @property {Array<{ name: string; value: string }> | null} specifications
+	* @property {Record<string, unknown> | null} metadata
 	* @property {string | null} videoUrl
 	* @property {boolean} isPhysical
 	* @property {Array<unknown>} reviews
@@ -192,10 +194,53 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {{ criteria?: 'name' | 'created' | 'updated' | 'sales' | 'price'; order?: 'asc' | 'desc' }} sort
 	*/
 
+/**
+	* @typedef {{ text: string; isNoteVisible?: boolean }} CartItemNoteInput
+	*/
+
+/**
+	* @typedef {{
+	*   quantity: number
+	*   note?: CartItemNoteInput | null
+	*   onClose?: (payload: { updatedCartItemsQuantity: number }) => void
+	* }} AddProductVariantOptions
+	*/
+
 const trackMetaAddToCart = () => {}
 const trackMetaInitiateCheckout = () => {}
 const trackMetaPurchase = () => {}
 let activeCartOverlayCleanup = null
+
+/** @param {CartItemNoteInput | undefined} note */
+const normalizeCartItemNoteInput = note => {
+	if (!note || typeof note !== 'object') return null
+	const text = typeof note.text === 'string' ? note.text.trim() : ''
+	if (!text) return null
+	return {
+		text,
+		isNoteVisible: Boolean(note.isNoteVisible)
+	}
+}
+
+/**
+	* @param {AddProductVariantOptions} options
+	*/
+const resolveAddProductVariantOptions = options => {
+	if (!options || typeof options !== 'object') {
+		throw new Error('`options` is required and must be an object.')
+	}
+
+	const normalizedQuantity = Number(options.quantity)
+	if (!Number.isFinite(normalizedQuantity) || normalizedQuantity <= 0) {
+		throw new Error('`options.quantity` must be a positive number.')
+	}
+
+	return {
+		quantity: Math.max(1, Math.floor(normalizedQuantity)),
+		note: normalizeCartItemNoteInput(options.note),
+		onClose: typeof options.onClose === 'function' ? options.onClose : undefined
+	}
+}
 
 const up = baseFetch => {
 	const buildUrl = (url, queryParams) => {
@@ -359,12 +404,18 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			}
 		},
 		cart: {
-			addProductVariant: async (productVariant, quantity, onClose) => {
+			/**
+			 * Adds a product variant to cart and opens checkout overlay.
+			 * @param {{ id: number }} productVariant
+			 * @param {AddProductVariantOptions} options
+			 */
+			addProductVariant: async (productVariant, options) => {
 				const shopperSessionToken = await methods.shoppers.getToken()
+				const { quantity, note, onClose } = resolveAddProductVariantOptions(options)
 
 				const response = await upFetch.post(
 					`${baseApiUrl}/cart/products/variants/${productVariant.id}`,
-					{ quantity },
+					{ quantity, note },
 					{
 						headers: shopperSessionToken
 							? { [SHOPPER_SESSION_TOKEN_HEADER]: shopperSessionToken }

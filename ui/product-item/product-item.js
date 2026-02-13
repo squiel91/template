@@ -207,6 +207,10 @@ class ProductItem extends LitElement {
 		url: { type: String },
 		hasSingleVariant: { type: Boolean, attribute: 'has-single-variant' },
 		hasMultipleVariants: { type: Boolean, attribute: 'has-multiple-variants' },
+		hasMultipleMetadataColors: {
+			type: Boolean,
+			attribute: 'has-multiple-metadata-colors'
+		},
 		variantId: { type: String, attribute: 'variant-id' },
 		outOfStock: { type: Boolean, attribute: 'out-of-stock' },
 		averageRating: { type: Number, attribute: 'average-rating' },
@@ -224,6 +228,7 @@ class ProductItem extends LitElement {
 		this.url = ''
 		this.hasSingleVariant = false
 		this.hasMultipleVariants = false
+		this.hasMultipleMetadataColors = false
 		this.variantId = ''
 		this.outOfStock = false
 		this.averageRating = 0
@@ -279,11 +284,18 @@ class ProductItem extends LitElement {
 		this.startLoading()
 
 		tiendu.cart
-			.addProductVariant({ id: Number(this.variantId) }, 1, ({ updatedCartItemsQuantity }) => {
-				const cartBadge = document.getElementById('cart-quantity')
-				if (cartBadge) cartBadge.textContent = String(updatedCartItemsQuantity)
-				this.stopLoading()
-			})
+			.addProductVariant(
+				{ id: Number(this.variantId) },
+				{
+					quantity: 1,
+					onClose: ({ updatedCartItemsQuantity }) => {
+						const cartBadge = document.getElementById('cart-quantity')
+						if (cartBadge)
+							cartBadge.textContent = String(updatedCartItemsQuantity)
+						this.stopLoading()
+					}
+				}
+			)
 			.catch(err => {
 				console.error('[ProductItem] Error adding to cart:', err)
 				this.stopLoading()
@@ -291,7 +303,15 @@ class ProductItem extends LitElement {
 	}
 
 	renderQuickAction() {
-		if (this.hasSingleVariant && !this.outOfStock) {
+		const hasDisplayPrice =
+			typeof this.price === 'string' && this.price.trim().length > 0
+
+		if (
+			this.hasSingleVariant &&
+			hasDisplayPrice &&
+			!this.hasMultipleMetadataColors &&
+			!this.outOfStock
+		) {
 			return html`
 				<div class="product-item__quick-action">
 					<button

@@ -3,6 +3,7 @@
 import { getListingProductState } from '/shared/product-pricing.js'
 import { withOriginQuery } from '/shared/navigation-origin.js'
 import { urlSafe } from '/shared/url-safe.js'
+import { getNormalizedMetadataColors } from '/shared/product-metadata.js'
 
 export const createProductItemElement = (product, options = {}) => {
 	const item = document.createElement('product-item')
@@ -10,6 +11,8 @@ export const createProductItemElement = (product, options = {}) => {
 	const defaultUrl = `/prendas/${product.id}/${urlSafe(product.title || 'producto')}`
 	const targetUrl = typeof options.url === 'string' ? options.url : defaultUrl
 	const linkWithOrigin = withOriginQuery(targetUrl, options.origin)
+	const hasMultipleMetadataColors =
+		getNormalizedMetadataColors(product).length > 1
 
 	item.setAttribute('product-id', String(product.id))
 	item.setAttribute('title', product.title)
@@ -31,6 +34,9 @@ export const createProductItemElement = (product, options = {}) => {
 	if (listingState.quickAddVariantId) {
 		item.setAttribute('has-single-variant', 'true')
 		item.setAttribute('variant-id', String(listingState.quickAddVariantId))
+		if (hasMultipleMetadataColors) {
+			item.setAttribute('has-multiple-metadata-colors', 'true')
+		}
 	} else if (listingState.hasMultipleVariants) {
 		item.setAttribute('has-multiple-variants', 'true')
 	}
