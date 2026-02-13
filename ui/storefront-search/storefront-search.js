@@ -631,10 +631,10 @@ class StorefrontSearch extends LitElement {
 	}
 
 	renderItem(product) {
-		const searchPageUrl = `/productos?q=${encodeURIComponent(this.query)}`
+		const searchPageUrl = `/prendas?q=${encodeURIComponent(this.query)}`
 		const priceLabel = getListingPriceLabel(product)
 		const productUrl = withOriginQuery(
-			`/productos/${product.id}/${urlSafe(product.title || '')}`,
+			`/prendas/${product.id}/${urlSafe(product.title || '')}`,
 			{ url: searchPageUrl, title: 'Búsqueda' }
 		)
 
@@ -661,7 +661,7 @@ class StorefrontSearch extends LitElement {
 		if (!this.query || this.loading || this.items.length !== SEARCH_DROPDOWN_LIMIT) return nothing
 		return html`
 			<div class="storefront-search__more">
-				<a class="storefront-search__more-link" href=${`/productos?q=${encodeURIComponent(this.query)}`}>
+				<a class="storefront-search__more-link" href=${`/prendas?q=${encodeURIComponent(this.query)}`}>
 					Ver más resultados
 				</a>
 			</div>
@@ -681,7 +681,7 @@ class StorefrontSearch extends LitElement {
 					<i data-lucide="search"></i>
 				</button>
 				<button class="storefront-search__mobile-backdrop" type="button" aria-label="Cerrar búsqueda" @click=${this.closeMobile}></button>
-				<form class="storefront-search__form" action="/productos" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
+				<form class="storefront-search__form" action="/prendas" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
 					<label class="sr-only" for="storefront-search-input">Buscar productos</label>
 					<div class="storefront-search__control inline-form-control">
 						${this.renderControlIcon()}

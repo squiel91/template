@@ -12,7 +12,7 @@ import { urlSafe } from '/shared/url-safe.js'
 
 const CART_BUTTON_LOADING_TIMEOUT_MS = 4000
 const PAGE_NAVIGATION_DELAY_MS = 120
-const PAGE_OVERLAY_MAX_WAIT_MS = 3000
+const PAGE_OVERLAY_MAX_WAIT_MS = 2000
 const NEWSLETTER_SUCCESS_MESSAGE =
 	'¡Enviado el email de confirmación! Suscribite al confirmar tu correo.'
 const NEWSLETTER_INVALID_EMAIL_MESSAGE = 'Ingresá un email válido para suscribirte.'

@@ -24,10 +24,34 @@ const ensureStyles = () => {
 			font-family: inherit;
 			font-size: var(--text-sm, 0.875rem);
 			font-weight: 600;
-			transition: all var(--transition-fast, 0.15s ease);
+			transition: transform var(--transition-fast, 0.15s ease);
 			border: 1px solid transparent;
 			cursor: pointer;
 			line-height: 1;
+			position: relative;
+			overflow: hidden;
+			isolation: isolate;
+		}
+
+		tiendu-button[variant='primary'] button::after {
+			content: '';
+			position: absolute;
+			top: -140%;
+			left: -160%;
+			width: 56%;
+			height: 320%;
+			transform: rotate(18deg);
+			background: linear-gradient(
+				120deg,
+				rgba(255, 255, 255, 0) 0%,
+				rgba(255, 255, 255, 0.14) 38%,
+				rgba(255, 255, 255, 0.42) 50%,
+				rgba(255, 255, 255, 0.14) 62%,
+				rgba(255, 255, 255, 0) 100%
+			);
+			opacity: 0;
+			pointer-events: none;
+			transition: left 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
 		}
 
 		tiendu-button .tiendu-button__icon {
@@ -50,8 +74,7 @@ const ensureStyles = () => {
 		}
 
 		tiendu-button[variant='secondary'] button:hover:not(:disabled) {
-			background: #e2e8f0;
-			border-color: #64748b;
+			transform: scale(1.02);
 		}
 
 		tiendu-button[variant='primary'] button {
@@ -61,8 +84,13 @@ const ensureStyles = () => {
 		}
 
 		tiendu-button[variant='primary'] button:hover:not(:disabled) {
-			background: var(--color-primary-hover, #1e293b);
-			border-color: var(--color-primary-hover, #1e293b);
+			transform: scale(1.02);
+		}
+
+		tiendu-button[variant='primary'] button:hover:not(:disabled)::after,
+		tiendu-button[variant='primary'] button:focus-visible:not(:disabled)::after {
+			left: 170%;
+			opacity: 1;
 		}
 
 		tiendu-button button:disabled {
@@ -164,6 +192,10 @@ class AppButton extends LitElement {
 
 		if (iconName === 'forward') {
 			return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 17 5-5-5-5"></path><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg>`
+		}
+
+		if (iconName === 'arrow-right') {
+			return html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>`
 		}
 
 		if (iconName === 'message-square') {

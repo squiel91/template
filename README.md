@@ -27,20 +27,20 @@ Routing is file based with `+page.html` and optional nested `+layout.html` using
 
 Segment types:
 
-- Static: `productos`
+- Static: `prendas`
 - Required param: `[productId]`
 - Optional terminal param: `[[safeSearchProductTitle]]`
 
 Examples:
 
 - `/` -> `+page.html`
-- `/productos` -> `productos/+page.html`
-- `/productos/323` -> `productos/[productId]/+page.html`
-- `/productos/323/camisa-azul` -> `productos/[productId]/[[safeSearchProductTitle]]/+page.html`
+- `/prendas` -> `prendas/+page.html`
+- `/prendas/323` -> `prendas/[productId]/+page.html`
+- `/prendas/323/camisa-azul` -> `prendas/[productId]/[[safeSearchProductTitle]]/+page.html`
 
 We recommend using Spanish route groups like:
 
-- `/productos`
+- `/prendas`
 - `/categorias`
 - `/paginas`
 
@@ -87,14 +87,14 @@ Use `/shared/url-safe.js` to build readable optional slug URLs.
 ```js
 import { urlSafe } from '/shared/url-safe.js'
 
-const productHref = `/productos/${product.id}/${urlSafe(product.title)}`
+const productHref = `/prendas/${product.id}/${urlSafe(product.title)}`
 const categoryHref = `/categorias/${category.id}/${urlSafe(category.name)}`
 const pageHref = `/paginas/${page.id}/${urlSafe(page.title || 'pagina')}`
 ```
 
 Patterns:
 
-- `/productos/:id/:slug?`
+- `/prendas/:id/:slug?`
 - `/categorias/:id/:slug?`
 - `/paginas/:id/:slug?`
 

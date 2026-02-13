@@ -4,6 +4,7 @@ import '/ui/product-item/product-item.js'
 import '/ui/product-list/product-list.js'
 import '/ui/category-item/category-item.js'
 import '/ui/category-list/category-list.js'
+import '/ui/app-button/app-button.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { storefrontConfig } from '/shared/storefront-config.js'
 import { withPageLoading } from '/shared/page-loading.js'
@@ -14,6 +15,28 @@ import { escapeHtml } from '/shared/sanitize.js'
 import { urlSafe } from '/shared/url-safe.js'
 
 const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
+
+const initHeroActions = () => {
+	const heroPrimaryButton = document.getElementById('hero-primary-link')
+	if (!(heroPrimaryButton instanceof HTMLElement)) return
+
+	heroPrimaryButton.addEventListener('app-click', () => {
+		window.location.href = '/prendas'
+	})
+}
+
+const initLinkedTienduButtons = () => {
+	document.addEventListener('app-click', event => {
+		const target = event.target
+		if (!(target instanceof Element)) return
+		const button = target.closest('tiendu-button[data-href]')
+		if (!(button instanceof HTMLElement)) return
+
+		const href = button.getAttribute('data-href')
+		if (!href) return
+		window.location.href = href
+	})
+}
 
 const renderHomeState = html => {
 	const container = document.getElementById('home-category-sections')
@@ -203,7 +226,7 @@ const renderCategorySections = sections => {
 				<section class="section" aria-labelledby="home-category-title-${category.id}">
 					<div class="section__header">
 						<h2 id="home-category-title-${category.id}" class="section__title section__title--large">${categoryName}</h2>
-						<a class="section__action" href="${categoryHref}">Ver más <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-left:2px;"></i></a>
+						<tiendu-button class="section__action-button" variant="secondary" label="Ver más" icon="arrow-right" data-href="${categoryHref}" aria-label="Ver más de ${categoryName}"></tiendu-button>
 					</div>
 					<div id="${productsContainerId}" aria-live="polite"></div>
 				</section>
@@ -222,6 +245,9 @@ const renderCategorySections = sections => {
 }
 
 const init = async () => {
+	initHeroActions()
+	initLinkedTienduButtons()
+
 	const blogPostsPromise = loadBlogPosts()
 
 	const configuredIds = Array.isArray(storefrontConfig.homeCategoryIds)

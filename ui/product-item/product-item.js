@@ -87,12 +87,12 @@ const ensureStyles = () => {
 			width: 40px;
 			height: 40px;
 			padding: 0;
-			background: #0f172a;
+			background: var(--color-primary, #0f172a);
 			color: white;
 		}
 
 		.product-item__quick-action-btn--cart:hover {
-			background: #1e293b;
+			background: var(--color-primary, #0f172a);
 			transform: scale(1.05);
 		}
 
@@ -318,7 +318,7 @@ class ProductItem extends LitElement {
 	render() {
 		if (!this.title) return nothing
 
-		const href = this.url || `/productos/${this.productId}`
+		const href = this.url || `/prendas/${this.productId}`
 		const hasImage = Boolean(this.imageUrl)
 		const imageSrc = this.imageUrl || FALLBACK_IMAGE_SRC
 		const alt = hasImage ? this.imageAlt || this.title : 'Sin imagen'

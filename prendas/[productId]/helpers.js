@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-export const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899424414'
+export const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899124018'
 
 export const buildOutOfStockWhatsAppUrl = productTitle => {
 	const message = `¡Hola! Quiero consultarles sobre el producto "${productTitle}" que vi que ya no tienen en stock.`

@@ -12,7 +12,7 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+			href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap"
 			rel="stylesheet"
 		/>
 		<style>
@@ -30,7 +30,7 @@
 			#boot-page-overlay .boot-page-overlay__surface {
 				display: grid;
 				place-items: center;
-				background: rgba(255, 255, 255, 1);
+				background: rgba(255, 255, 255, 0.85);
 				backdrop-filter: blur(4px);
 				opacity: 1;
 			}
@@ -43,11 +43,10 @@
 				transform: scale(1);
 			}
 
-			#boot-page-overlay .boot-page-overlay__panel svg {
+			#boot-page-overlay .boot-page-overlay__panel img {
 				width: 48px;
 				height: 48px;
-				color: #0f172a;
-				animation: boot-page-overlay-spin 1s linear infinite;
+				animation: boot-page-overlay-pulse 1.2s ease-in-out infinite;
 			}
 
 			#boot-page-overlay[data-animate-in='true'][data-state='opening'] .boot-page-overlay__surface {
@@ -69,9 +68,16 @@
 				animation: boot-page-overlay-zoom-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 			}
 
-			@keyframes boot-page-overlay-spin {
-				to {
-					transform: rotate(360deg);
+			@keyframes boot-page-overlay-pulse {
+				0%,
+				100% {
+					transform: scale(0.94);
+					opacity: 0.82;
+				}
+
+				50% {
+					transform: scale(1.06);
+					opacity: 1;
 				}
 			}
 
@@ -180,6 +186,14 @@
 		</script>
 	</head>
 	<body>
+		<img
+			src="/public/white-bear.png"
+			class="body-bear-bg"
+			alt=""
+			aria-hidden="true"
+			loading="lazy"
+			decoding="async"
+		/>
 		<div
 			id="boot-page-overlay"
 			data-open="true"
@@ -188,14 +202,14 @@
 		>
 			<div class="boot-page-overlay__surface" role="status" aria-live="polite" aria-label="Cargando página">
 				<div class="boot-page-overlay__panel" aria-hidden="true">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle-icon lucide-loader-circle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+					<img src="/public/page-loader-heart.svg" alt="" />
 				</div>
 			</div>
 		</div>
 		<a href="#contenido" class="skip-link">Saltar al contenido</a>
 
 		<div class="top-banner" role="status" aria-live="polite">
-			<div class="container top-banner__inner">Envío GRATIS en Uruguay  en pedidos superiores a $ 2.000</div>
+			<div class="container top-banner__inner">Envío GRATIS en Uruguay  en pedidos mayores a $ 2.000</div>
 		</div>
 		
 		<nav class="site-header" aria-label="Navegación principal">
@@ -205,7 +219,7 @@
 						<i data-lucide="align-left"></i>
 					</button>
 					<a href="/" class="brand brand__name" aria-label="Inicio Tienda">
-						Roma Tejidos
+						<img src="/public/roma-tejidos-tag.png" alt="Roma Tejidos" class="brand__logo" />
 					</a>
 				</div>
 				
@@ -255,7 +269,7 @@
 		</main>
 
 		<a
-			href="https://wa.me/59899424414?text=%C2%A1Hola%21%20Tengo%20una%20consulta%20sobre%20algo%20que%20v%C3%AD%20en%20su%20web."
+			href="https://wa.me/59899124018?text=%C2%A1Hola%21%20Tengo%20una%20consulta%20sobre%20algo%20que%20v%C3%AD%20en%20su%20web."
 			class="whatsapp-fab"
 			target="_blank"
 			rel="noopener noreferrer"
@@ -271,21 +285,21 @@
 					<section class="footer-column" aria-labelledby="footer-store-title">
 						<h2 id="footer-store-title">Roma Tejidos</h2>
 						<p>
-							Una tienda pensada para resolver compras del día a día con buen servicio,
-							entregas rápidas y atención cercana.
+							Creamos prendas de bebé artesanales que acompañan cada etapa, con
+							atención cercana y envíos rápidos a todo Uruguay.
 						</p>
 						<ul class="footer-contact-list">
 							<li>
 								<i data-lucide="phone"></i>
-								<a href="tel:+59899424414">+(598) 099 424 414</a>
+							<a href="tel:+598099124018">+(598) 099 124 018</a>
 							</li>
 							<li>
 								<i data-lucide="mail"></i>
-								<a href="mailto:contacto@tutienda.uy">contacto@tutienda.uy</a>
+							<a href="mailto:romatejidos@tiendu.uy">romatejidos@tiendu.uy</a>
 							</li>
 							<li>
 								<i data-lucide="map-pin"></i>
-								<span>Calle Principal 123, Ciudad</span>
+							<span>Montevideo, Uruguay</span>
 							</li>
 						</ul>
 					</section>

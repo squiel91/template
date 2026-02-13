@@ -7,7 +7,7 @@ import { urlSafe } from '/shared/url-safe.js'
 export const createProductItemElement = (product, options = {}) => {
 	const item = document.createElement('product-item')
 	const listingState = getListingProductState(product)
-	const defaultUrl = `/productos/${product.id}/${urlSafe(product.title || 'producto')}`
+	const defaultUrl = `/prendas/${product.id}/${urlSafe(product.title || 'producto')}`
 	const targetUrl = typeof options.url === 'string' ? options.url : defaultUrl
 	const linkWithOrigin = withOriginQuery(targetUrl, options.origin)
 
