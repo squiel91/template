@@ -123,9 +123,9 @@ body {
 	z-index: 0;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 767px) {
 	.body-bear-bg {
-		display: none;
+		width: min(320px, 68vw);
 	}
 }
 
