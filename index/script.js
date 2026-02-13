@@ -16,28 +16,6 @@ import { urlSafe } from '/shared/url-safe.js'
 
 const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
 
-const initHeroActions = () => {
-	const heroPrimaryButton = document.getElementById('hero-primary-link')
-	if (!(heroPrimaryButton instanceof HTMLElement)) return
-
-	heroPrimaryButton.addEventListener('app-click', () => {
-		window.location.href = '/prendas'
-	})
-}
-
-const initLinkedTienduButtons = () => {
-	document.addEventListener('app-click', event => {
-		const target = event.target
-		if (!(target instanceof Element)) return
-		const button = target.closest('tiendu-button[data-href]')
-		if (!(button instanceof HTMLElement)) return
-
-		const href = button.getAttribute('data-href')
-		if (!href) return
-		window.location.href = href
-	})
-}
-
 const renderHomeState = html => {
 	const container = document.getElementById('home-category-sections')
 	if (!container) {
@@ -226,7 +204,7 @@ const renderCategorySections = sections => {
 				<section class="section" aria-labelledby="home-category-title-${category.id}">
 					<div class="section__header">
 						<h2 id="home-category-title-${category.id}" class="section__title section__title--large">${categoryName}</h2>
-						<tiendu-button class="section__action-button" variant="secondary" label="Ver más" icon="arrow-right" data-href="${categoryHref}" aria-label="Ver más de ${categoryName}"></tiendu-button>
+						<a href="${categoryHref}" aria-label="Ver más de ${categoryName}"><tiendu-button class="section__action-button" variant="secondary" label="Ver más" icon="arrow-right" aria-hidden="true"></tiendu-button></a>
 					</div>
 					<div id="${productsContainerId}" aria-live="polite"></div>
 				</section>
@@ -245,9 +223,6 @@ const renderCategorySections = sections => {
 }
 
 const init = async () => {
-	initHeroActions()
-	initLinkedTienduButtons()
-
 	const blogPostsPromise = loadBlogPosts()
 
 	const configuredIds = Array.isArray(storefrontConfig.homeCategoryIds)

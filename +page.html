@@ -2,13 +2,14 @@
 	<div class="hero__content">
 		<div class="hero__layout">
 			<div class="hero__copy">
-				<h1 id="store-home-title" class="hero__title">Ropa para bebé hecha a mano y con amor</h1>
-				<p class="hero__subtitle">Descubrí prendas para bebé hechas a mano: suaves, cómodas y llenas de amor, con envíos a todo el país.</p>
+				<h1 id="store-home-title" class="hero__title">Ropa para bebé, hechas a mano y con amor</h1>
+				<p class="hero__subtitle">Descubrí prendas hechas a mano: suaves, cómodas y llenas de amor, con envíos a todo el país.</p>
 				<div class="hero__actions">
-					<tiendu-button id="hero-primary-link" variant="primary" label="Explorar prendas" icon="arrow-right" aria-label="Explorar prendas"></tiendu-button>
-					<a id="hero-secondary-link" class="btn btn--secondary" href="/categorias">
-						<i data-lucide="layout-grid"></i>
-						<span>Explorar categorías</span>
+					<a href="/prendas" aria-label="Explorar prendas">
+						<tiendu-button id="hero-primary-link" variant="primary" label="Explorar prendas" icon="arrow-right" aria-hidden="true"></tiendu-button>
+					</a>
+					<a href="/categorias" aria-label="Explorar categorías">
+						<tiendu-button id="hero-secondary-link" variant="secondary" label="Explorar categorías" icon="layout-grid" aria-hidden="true"></tiendu-button>
 					</a>
 				</div>
 				<div class="benefits-strip" aria-label="Beneficios de la tienda">
@@ -63,14 +64,15 @@
 	<section class="section" aria-labelledby="home-blog-title">
 		<div class="section__header">
 			<h2 id="home-blog-title" class="section__title section__title--large">Desde el blog</h2>
-			<tiendu-button
-				class="section__action-button"
-				variant="secondary"
-				label="Ver todos"
-				icon="arrow-right"
-				data-href="/blog"
-				aria-label="Ver todos los artículos del blog"
-			></tiendu-button>
+			<a href="/blog" aria-label="Ver todos los artículos del blog">
+				<tiendu-button
+					class="section__action-button"
+					variant="secondary"
+					label="Ver todos"
+					icon="arrow-right"
+					aria-hidden="true"
+				></tiendu-button>
+			</a>
 		</div>
 		<div id="home-blog-posts" class="blog-grid" aria-live="polite"></div>
 	</section>

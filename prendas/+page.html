@@ -1,15 +1,20 @@
 <store-breadcrumbs
 	aria-label="Breadcrumb"
 	items='[{"label":"Inicio","href":"/"}]'
-	current-label="Productos"
+	current-label="Prendas"
 ></store-breadcrumbs>
 
 <section class="listing-head" aria-labelledby="products-page-title">
 	<div class="listing-meta">
-		<h1 id="products-page-title" class="page-title">Productos</h1>
+		<h1 id="products-page-title" class="page-title">Prendas</h1>
 	</div>
 	<div class="listing-subhead">
-		<p id="products-results-summary">Explorá todo el catálogo</p>
+		<div class="listing-results-meta">
+			<p id="products-results-summary">Explorá todo el catálogo</p>
+			<a id="products-clear-search" class="listing-clear-search" href="/prendas" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" hidden>
+				<i data-lucide="x"></i>
+			</a>
+		</div>
 		<div class="listing-controls">
 			<tiendu-select id="products-sort-select" aria-label="Orden de productos" icon="arrow-down-up"></tiendu-select>
 		</div>
