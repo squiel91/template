@@ -5,7 +5,7 @@ import { urlSafe } from '/shared/url-safe.js'
 
 export const createCategoryItemElement = (category, options = {}) => {
 	const item = document.createElement('category-item')
-	const defaultUrl = `/categorias/${category.id}/${urlSafe(category.name || 'categoria')}`
+	const defaultUrl = `/colecciones/${category.id}/${urlSafe(category.name || 'coleccion')}`
 	const targetUrl = typeof options.url === 'string' ? options.url : defaultUrl
 	const linkWithOrigin = withOriginQuery(targetUrl, options.origin)
 

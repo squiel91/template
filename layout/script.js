@@ -110,7 +110,7 @@ const initMenuData = async () => {
 			'category-list',
 			categories,
 			category => category.name,
-			category => `/categorias/${category.id}/${urlSafe(category.name)}`
+			category => `/colecciones/${category.id}/${urlSafe(category.name)}`
 		)
 		renderLinkList(
 			'page-list',
@@ -123,7 +123,7 @@ const initMenuData = async () => {
 			'footer-category-list',
 			categories,
 			category => category.name,
-			category => `/categorias/${category.id}/${urlSafe(category.name)}`
+			category => `/colecciones/${category.id}/${urlSafe(category.name)}`
 		)
 		renderLinkList(
 			'footer-page-list',

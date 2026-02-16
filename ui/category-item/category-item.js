@@ -114,7 +114,7 @@ class CategoryItem extends LitElement {
 
 	render() {
 		if (!this.title) return nothing
-		const href = this.url || `/categorias/${this.categoryId}`
+		const href = this.url || `/colecciones/${this.categoryId}`
 		const imageSrc = this.imageUrl || FALLBACK_IMAGE_SRC
 		const imageAlt = this.imageAlt || this.title || 'Sin imagen'
 		const count = Number.isFinite(Number(this.count)) ? Number(this.count) : 0

@@ -3,16 +3,16 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Roma Tejidos</title>
+		<title>Euforia | Perfumes Árabes</title>
 		<meta
 			name="description"
-			content="Roma Tejidos: Vendemos todo lo que necesites. Todo, literal."
+			content="Perfumes, decants y experiencias olfativas premium en Uruguay."
 		/>
 		<meta name="theme-color" content="#0f172a" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
 			rel="stylesheet"
 		/>
 		<style>
@@ -44,9 +44,9 @@
 			}
 
 			#boot-page-overlay .boot-page-overlay__panel img {
-				width: 48px;
-				height: 48px;
-				animation: boot-page-overlay-pulse 1.2s ease-in-out infinite;
+				width: 96px;
+				height: auto;
+				animation: boot-page-overlay-pulse 1.25s ease-in-out infinite;
 			}
 
 			#boot-page-overlay[data-animate-in='true'][data-state='opening'] .boot-page-overlay__surface {
@@ -56,27 +56,27 @@
 
 			#boot-page-overlay[data-animate-in='true'][data-state='opening'] .boot-page-overlay__panel {
 				opacity: 0;
-				transform: scale(0.75);
+				transform: scale(0.8);
 				animation: boot-page-overlay-zoom-in 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 			}
 
 			#boot-page-overlay[data-state='closing'] .boot-page-overlay__surface {
-				animation: boot-page-overlay-fade-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+				animation: boot-page-overlay-fade-out 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 			}
 
 			#boot-page-overlay[data-state='closing'] .boot-page-overlay__panel {
-				animation: boot-page-overlay-zoom-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+				animation: boot-page-overlay-zoom-out 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 			}
 
 			@keyframes boot-page-overlay-pulse {
 				0%,
 				100% {
-					transform: scale(0.94);
-					opacity: 0.82;
+					transform: scale(0.96);
+					opacity: 0.84;
 				}
 
 				50% {
-					transform: scale(1.06);
+					transform: scale(1.04);
 					opacity: 1;
 				}
 			}
@@ -102,7 +102,7 @@
 			@keyframes boot-page-overlay-zoom-in {
 				from {
 					opacity: 0;
-					transform: scale(0.75);
+					transform: scale(0.8);
 				}
 				to {
 					opacity: 1;
@@ -117,17 +117,18 @@
 				}
 				to {
 					opacity: 0;
-					transform: scale(0.75);
+					transform: scale(0.8);
 				}
 			}
 		</style>
 		<link rel="icon" type="image/svg+xml" href="/public/favicon.svg" />
 		<link rel="stylesheet" href="/styles.css" />
+		<link rel="stylesheet" href="/layout/home-model.css" />
 		<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
 		<script>
 			(() => {
 				const OPEN_MS = 250
-				const CLOSE_MS = 750
+				const CLOSE_MS = 650
 				let openTimer = null
 				let closeTimer = null
 
@@ -152,16 +153,15 @@
 					overlay.dataset.animateIn = animate ? 'true' : 'false'
 					overlay.dataset.state = animate ? 'opening' : 'open'
 
-					if (animate) {
-						openTimer = window.setTimeout(() => {
-							const nextOverlay = getOverlay()
-							if (!nextOverlay) return
-							if (nextOverlay.dataset.open === 'true') {
-								nextOverlay.dataset.state = 'open'
-							}
-							openTimer = null
-						}, OPEN_MS)
-					}
+					if (!animate) return
+					openTimer = window.setTimeout(() => {
+						const nextOverlay = getOverlay()
+						if (!nextOverlay) return
+						if (nextOverlay.dataset.open === 'true') {
+							nextOverlay.dataset.state = 'open'
+						}
+						openTimer = null
+					}, OPEN_MS)
 				}
 
 				const hide = () => {
@@ -185,15 +185,7 @@
 			})()
 		</script>
 	</head>
-	<body>
-		<img
-			src="/public/white-bear.png"
-			class="body-bear-bg"
-			alt=""
-			aria-hidden="true"
-			loading="lazy"
-			decoding="async"
-		/>
+	<body class="model-theme">
 		<div
 			id="boot-page-overlay"
 			data-open="true"
@@ -202,156 +194,139 @@
 		>
 			<div class="boot-page-overlay__surface" role="status" aria-live="polite" aria-label="Cargando página">
 				<div class="boot-page-overlay__panel" aria-hidden="true">
-					<img src="/public/page-loader-heart.svg" alt="" />
+					<img src="/public/euphoria-logo.svg" alt="" />
 				</div>
 			</div>
 		</div>
+
 		<a href="#contenido" class="skip-link">Saltar al contenido</a>
 
-		<div class="top-banner" role="status" aria-live="polite">
-			<div class="container top-banner__inner">Envío GRATIS en Uruguay  en pedidos mayores a $ 2.000</div>
-		</div>
-		
-		<nav class="site-header" aria-label="Navegación principal">
-			<div class="container site-header__inner">
-				<div class="site-header__left">
-					<button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menú">
-						<i data-lucide="align-left"></i>
+		<header class="model-header" aria-label="Navegación principal">
+			<div class="model-header__inner">
+				<div class="model-header__left">
+					<button id="menu-toggle" class="model-icon-button" type="button" aria-label="Abrir menú">
+						<i data-lucide="menu"></i>
 					</button>
-					<a href="/" class="brand brand__name" aria-label="Inicio Tienda">
-						<img src="/public/roma-tejidos-tag.png" alt="Roma Tejidos" class="brand__logo" />
-					</a>
+					<nav class="model-header__nav" aria-label="Menú principal">
+						<a href="/perfumes">Tienda</a>
+						<span id="header-category-links"></span>
+						<a href="/paginas">Contacto</a>
+					</nav>
 				</div>
-				
-				<div class="site-header__right">
+
+				<a href="/" class="model-header__logo" aria-label="Inicio Euforia">
+					<img src="/public/model/logo/texto_ene.svg" alt="Euforia" />
+				</a>
+
+				<div class="model-header__right">
 					<storefront-search class="storefront-search"></storefront-search>
 					<tiendu-button
 						id="open-cart-button"
 						variant="secondary"
 						icon="shopping-cart"
 						loading-icon="loader-2"
-						label="Carrito"
+						label=""
 						badge="0"
 						badge-id="cart-quantity"
 						aria-label="Abrir carrito"
 					></tiendu-button>
 				</div>
 			</div>
-		</nav>
+		</header>
 
-		<aside id="side-menu" class="side-menu" aria-hidden="true">
-			<div class="side-menu__backdrop" id="menu-backdrop"></div>
-			<div class="side-menu__panel" role="dialog" aria-label="Menú de navegación">
-				<div class="side-menu__header">
+		<aside id="side-menu" class="model-side-menu" aria-hidden="true">
+			<div class="model-side-menu__backdrop" id="menu-backdrop"></div>
+			<div class="model-side-menu__panel" role="dialog" aria-label="Menú de navegación">
+				<div class="model-side-menu__header">
 					<strong>Menú</strong>
-					<button id="menu-close" class="side-menu__close" type="button" aria-label="Cerrar menú">
+					<button id="menu-close" class="model-icon-button" type="button" aria-label="Cerrar menú">
 						<i data-lucide="x"></i>
 					</button>
 				</div>
-				<div class="side-menu__content">
-					<section class="side-menu__section" aria-labelledby="menu-categories-title">
-						<h2 id="menu-categories-title" class="side-menu__section-title">Categorías</h2>
-						<ul id="category-list" class="side-menu__list" aria-live="polite"></ul>
-					</section>
-					<section class="side-menu__section" aria-labelledby="menu-pages-title">
-						<h2 id="menu-pages-title" class="side-menu__section-title">+ Información</h2>
-						<ul id="page-list" class="side-menu__list" aria-live="polite"></ul>
-						<ul class="side-menu__list">
-							<li><a href="/blog">Blog</a></li>
-						</ul>
-					</section>
-				</div>
+				<nav class="model-side-menu__links" aria-label="Menú móvil">
+					<a href="/perfumes">Tienda</a>
+					<span id="side-menu-category-links"></span>
+					<a href="/paginas">Contacto</a>
+					<a href="/blog">Blog</a>
+				</nav>
 			</div>
 		</aside>
 
-		<main id="contenido" class="container page-shell" role="main">
+		<main id="contenido" class="model-main" role="main">
 			{{content}}
 		</main>
 
-		<a
-			href="https://wa.me/59899124018?text=%C2%A1Hola%21%20Tengo%20una%20consulta%20sobre%20algo%20que%20v%C3%AD%20en%20su%20web."
-			class="whatsapp-fab"
-			target="_blank"
-			rel="noopener noreferrer"
-			aria-label="Abrir WhatsApp"
-			title="Escribinos por WhatsApp"
-		>
-			<img src="/public/whatsapp-logo.svg" alt="WhatsApp" loading="lazy" decoding="async" />
-		</a>
-
-		<footer class="site-footer">
-			<div class="container">
-				<div class="footer-grid">
-					<section class="footer-column" aria-labelledby="footer-store-title">
-						<h2 id="footer-store-title">Roma Tejidos</h2>
+		<footer class="model-footer">
+			<div class="model-footer__inner">
+				<div class="model-footer__grid">
+					<section class="model-footer__column" aria-labelledby="footer-brand-title">
+						<h2 id="footer-brand-title" class="sr-only">Euforia Perfumes</h2>
+						<img
+							src="/public/model/logo/logo_ene.svg"
+							class="model-footer__brand-logo"
+							alt="Euforia"
+						/>
 						<p>
-							Creamos prendas de bebé artesanales que acompañan cada etapa, con
-							atención cercana y envíos rápidos a todo Uruguay.
+							Tu destino para fragancias exclusivas y auténticas. Descubrí perfumes de nicho,
+							decants y marcas internacionales.
 						</p>
-						<ul class="footer-contact-list">
+						<ul class="model-footer__contact">
+							<li><i data-lucide="phone"></i><a href="tel:+59897813815">+598 97 813 815</a></li>
 							<li>
-								<i data-lucide="phone"></i>
-							<a href="tel:+598099124018">+(598) 099 124 018</a>
+								<i data-lucide="mail"></i><a href="mailto:euforia@tiendu.uy">euforia@tiendu.uy</a>
 							</li>
-							<li>
-								<i data-lucide="mail"></i>
-							<a href="mailto:romatejidos@tiendu.uy">romatejidos@tiendu.uy</a>
-							</li>
-							<li>
-								<i data-lucide="map-pin"></i>
-							<span>Montevideo, Uruguay</span>
-							</li>
+							<li><i data-lucide="map-pin"></i><span>Montevideo, Uruguay</span></li>
 						</ul>
 					</section>
 
-					<section class="footer-column" aria-labelledby="footer-categories-title">
-						<h2 id="footer-categories-title">Categorías</h2>
-						<ul id="footer-category-list" class="footer-links" aria-live="polite"></ul>
+					<section class="model-footer__column" aria-labelledby="footer-frag-title">
+						<h2 id="footer-frag-title">Fragancias</h2>
+						<ul class="model-footer__links" id="footer-fragrance-links">
+							<li><a href="/colecciones">Ver colecciones</a></li>
+						</ul>
 					</section>
 
-					<section class="footer-column" aria-labelledby="footer-info-title">
+					<section class="model-footer__column" aria-labelledby="footer-info-title">
 						<h2 id="footer-info-title">Información Útil</h2>
-						<ul id="footer-page-list" class="footer-links" aria-live="polite"></ul>
+						<ul class="model-footer__links" id="footer-info-links">
+							<li><a href="/paginas">Ver páginas</a></li>
+						</ul>
 					</section>
 
-					<section class="footer-column" aria-labelledby="footer-news-title">
+					<section class="model-footer__column" aria-labelledby="footer-news-title">
 						<h2 id="footer-news-title">Mantente Informado</h2>
-						<p>Recibe las últimas novedades y ofertas exclusivas</p>
-						<form class="footer-subscribe-form" method="post" data-skip-overlay novalidate>
-							<label class="sr-only" for="footer-subscribe-email">Tu email</label>
-							<div class="inline-form-control">
-								<span id="footer-subscribe-icon" class="inline-form-control__icon" aria-hidden="true">
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>
-								</span>
-								<input
-									id="footer-subscribe-email"
-									type="email"
-									name="email"
-									autocomplete="email"
-									placeholder="Tu email"
-									class="inline-form-control__input"
-								/>
-								<button type="submit" class="inline-form-control__button">Unirme</button>
-							</div>
+						<p>Recibí novedades y ofertas exclusivas.</p>
+						<form class="model-footer__subscribe footer-subscribe-form" method="post" data-skip-overlay novalidate>
+							<input id="footer-subscribe-email" type="email" name="email" placeholder="Tu email" autocomplete="email" />
+							<button type="submit">Suscribir</button>
 						</form>
-						<ul class="footer-social-links">
+						<ul class="model-footer__social">
 							<li>
-								<a href="https://www.instagram.com/roma.tejidos.31" target="_blank" rel="noopener noreferrer" aria-label="Instagram Roma Tejidos" title="Instagram Roma Tejidos"><i data-lucide="instagram"></i></a>
-								<span class="footer-social-tooltip">¡Seguinos!</span>
+								<a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+									<i data-lucide="facebook"></i>
+								</a>
+							</li>
+							<li>
+								<a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+									<i data-lucide="instagram"></i>
+								</a>
 							</li>
 						</ul>
 					</section>
 				</div>
 
-				<p class="footer-legal">
-					&copy; <span id="footer-year"></span> Roma Tejidos. Todos los derechos reservados.
-					<br />
-					Tienda co-creada junto a
-					<a class="footer-legal__link" href="https://tiendu.uy" target="_blank" rel="noopener noreferrer">Tiendu</a>.
-				</p>
+				<div class="model-footer__bottom">
+					<div class="model-footer__policies">
+						<a href="/paginas">Política de Privacidad</a>
+						<a href="/paginas">Política de Envíos y Devoluciones</a>
+					</div>
+					<div class="model-footer__meta">
+						<span>© <span id="footer-year"></span> Euforia</span>
+					</div>
+				</div>
 			</div>
 		</footer>
 
-		<script type="module" src="/layout/script.js"></script>
+		<script type="module" src="/layout/static-layout.js"></script>
 	</body>
 </html>

@@ -103,3 +103,21 @@ export const getNormalizedMetadataColors = (product, options = {}) => {
 		return result
 	}, [])
 }
+
+export const getMetadataBrand = (product, options = {}) => {
+	const warningContext =
+		typeof options.warningContext === 'string' && options.warningContext.length > 0
+			? options.warningContext
+			: buildWarningContext(product)
+	const metadata = parseMetadataObject(product, warningContext)
+	const rawBrand = metadata?.brand
+
+	if (rawBrand == null) return ''
+	if (typeof rawBrand !== 'string') {
+		warnInvalidMetadata(warningContext, '`metadata.brand` should be a string.', rawBrand)
+		return ''
+	}
+
+	const normalizedBrand = rawBrand.trim()
+	return normalizedBrand.length > 0 ? normalizedBrand : ''
+}

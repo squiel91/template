@@ -1,0 +1,22 @@
+<store-breadcrumbs
+	id="category-breadcrumbs"
+	aria-label="Breadcrumb"
+	items='[{"label":"Inicio","href":"/"}]'
+	current-label="Colección"
+></store-breadcrumbs>
+
+<section class="listing-head" aria-labelledby="category-title">
+	<div class="listing-meta">
+		<h1 id="category-title" class="page-title">Colección</h1>
+		<p id="category-description" class="category-description"></p>
+	</div>
+	<div class="listing-subhead">
+		<p id="category-products-summary" class="category-products-summary"></p>
+		<div class="listing-controls">
+			<tiendu-select id="category-sort-select" aria-label="Orden de productos" icon="arrow-down-up"></tiendu-select>
+		</div>
+	</div>
+</section>
+
+<div id="category-products" aria-live="polite"></div>
+<script type="module" src="/colecciones/[categoryId]/script.js"></script>

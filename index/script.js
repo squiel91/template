@@ -196,7 +196,7 @@ const renderCategorySections = sections => {
 		.map(({ category }) => {
 			const categoryName = escapeHtml(category.name || 'Categoría')
 			const categoryHref = escapeHtml(
-				`/categorias/${category.id}/${urlSafe(category.name || 'categoria')}`
+				`/colecciones/${category.id}/${urlSafe(category.name || 'coleccion')}`
 			)
 			const productsContainerId = `home-category-products-${category.id}`
 

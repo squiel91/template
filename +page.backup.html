@@ -1,0 +1,81 @@
+<header class="hero" aria-labelledby="store-home-title">
+	<div class="hero__content">
+		<div class="hero__layout">
+			<div class="hero__copy">
+				<h1 id="store-home-title" class="hero__title">Ropa para bebé, hecha a mano y con amor</h1>
+				<p class="hero__subtitle">Descubrí prendas hechas a mano: suaves, cómodas y llenas de amor, con envíos a todo el país.</p>
+				<div class="hero__actions">
+					<a href="/prendas" aria-label="Explorar prendas">
+						<tiendu-button id="hero-primary-link" variant="primary" label="Explorar prendas" icon="arrow-right" aria-hidden="true"></tiendu-button>
+					</a>
+					<a href="/categorias" aria-label="Explorar categorías">
+						<tiendu-button id="hero-secondary-link" variant="secondary" label="Explorar categorías" icon="layout-grid" aria-hidden="true"></tiendu-button>
+					</a>
+				</div>
+				<div class="benefits-strip" aria-label="Beneficios de la tienda">
+					<div class="benefits-strip__track">
+						<div class="benefits-strip__group">
+							<div class="hero-benefit">
+								<i data-lucide="truck"></i>
+								<span>Envíos a todo el país</span>
+							</div>
+							<div class="hero-benefit">
+								<i data-lucide="shield-check"></i>
+								<span>Compra segura</span>
+							</div>
+							<div class="hero-benefit">
+								<i data-lucide="refresh-cw"></i>
+								<span>Cambios sencillos</span>
+							</div>
+						</div>
+						<div class="benefits-strip__group" aria-hidden="true">
+							<div class="hero-benefit">
+								<i data-lucide="truck"></i>
+								<span>Envíos a todo el país</span>
+							</div>
+							<div class="hero-benefit">
+								<i data-lucide="shield-check"></i>
+								<span>Compra segura</span>
+							</div>
+							<div class="hero-benefit">
+								<i data-lucide="refresh-cw"></i>
+								<span>Cambios sencillos</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="hero__visual">
+				<img src="/public/euphoria-logo.svg" class="hero__heart hero__heart--1" alt="" />
+				<img src="/public/euphoria-logo.svg" class="hero__heart hero__heart--2" alt="" />
+				<img src="/public/euphoria-logo.svg" class="hero__heart hero__heart--3" alt="" />
+				<img src="/public/euphoria-logo.svg" class="hero__heart hero__heart--4" alt="" />
+				<img src="/public/bears-hugging.png" class="hero__image" alt="Mamá osa abrazando a su bebé" loading="eager" decoding="async" />
+			</div>
+		</div>
+	</div>
+</header>
+
+<div class="home-sections">
+	<div id="home-category-sections" class="home-sections__injected" aria-live="polite"></div>
+	<div id="home-categories-list" aria-live="polite"></div>
+
+	<section class="section" aria-labelledby="home-blog-title">
+		<div class="section__header">
+			<h2 id="home-blog-title" class="section__title section__title--large">Nuestras notas</h2>
+			<a href="/blog" aria-label="Ver todos los artículos del blog">
+				<tiendu-button
+					class="section__action-button"
+					variant="secondary"
+					label="Ver todas"
+					icon="arrow-right"
+					aria-hidden="true"
+				></tiendu-button>
+			</a>
+		</div>
+		<div id="home-blog-posts" class="blog-grid" aria-live="polite"></div>
+	</section>
+</div>
+
+<script type="module" src="/index/script.js"></script>

@@ -2,7 +2,7 @@
 
 import { LitElement, html, nothing } from '/shared/lit.js'
 import { tiendu } from '/shared/tiendu-client.js'
-import { getListingPriceLabel } from '/shared/product-pricing.js'
+import { getListingPriceLabel } from '/shared/aggregate-product-info.js'
 import { withOriginQuery } from '/shared/navigation-origin.js'
 import { urlSafe } from '/shared/url-safe.js'
 import { refreshIcons } from '/shared/icons.js'
@@ -630,13 +630,13 @@ class StorefrontSearch extends LitElement {
 		`
 	}
 
-	renderItem(product) {
-		const searchPageUrl = `/prendas?q=${encodeURIComponent(this.query)}`
-		const priceLabel = getListingPriceLabel(product)
-		const productUrl = withOriginQuery(
-			`/prendas/${product.id}/${urlSafe(product.title || '')}`,
-			{ url: searchPageUrl, title: 'Búsqueda' }
-		)
+		renderItem(product) {
+			const searchPageUrl = `/perfumes?q=${encodeURIComponent(this.query)}`
+			const priceLabel = getListingPriceLabel(product)
+			const productUrl = withOriginQuery(
+				`/perfumes/${product.id}/${urlSafe(product.title || '')}`,
+				{ url: searchPageUrl, title: 'Búsqueda' }
+			)
 
 		return html`
 			<li class="storefront-search__item">
@@ -661,7 +661,7 @@ class StorefrontSearch extends LitElement {
 		if (!this.query || this.loading || this.items.length !== SEARCH_DROPDOWN_LIMIT) return nothing
 		return html`
 			<div class="storefront-search__more">
-				<a class="storefront-search__more-link" href=${`/prendas?q=${encodeURIComponent(this.query)}`}>
+				<a class="storefront-search__more-link" href=${`/perfumes?q=${encodeURIComponent(this.query)}`}>
 					Ver más resultados
 				</a>
 			</div>
@@ -681,7 +681,7 @@ class StorefrontSearch extends LitElement {
 					<i data-lucide="search"></i>
 				</button>
 				<button class="storefront-search__mobile-backdrop" type="button" aria-label="Cerrar búsqueda" @click=${this.closeMobile}></button>
-				<form class="storefront-search__form" action="/prendas" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
+				<form class="storefront-search__form" action="/perfumes" method="get" role="search" autocomplete="off" @submit=${this.handleSubmit}>
 					<label class="sr-only" for="storefront-search-input">Buscar productos</label>
 					<div class="storefront-search__control inline-form-control">
 						${this.renderControlIcon()}
