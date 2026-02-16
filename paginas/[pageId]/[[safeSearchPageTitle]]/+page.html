@@ -1,12 +1,13 @@
-<article>
-	<store-breadcrumbs
-		id="page-breadcrumbs"
-		aria-label="Breadcrumb"
-		items='[{"label":"Inicio","href":"/"}]'
-		current-label="Página"
-	></store-breadcrumbs>
+<div class="model-container page-shell">
+	<article>
+		<store-breadcrumbs
+			id="page-breadcrumbs"
+			aria-label="Breadcrumb"
+			items='[{"label":"Inicio","href":"/"}]'
+			current-label="Página"
+		></store-breadcrumbs>
 
-	<h1 id="page-title" class="page-title">Página</h1>
-	<div id="page" class="page-content" aria-live="polite"></div>
-</article>
+		<div id="page" class="page-content" aria-live="polite"></div>
+	</article>
+</div>
 <script type="module" src="/paginas/[pageId]/script.js"></script>

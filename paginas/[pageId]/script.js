@@ -33,9 +33,6 @@ const init = async () => {
 		const page = await tiendu.pages.get(pageId)
 		const title = page.title || 'Página'
 
-		const titleNode = document.getElementById('page-title')
-		if (titleNode) titleNode.textContent = title
-
 		const breadcrumbNode = document.getElementById('page-breadcrumbs')
 		if (breadcrumbNode && typeof breadcrumbNode.setCurrentLabel === 'function') {
 			breadcrumbNode.setCurrentLabel(title)

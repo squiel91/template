@@ -1,7 +1,7 @@
 <div class="model-home">
 	<section class="model-hero home-no-padding model-reveal" aria-labelledby="model-home-title">
 		<div class="model-hero__background" aria-hidden="true">
-			<img src="/public/model/hero/naxos-hero.jpeg" alt="" />
+			<img src="/public/model/hero/naxos-hero.webp" alt="" />
 		</div>
 		<div class="model-hero__overlay" aria-hidden="true"></div>
 		<div class="model-hero__content home-contained">
@@ -11,149 +11,146 @@
 		</div>
 	</section>
 
-	<section class="model-promo-strip home-contained model-reveal" aria-label="Promociones y beneficios">
-		<div class="model-promo-strip__fade model-promo-strip__fade--left" aria-hidden="true"></div>
-		<div class="model-promo-strip__fade model-promo-strip__fade--right" aria-hidden="true"></div>
-		<div class="model-promo-strip__track">
-			<div class="model-promo-strip__group">
-				<div class="model-promo-strip__item"><i data-lucide="banknote"></i><span><strong>10% OFF</strong> pagando con transferencia</span></div>
-				<div class="model-promo-strip__item"><i data-lucide="truck"></i><span>Envío gratis desde <strong>$8.000</strong></span></div>
-				<div class="model-promo-strip__item"><i data-lucide="shield-check"></i><span>Productos <strong>100% originales</strong></span></div>
+	<div class="home-contained home-sections">
+		<section class="model-promo-strip model-reveal" aria-label="Promociones y beneficios">
+			<div class="model-promo-strip__fade model-promo-strip__fade--left" aria-hidden="true"></div>
+			<div class="model-promo-strip__fade model-promo-strip__fade--right" aria-hidden="true"></div>
+			<div class="model-promo-strip__track">
+				<div class="model-promo-strip__group">
+					<div class="model-promo-strip__item"><i data-lucide="banknote"></i><span><strong>10% OFF</strong> pagando con transferencia</span></div>
+					<div class="model-promo-strip__item"><i data-lucide="truck"></i><span>Envío gratis desde <strong>$8.000</strong></span></div>
+					<div class="model-promo-strip__item"><i data-lucide="shield-check"></i><span>Productos <strong>100% originales</strong></span></div>
+				</div>
+				<div class="model-promo-strip__group" aria-hidden="true">
+					<div class="model-promo-strip__item"><i data-lucide="banknote"></i><span><strong>10% OFF</strong> pagando con transferencia</span></div>
+					<div class="model-promo-strip__item"><i data-lucide="truck"></i><span>Envío gratis desde <strong>$8.000</strong></span></div>
+					<div class="model-promo-strip__item"><i data-lucide="shield-check"></i><span>Productos <strong>100% originales</strong></span></div>
+				</div>
 			</div>
-			<div class="model-promo-strip__group" aria-hidden="true">
-				<div class="model-promo-strip__item"><i data-lucide="banknote"></i><span><strong>10% OFF</strong> pagando con transferencia</span></div>
-				<div class="model-promo-strip__item"><i data-lucide="truck"></i><span>Envío gratis desde <strong>$8.000</strong></span></div>
-				<div class="model-promo-strip__item"><i data-lucide="shield-check"></i><span>Productos <strong>100% originales</strong></span></div>
-			</div>
-		</div>
-	</section>
+		</section>
 
-	<section class="model-category-grid home-full-width model-reveal" aria-label="Categorías destacadas">
-		<article class="model-category-card">
-			<img src="/public/model/categories/cat_hombre.webp" alt="Perfumes de hombre" />
-			<a href="/perfumes" class="model-category-card__action">Ver más</a>
-		</article>
-		<article class="model-category-card">
-			<img src="/public/model/categories/cat_mujer.webp" alt="Perfumes de mujer" />
-			<a href="/perfumes" class="model-category-card__action">Ver más</a>
-		</article>
-	</section>
+		<section class="model-category-grid model-reveal" aria-label="Categorías destacadas">
+			<a class="model-category-card" href="/colecciones/236/perfumes-para-hombre" aria-label="Ver perfumes para hombre">
+				<img src="/public/model/categories/cat_hombre.webp" alt="Perfumes de hombre" />
+				<span class="model-category-card__action">Ver más</span>
+			</a>
+			<a class="model-category-card" href="/colecciones/237/perfumes-para-mujer" aria-label="Ver perfumes para mujer">
+				<img src="/public/model/categories/cat_mujer.webp" alt="Perfumes de mujer" />
+				<span class="model-category-card__action">Ver más</span>
+			</a>
+		</section>
 
-	<section class="model-featured home-contained model-reveal" aria-labelledby="model-featured-title">
-		<h2 id="model-featured-title" class="sr-only">Productos destacados</h2>
-		<div class="model-featured__header">
-			<div class="model-featured__tabs" role="tablist" aria-label="Listas destacadas">
-				<button type="button" class="is-active" data-featured-tab="new" role="tab" aria-selected="true" aria-controls="model-featured-new" id="model-featured-tab-new">Novedades</button>
-				<button type="button" data-featured-tab="top" role="tab" aria-selected="false" aria-controls="model-featured-top" id="model-featured-tab-top">Más Vendidos</button>
-			</div>
-			<a href="/perfumes" class="model-featured__view-all">Ver todo <span aria-hidden="true"></span></a>
-		</div>
-
-		<div class="model-featured__panels" aria-live="polite">
-			<div class="model-featured__track" id="model-featured-new" data-featured-group="new" role="tabpanel" aria-labelledby="model-featured-tab-new">
-				<div class="model-featured__status" data-featured-status="new">Cargando productos...</div>
+		<section class="model-featured model-reveal" aria-labelledby="model-featured-title">
+			<h2 id="model-featured-title" class="sr-only">Productos destacados</h2>
+			<div class="model-featured__header">
+				<div class="model-featured__tabs" role="tablist" aria-label="Listas destacadas">
+					<button type="button" class="is-active" data-featured-tab="new" role="tab" aria-selected="true" aria-controls="model-featured-new" id="model-featured-tab-new">Novedades</button>
+					<button type="button" data-featured-tab="top" role="tab" aria-selected="false" aria-controls="model-featured-top" id="model-featured-tab-top">Más Vendidos</button>
+				</div>
+				<a href="/perfumes" class="model-featured__view-all">Ver todo <span aria-hidden="true"></span></a>
 			</div>
 
-			<div class="model-featured__track" id="model-featured-top" data-featured-group="top" role="tabpanel" aria-labelledby="model-featured-tab-top" hidden>
-				<div class="model-featured__status" data-featured-status="top">Cargando productos...</div>
+			<div class="model-featured__panels" aria-live="polite">
+				<div class="model-featured__track" id="model-featured-new" data-featured-group="new" role="tabpanel" aria-labelledby="model-featured-tab-new">
+					<div class="model-featured__status" data-featured-status="new">Cargando productos...</div>
+				</div>
+
+				<div class="model-featured__track" id="model-featured-top" data-featured-group="top" role="tabpanel" aria-labelledby="model-featured-tab-top" hidden>
+					<div class="model-featured__status" data-featured-status="top">Cargando productos...</div>
+				</div>
 			</div>
-		</div>
-	</section>
+		</section>
 
-	<section class="model-trust home-contained model-reveal" aria-label="Confianza y soporte">
-		<home-trust-item icon="shield-check" title="100% originales" subtitle="Garantía de autenticidad"></home-trust-item>
-		<home-trust-item icon="truck" title="Envíos rápidos" subtitle="En el día en Montevideo"></home-trust-item>
-		<home-trust-item icon="package-check" title="Entregas seguras" subtitle="Seguimiento y cuidado"></home-trust-item>
-		<home-trust-item icon="credit-card" title="Pagos protegidos" subtitle="Mercado Pago y más"></home-trust-item>
-	</section>
+		<section class="model-trust model-reveal" aria-label="Confianza y soporte">
+			<home-trust-item icon="shield-check" title="100% originales" subtitle="Garantía de autenticidad"></home-trust-item>
+			<home-trust-item icon="truck" title="Envíos rápidos" subtitle="En el día en Montevideo"></home-trust-item>
+			<home-trust-item icon="package-check" title="Entregas seguras" subtitle="Seguimiento y cuidado"></home-trust-item>
+			<home-trust-item icon="credit-card" title="Pagos protegidos" subtitle="Mercado Pago y más"></home-trust-item>
+		</section>
 
-	<section class="model-decants-promo home-contained model-reveal" aria-label="Promoción de decants">
-		<div>
-			<h2>Promo Decants 3x</h2>
-			<p>Árabes: 5ml $990 • 10ml $1400 · Diseñador: 5ml $1400 • 10ml $2400</p>
-		</div>
-		<a href="/perfumes">Ver decants</a>
-	</section>
-
-	<section class="model-decants-benefits home-contained model-reveal" aria-labelledby="model-decants-title">
-		<div class="model-decants-benefits__media">
-			<img src="/public/model/media/botellas-decants.svg" alt="Botellas de decants" />
-		</div>
-		<div class="model-decants-benefits__content">
-			<h2 id="model-decants-title">Ventajas de los <span>Decants</span></h2>
-			<ul>
-				<li><i data-lucide="circle-check"></i><span><strong>Exploración sin riesgo:</strong> probá fragancias antes de invertir en botellas completas.</span></li>
-				<li><i data-lucide="circle-check"></i><span><strong>Libertad total:</strong> elegí qué perfumes usar en cada momento, sin membresías.</span></li>
-				<li><i data-lucide="circle-check"></i><span><strong>Presentación premium:</strong> atomizadores de alta dispersión y acabado elegante.</span></li>
-				<li><i data-lucide="circle-check"></i><span><strong>Acceso a lujo:</strong> acercate a marcas exclusivas por una fracción del costo.</span></li>
-				<li><i data-lucide="circle-check"></i><span><strong>Portabilidad:</strong> perfectos para viajes, oficina o llevar siempre contigo.</span></li>
-				<li><i data-lucide="circle-check"></i><span><strong>Variedad:</strong> armá una colección diversa para cada ocasión.</span></li>
-			</ul>
-		</div>
-	</section>
-
-	<home-media-highlight
-		image-src="/public/model/media/lattafa-poster.svg"
-		image-alt="Campaña Lattafa"
-		title="LATTAFA: La Esencia"
-		description="Imaginá capturar los susurros de la noche árabe embotellados en una esencia etérea."
-		cta-label="EXPLORAR"
-		cta-href="/perfumes"
-	></home-media-highlight>
-
-	<home-media-highlight
-		reverse
-		image-src="/public/model/media/french-poster.svg"
-		image-alt="Campaña French Avenue"
-		title="French Avenue"
-		description="La máxima expresión de exclusividad. Aromas que proyectan distinción y elegancia duradera."
-		cta-label="EXPLORAR"
-		cta-href="/perfumes"
-	></home-media-highlight>
-
-	<section class="model-testimonials home-contained model-reveal" aria-labelledby="model-testimonials-title">
-		<div class="model-testimonials__header">
+		<section class="model-decants-promo model-reveal" aria-label="Promoción de decants">
 			<div>
-				<h2 id="model-testimonials-title">Lo que dicen nuestros clientes</h2>
-				<p>Descubrí experiencias reales con nuestras fragancias más destacadas.</p>
+				<h2>Promo Decants 3x</h2>
+				<p>Árabes: 5ml $990 • 10ml $1400 · Diseñador: 5ml $1400 • 10ml $2400</p>
 			</div>
-			<a href="/perfumes">Ver todos los productos</a>
-		</div>
-		<div class="model-testimonials__grid">
-			<home-testimonial-card
-				rating="5"
-				title="Calidad muy buena"
-				quote="Ya la he probado varias veces y sinceramente me encanta. Muy buena duración y una salida elegante."
-				author="Roberto Gonzalez"
-				product="Review en: Myslf L'Absolu"
-				initial="R"
-				image-src="/public/model/reviews/myslf-labsolu.svg"
-				image-alt="Myslf L'Absolu"
-			></home-testimonial-card>
+			<a href="/colecciones/238/decants">Ver decants</a>
+		</section>
 
-			<home-testimonial-card
-				rating="4"
-				title="Excelente fragancia"
-				quote="Tiene una salida limpia y un fondo con mucha presencia. Ideal para quien busca algo elegante y diferente."
-				author="Martín Pereira"
-				product="Review en: Obsidian"
-				initial="M"
-				image-src="/public/model/reviews/obsidian-review.svg"
-				image-alt="Obsidian"
-			></home-testimonial-card>
+		<section class="model-decants-benefits model-reveal" aria-labelledby="model-decants-title">
+			<img class="model-decants-benefits__media" src="/public/model/media/botellas-decants.png" alt="Botellas de decants" />
+			<div class="model-decants-benefits__content">
+				<h2 id="model-decants-title">Ventajas de los <span>Decants</span></h2>
+				<ul>
+					<li><i data-lucide="circle-check"></i><span><strong>Exploración sin riesgo:</strong> probá fragancias antes de invertir en botellas completas.</span></li>
+					<li><i data-lucide="circle-check"></i><span><strong>Libertad total:</strong> elegí qué perfumes usar en cada momento, sin membresías.</span></li>
+					<li><i data-lucide="circle-check"></i><span><strong>Presentación premium:</strong> atomizadores de alta dispersión y acabado elegante.</span></li>
+					<li><i data-lucide="circle-check"></i><span><strong>Acceso a lujo:</strong> acercate a marcas exclusivas por una fracción del costo.</span></li>
+					<li><i data-lucide="circle-check"></i><span><strong>Portabilidad:</strong> perfectos para viajes, oficina o llevar siempre contigo.</span></li>
+					<li><i data-lucide="circle-check"></i><span><strong>Variedad:</strong> armá una colección diversa para cada ocasión.</span></li>
+				</ul>
+			</div>
+		</section>
 
-			<home-testimonial-card
-				rating="5"
-				title="Excelente calidad"
-				quote="Perfume muy bien logrado, excelente duración y muy buena proyección. Recomendado."
-				author="Renzo Pimentel Uzal"
-				product="Review en: Italia"
-				initial="R"
-				image-src="/public/model/reviews/italia-review.svg"
-				image-alt="Italia"
-			></home-testimonial-card>
-		</div>
-	</section>
+		<home-media-highlight
+			image-src="/public/model/media/lattafa-poster.jpg"
+			image-alt="Campaña Lattafa"
+			title="LATTAFA: La Esencia"
+			description="Imaginá capturar los susurros de la noche árabe embotellados en una esencia etérea."
+			cta-label="EXPLORAR"
+			cta-href="/colecciones/241/lattafa-la-esencia"
+		></home-media-highlight>
+
+		<home-media-highlight
+			reverse
+			image-src="/public/model/media/french-poster.webp"
+			image-alt="Campaña French Avenue"
+			title="French Avenue"
+			description="La máxima expresión de exclusividad. Aromas que proyectan distinción y elegancia duradera."
+			cta-label="EXPLORAR"
+			cta-href="/colecciones/241/lattafa-la-esencia"
+		></home-media-highlight>
+
+		<section class="model-testimonials model-reveal" aria-labelledby="model-testimonials-title">
+			<div class="model-testimonials__header">
+				<div class="model-testimonials__intro">
+					<h2 id="model-testimonials-title">Lo que dicen nuestros clientes</h2>
+					<p>Descubrí experiencias reales con nuestras fragancias más destacadas.</p>
+				</div>
+				<a href="/perfumes">Ver todos los productos</a>
+			</div>
+			<div class="model-testimonials__grid">
+				<home-testimonial-card
+					rating="5"
+					title="Calidad muy buena"
+					quote="Ya la he probado varias veces y sinceramente me encanta. Muy buena duración y una salida elegante."
+					author="Roberto Gonzalez"
+					initial="R"
+					image-src="/public/model/reviews/myslf-labsolu.webp"
+					image-alt="Myslf L'Absolu"
+				></home-testimonial-card>
+
+				<home-testimonial-card
+					rating="4"
+					title="Excelente fragancia"
+					quote="Tiene una salida limpia y un fondo con mucha presencia. Ideal para quien busca algo elegante y diferente."
+					author="Martín Pereira"
+					initial="M"
+					image-src="/public/model/reviews/obsidian-review.webp"
+					image-alt="Obsidian"
+				></home-testimonial-card>
+
+				<home-testimonial-card
+					rating="5"
+					title="Excelente calidad"
+					quote="Perfume muy bien logrado, excelente duración y muy buena proyección. Recomendado."
+					author="Renzo Pimentel Uzal"
+					initial="R"
+					image-src="/public/model/reviews/italia-review.webp"
+					image-alt="Italia"
+				></home-testimonial-card>
+			</div>
+		</section>
+	</div>
 
 	<section class="model-brands home-no-padding model-reveal" aria-label="Marcas destacadas">
 		<div class="model-brands__fade model-brands__fade--left" aria-hidden="true"></div>

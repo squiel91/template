@@ -17,7 +17,7 @@ import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 import { toSafeCssColor } from '/shared/css-color.js'
-import { getNormalizedMetadataColors } from '/shared/product-metadata.js'
+import { getMetadataBrand, getNormalizedMetadataColors } from '/shared/product-metadata.js'
 import { urlSafe } from '/shared/url-safe.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
 import {
@@ -80,6 +80,7 @@ const renderProduct = (product, relatedProducts = []) => {
 		requiresVariantSelection || !defaultVariant ? new Map() : extractVariantValueMap(defaultVariant)
 
 	const title = product.title || 'Producto'
+	const brand = getMetadataBrand(product)
 	const description = product.description || ''
 	const descriptionText = String(description).trim()
 	const hasDescription = descriptionText.length > 0
@@ -184,6 +185,7 @@ const renderProduct = (product, relatedProducts = []) => {
 				<tiendu-image-carousel id="product-image-carousel"></tiendu-image-carousel>
 			</div>
 			<div class="product-info">
+				${brand ? `<p class="product-info__brand">${escapeHtml(brand)}</p>` : ''}
 				<h1 class="product-info__title">${escapeHtml(title)}</h1>
 				${
 					unitsSoldCopy
@@ -206,9 +208,9 @@ const renderProduct = (product, relatedProducts = []) => {
 						<tiendu-button id="add-to-cart-button" variant="primary" label="Agregar al carrito" loading-label="Agregar al carrito" icon="plus" loading-icon="loader-2" duration="4000"></tiendu-button>
 					</div>
 					<ul class="purchase-notes" aria-label="Beneficios de compra">
-						<li class="purchase-notes__item"><i data-lucide="truck" aria-hidden="true"></i><span>Envío gratis en pedidos superiores a $ 2.000</span></li>
-						<li class="purchase-notes__item"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Devolución simplificada</span></li>
-						<li class="purchase-notes__item"><i data-lucide="credit-card" aria-hidden="true"></i><span>Pagalo hasta en 12 cuotas sin recargo con tarjeta de crédito</span></li>
+						<li class="purchase-notes__item"><i data-lucide="truck" aria-hidden="true"></i><span>Envío gratis en pedidos mayores a $ 7.000</span></li>
+						<li class="purchase-notes__item"><i data-lucide="banknote" aria-hidden="true"></i><span><span class="purchase-notes__badge">10% OFF</span> con deposito bancario</span></li>
+						<li class="purchase-notes__item"><i data-lucide="credit-card" aria-hidden="true"></i><span>Hasta 12 cuotas sin recargo con tarjeta de crédito</span></li>
 					</ul>
 					<ul class="payment-methods" aria-label="Medios de pago disponibles">
 						${paymentMethodsHtml}

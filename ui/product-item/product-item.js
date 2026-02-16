@@ -21,22 +21,24 @@ const ensureStyles = () => {
 		.product-item__link {
 			display: flex;
 			flex-direction: column;
-			gap: 10px;
+			gap: 0;
 			height: 100%;
-			padding: 1rem;
+			padding: 0 0 0.95rem;
 			text-decoration: none;
 			color: inherit;
-			background: #f3f4f6;
-			border-radius: 22px;
-			border: 1px solid #e5e7eb;
+			background: #ffffff;
+			border-radius: 12px;
+			border: none;
+			overflow: hidden;
+			box-shadow: 0 3px 10px rgba(15, 23, 42, 0.11);
 		}
 
 		.product-item__media {
 			position: relative;
 			aspect-ratio: 1 / 1;
 			width: 100%;
-			background: rgba(255, 255, 255, 0.6);
-			border-radius: 16px;
+			background: #f8fafc;
+			border-radius: 12px 12px 0 0;
 			overflow: hidden;
 		}
 
@@ -47,20 +49,52 @@ const ensureStyles = () => {
 			transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 		}
 
-		.product-item__link:hover img {
+		.product-item__link:hover img,
+		.product-item__link:focus-visible img {
 			transform: scale(1.05);
+		}
+
+		.product-item__zoom-indicator {
+			position: absolute;
+			top: 0.75rem;
+			right: 0.75rem;
+			width: 40px;
+			height: 40px;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.96);
+			color: #0f172a;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+			opacity: 0;
+			transform: translateY(-6px);
+			pointer-events: none;
+			transition: opacity 0.2s ease, transform 0.2s ease;
+		}
+
+		.product-item__zoom-indicator svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.product-item__link:hover .product-item__zoom-indicator,
+		.product-item__link:focus-visible .product-item__zoom-indicator {
+			opacity: 1;
+			transform: translateY(0);
 		}
 
 		.product-item__meta {
 			display: flex;
 			flex-direction: column;
 			gap: 0.45rem;
+			padding: 0.8rem 0.9rem 0;
 		}
 
 		.product-item__brand {
 			margin: 0;
 			font-size: 0.8rem;
-			font-weight: 600;
+			font-weight: 400;
 			color: #6b7280;
 		}
 
@@ -98,7 +132,7 @@ const ensureStyles = () => {
 
 		.product-item__price {
 			font-size: 1.05rem;
-			font-weight: 700;
+			font-weight: 600;
 			color: #111827;
 			line-height: 1;
 		}
@@ -138,21 +172,20 @@ const ensureStyles = () => {
 
 		.product-item__soldout {
 			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			display: flex;
+			top: 12px;
+			left: 12px;
+			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			padding: 0.5rem 0.75rem;
-			border-radius: 0;
-			background: rgba(220, 38, 38, 0.95);
+			padding: 0.35rem 0.55rem;
+			border-radius: 6px;
+			background: #193cb8;
 			color: #fff;
 			font-weight: 700;
-			font-size: 0.72rem;
+			font-size: 0.68rem;
 			line-height: 1;
 			letter-spacing: 0.01em;
-			box-shadow: 0 3px 10px rgba(127, 29, 29, 0.2);
+			box-shadow: 0 6px 12px rgba(25, 60, 184, 0.28);
 		}
 	`
 	document.head.appendChild(style)
@@ -205,6 +238,9 @@ class ProductItem extends LitElement {
 			<a href=${href} class="product-item__link">
 				<div class="product-item__media">
 					<img src=${imageSrc} alt=${alt} loading="lazy" />
+					<span class="product-item__zoom-indicator" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+					</span>
 					${this.renderOutOfStockBadge(listing.isOutOfStock)}
 				</div>
 				<div class="product-item__meta">

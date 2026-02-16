@@ -9,7 +9,7 @@ import { refreshIcons } from '/shared/icons.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
 import { escapeHtml } from '/shared/sanitize.js'
 
-const FEATURED_CATEGORY_ID = 612
+const FEATURED_CATEGORY_ID = 242
 const FEATURED_PAGE_SIZE = 8
 const renderFeaturedStatus = (key, message) => {
 	const track = document.querySelector(`[data-featured-group="${key}"]`)

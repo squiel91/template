@@ -135,51 +135,6 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	*/
 
 /**
-	* @typedef {Object} PublicUser
-	* @property {string} name
-	*/
-
-/**
-	* @typedef {Object} BlogPostListing
-	* @property {number} id
-	* @property {string} title
-	* @property {string | null} excerpt
-	* @property {PublicImage | null} coverImage
-	* @property {PublicUser} manager
-	* @property {string} publicUrl
-	* @property {string} createdAt
-	* @property {string} updatedAt
-	*/
-
-/**
-	* @typedef {Object} BlogPost
-	* @property {number} id
-	* @property {string} title
-	* @property {string | null} excerpt
-	* @property {PublicImage | null} coverImage
-	* @property {PublicUser} manager
-	* @property {string} publicUrl
-	* @property {string} createdAt
-	* @property {string} updatedAt
-	* @property {Array<{
-	*   type: 'heading',
-	*   level: 1 | 2 | 3,
-	*   text: string
-	* } | {
-	*   type: 'paragraph',
-	*   text: string
-	* } | {
-	*   type: 'image',
-	*   image: PublicImage,
-	*   size: 'small' | 'medium' | 'large' | 'full',
-	*   align: 'left' | 'center' | 'right'
-	* } | {
-	*   type: 'html',
-	*   code: string
-	* }>} content
-	*/
-
-/**
 	* @typedef {{ success: true } | {
 	*   success: false,
 	*   errorCode: 'INVALID_EMAIL' | 'EXISTING_SUBSCRIBER' | 'INTERNAL_ERROR'
@@ -388,18 +343,6 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			/** @param {number} pageId @returns {Promise<Page>} */
 			get: async pageId => {
 				const response = await upFetch.get(`${baseApiUrl}/pages/${pageId}`)
-				return response?.data ?? response
-			}
-		},
-		blogPosts: {
-			/** @returns {Promise<Array<BlogPostListing>>} */
-			list: async () => {
-				const response = await upFetch.get(`${baseApiUrl}/blog-posts`)
-				return response?.data ?? response
-			},
-			/** @param {number} blogPostId @returns {Promise<BlogPost>} */
-			get: async blogPostId => {
-				const response = await upFetch.get(`${baseApiUrl}/blog-posts/${blogPostId}`)
 				return response?.data ?? response
 			}
 		},

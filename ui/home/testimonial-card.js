@@ -14,7 +14,6 @@ class HomeTestimonialCard extends HTMLElement {
 		const title = this.getAttribute('title') || 'Excelente producto'
 		const quote = this.getAttribute('quote') || 'Comentario pendiente.'
 		const author = this.getAttribute('author') || 'Cliente verificado'
-		const product = this.getAttribute('product') || 'Review en producto destacado'
 		const initial = (this.getAttribute('initial') || author.charAt(0) || 'C').slice(0, 1)
 		const imageSrc = this.getAttribute('image-src') || '/public/no-image.svg'
 		const imageAlt = this.getAttribute('image-alt') || 'Producto'
@@ -38,7 +37,6 @@ class HomeTestimonialCard extends HTMLElement {
 				<span class="model-review-card__avatar" aria-hidden="true">${initial}</span>
 				<div class="model-review-card__meta">
 					<strong>${author}</strong>
-					<span>${product}</span>
 				</div>
 				<span class="model-review-card__verified"><i data-lucide="circle-check"></i>Verificado</span>
 			</div>

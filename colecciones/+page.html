@@ -1,16 +1,18 @@
-<store-breadcrumbs
-	aria-label="Breadcrumb"
-	items='[{"label":"Inicio","href":"/"}]'
-	current-label="Colecciones"
-></store-breadcrumbs>
+<div class="home-contained page-shell">
+	<store-breadcrumbs
+		aria-label="Breadcrumb"
+		items='[{"label":"Inicio","href":"/"}]'
+		current-label="Colecciones"
+	></store-breadcrumbs>
 
-<section class="listing-head" aria-labelledby="categories-page-title">
-	<div class="listing-meta">
-		<h1 id="categories-page-title" class="page-title">Colecciones</h1>
-		<p>Explorá nuestro catálogo por colección</p>
-	</div>
-</section>
+	<section class="listing-head" aria-labelledby="categories-page-title">
+		<div class="listing-meta">
+			<h1 id="categories-page-title" class="product-info__title">Colecciones</h1>
+			<p>Explorá nuestro catálogo por colección</p>
+		</div>
+	</section>
 
-<div id="categories-grid" aria-live="polite"></div>
+	<div id="categories-grid" aria-live="polite"></div>
+</div>
 
 <script type="module" src="/colecciones/script.js"></script>

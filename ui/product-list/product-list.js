@@ -24,7 +24,7 @@ const ensureStyles = () => {
 		@media (min-width: 1024px) {
 			product-list {
 				grid-template-columns: repeat(4, 1fr);
-				gap: 32px;
+				gap: 40px;
 			}
 		}
 	`

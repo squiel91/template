@@ -1,10 +1,12 @@
-<store-breadcrumbs
-	id="product-breadcrumbs"
-	aria-label="Breadcrumb"
-	items='[{"label":"Inicio","href":"/"}]'
-	current-label="Detalle"
-></store-breadcrumbs>
+<div class="home-contained page-shell">
+	<store-breadcrumbs
+		id="product-breadcrumbs"
+		aria-label="Breadcrumb"
+		items='[{"label":"Inicio","href":"/"}]'
+		current-label="Detalle"
+	></store-breadcrumbs>
 
-<article id="product" aria-live="polite"></article>
+	<article id="product" aria-live="polite"></article>
+</div>
 
 <script type="module" src="/perfumes/[productId]/script.js"></script>

@@ -2,13 +2,17 @@
 
 import '/ui/app-button/app-button.js'
 import '/ui/storefront-search/storefront-search.js'
+import '/ui/store-breadcrumbs/store-breadcrumbs.js'
 import '/ui/toast-stack/toast-stack.js'
 import { tiendu } from '/shared/tiendu-client.js'
+import { PAGE_READY_EVENT, isPageReady } from '/shared/page-loading.js'
 import { refreshIcons } from '/shared/icons.js'
 import { urlSafe } from '/shared/url-safe.js'
 
 const CART_BUTTON_LOADING_TIMEOUT_MS = 4000
-const PAGE_NAVIGATION_DELAY_MS = 110
+const PAGE_NAVIGATION_DELAY_MS = 120
+const PAGE_OVERLAY_MAX_WAIT_MS = 2000
+const HOME_HEADER_TRANSPARENT_SCROLL_MAX = 160
 const MENU_CATEGORY_LIMIT = 6
 const FOOTER_INFO_PAGE_LIMIT = 6
 const NEWSLETTER_SUCCESS_MESSAGE =
@@ -46,6 +50,13 @@ const hideOverlay = () => {
 		window.__tienduPageOverlay.hide()
 		return
 	}
+	if (!overlay) return
+	overlay.dataset.open = 'false'
+	overlay.dataset.state = 'closed'
+	overlay.dataset.animateIn = 'false'
+}
+
+const hideOverlayImmediately = () => {
 	if (!overlay) return
 	overlay.dataset.open = 'false'
 	overlay.dataset.state = 'closed'
@@ -327,6 +338,38 @@ const initCartButton = async () => {
 	await syncQuantity()
 }
 
+const initHomeHeaderState = () => {
+	const header = document.querySelector('.model-header')
+	if (!(header instanceof HTMLElement)) return
+
+	const pathname = window.location.pathname || '/'
+	const isHomepage = pathname === '/'
+	if (!isHomepage) {
+		document.body.dataset.homeHeader = 'solid'
+		return
+	}
+
+	let isHeaderHovered = false
+
+	const updateHeaderState = () => {
+		const isNearTop = window.scrollY <= HOME_HEADER_TRANSPARENT_SCROLL_MAX
+		document.body.dataset.homeHeader = isNearTop && !isHeaderHovered ? 'transparent' : 'solid'
+	}
+
+	window.addEventListener('scroll', updateHeaderState, { passive: true })
+	window.addEventListener('pageshow', updateHeaderState)
+	header.addEventListener('mouseenter', () => {
+		isHeaderHovered = true
+		updateHeaderState()
+	})
+	header.addEventListener('mouseleave', () => {
+		isHeaderHovered = false
+		updateHeaderState()
+	})
+
+	updateHeaderState()
+}
+
 const initPageTransitionOverlay = () => {
 	document.addEventListener('click', event => {
 		if (event.defaultPrevented) return
@@ -337,7 +380,7 @@ const initPageTransitionOverlay = () => {
 		if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
 
 		const href = target.getAttribute('href')
-		if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+		if (!href || href.startsWith('#') || href.startsWith('mailto:')) {
 			return
 		}
 
@@ -350,6 +393,37 @@ const initPageTransitionOverlay = () => {
 			window.location.href = target.href
 		}, PAGE_NAVIGATION_DELAY_MS)
 	})
+
+	if (isPageReady()) {
+		hideOverlay()
+	} else {
+		window.addEventListener(
+			PAGE_READY_EVENT,
+			() => {
+				hideOverlay()
+			},
+			{ once: true }
+		)
+	}
+
+	window.setTimeout(() => {
+		hideOverlay()
+	}, PAGE_OVERLAY_MAX_WAIT_MS)
+
+	window.addEventListener('pageshow', event => {
+		if (event.persisted) {
+			hideOverlayImmediately()
+		}
+	})
+
+	document.addEventListener('submit', event => {
+		const form = event.target
+		if (!(form instanceof HTMLFormElement)) return
+		if (event.defaultPrevented) return
+		if (form.hasAttribute('data-skip-overlay')) return
+		if ((form.method || 'get').toLowerCase() !== 'get') return
+		showOverlay()
+	})
 }
 
 const init = () => {
@@ -358,9 +432,9 @@ const init = () => {
 	initNewsletterSubscription()
 	void initCategoryNavigation()
 	initCartButton()
+	initHomeHeaderState()
 	initPageTransitionOverlay()
 	refreshIcons()
-	hideOverlay()
 }
 
 if (document.readyState === 'loading') {
