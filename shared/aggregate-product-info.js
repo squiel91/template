@@ -79,28 +79,17 @@ export const getProductStockOverview = product => {
 
 export const getAggregateProductInfo = (product, options = {}) => {
 	const normalizedStrategy = resolvePriceStrategy(options?.strategy)
-	const hasExplicitStrategy = typeof options?.strategy === 'string'
 	const listingVariant = getProductVariantByPriceStrategy(
 		product?.variants,
 		normalizedStrategy
 	)
 	const priceInCents =
-		typeof listingVariant?.priceInCents === 'number'
-			? listingVariant.priceInCents
-			: typeof product?.basePriceInCents === 'number'
-				? product.basePriceInCents
-				: null
+		typeof listingVariant?.priceInCents === 'number' ? listingVariant.priceInCents : null
 
 	const compareAtPriceInCents =
-		listingVariant
-			? typeof listingVariant?.compareAtPriceInCents === 'number'
-				? listingVariant.compareAtPriceInCents
-				: null
-			: hasExplicitStrategy
-				? null
-			: typeof product?.baseCompareAtPriceInCents === 'number'
-				? product.baseCompareAtPriceInCents
-				: null
+		typeof listingVariant?.compareAtPriceInCents === 'number'
+			? listingVariant.compareAtPriceInCents
+			: null
 
 	const hasDisplayPrice = typeof priceInCents === 'number' && Number.isFinite(priceInCents)
 	const hasComparePrice =
@@ -113,7 +102,16 @@ export const getAggregateProductInfo = (product, options = {}) => {
 		? Math.round(((compareAtPriceInCents - priceInCents) / compareAtPriceInCents) * 100)
 		: null
 
-	const stockOverview = getProductStockOverview(product)
+	const variants = Array.isArray(product?.variants) ? product.variants : []
+	const isOutOfStock =
+		variants.length > 0
+			? variants.every(
+				variant =>
+					typeof variant?.stock === 'number' && Number.isFinite(variant.stock) && variant.stock <= 0
+			)
+			: typeof product?.stock === 'number' && Number.isFinite(product.stock)
+				? product.stock <= 0
+				: false
 
 	return {
 		priceInCents,
@@ -121,10 +119,8 @@ export const getAggregateProductInfo = (product, options = {}) => {
 		priceLabel: hasDisplayPrice ? formatCurrency(priceInCents) : '',
 		compareLabel: hasComparePrice ? formatCurrency(compareAtPriceInCents) : '',
 		discountPercentage,
-		stock: stockOverview.stock,
-		isOutOfStock: stockOverview.allVariantsOutOfStock,
-		hasDisplayPrice,
-		hasMultipleVariants: getVariantsWithPrice(product?.variants).length > 1
+		isOutOfStock,
+		hasDisplayPrice
 	}
 }
 
