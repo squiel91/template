@@ -78,9 +78,11 @@ export const getProductStockOverview = product => {
 }
 
 export const getAggregateProductInfo = (product, options = {}) => {
+	const normalizedStrategy = resolvePriceStrategy(options?.strategy)
+	const hasExplicitStrategy = typeof options?.strategy === 'string'
 	const listingVariant = getProductVariantByPriceStrategy(
 		product?.variants,
-		resolvePriceStrategy(options?.strategy)
+		normalizedStrategy
 	)
 	const priceInCents =
 		typeof listingVariant?.priceInCents === 'number'
@@ -94,6 +96,8 @@ export const getAggregateProductInfo = (product, options = {}) => {
 			? typeof listingVariant?.compareAtPriceInCents === 'number'
 				? listingVariant.compareAtPriceInCents
 				: null
+			: hasExplicitStrategy
+				? null
 			: typeof product?.baseCompareAtPriceInCents === 'number'
 				? product.baseCompareAtPriceInCents
 				: null
