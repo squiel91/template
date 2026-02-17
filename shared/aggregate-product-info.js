@@ -90,8 +90,10 @@ export const getAggregateProductInfo = (product, options = {}) => {
 				: null
 
 	const compareAtPriceInCents =
-		typeof listingVariant?.compareAtPriceInCents === 'number'
-			? listingVariant.compareAtPriceInCents
+		listingVariant
+			? typeof listingVariant?.compareAtPriceInCents === 'number'
+				? listingVariant.compareAtPriceInCents
+				: null
 			: typeof product?.baseCompareAtPriceInCents === 'number'
 				? product.baseCompareAtPriceInCents
 				: null
