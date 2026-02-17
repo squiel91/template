@@ -795,12 +795,23 @@ body[data-home-header='transparent'] .model-header .storefront-search .storefron
 	gap: 1rem;
 }
 
+.model-featured__title {
+	margin: 0;
+	font-size: 1.6rem;
+	font-weight: 700;
+	color: #111827;
+}
+
 .model-featured__header {
+	display: block;
+}
+
+.model-featured__heading-row {
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
+	align-items: baseline;
 	gap: 1rem;
-	flex-wrap: wrap;
+	width: 100%;
 }
 
 .model-featured__tabs {

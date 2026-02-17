@@ -41,22 +41,16 @@
 		</section>
 
 		<section class="model-featured model-reveal" aria-labelledby="model-featured-title">
-			<h2 id="model-featured-title" class="sr-only">Productos destacados</h2>
 			<div class="model-featured__header">
-				<div class="model-featured__tabs" role="tablist" aria-label="Listas destacadas">
-					<button type="button" class="is-active" data-featured-tab="new" role="tab" aria-selected="true" aria-controls="model-featured-new" id="model-featured-tab-new">Novedades</button>
-					<button type="button" data-featured-tab="top" role="tab" aria-selected="false" aria-controls="model-featured-top" id="model-featured-tab-top">Más Vendidos</button>
+				<div class="model-featured__heading-row">
+					<h2 id="model-featured-title" class="model-featured__title">Novedades</h2>
+					<a href="/perfumes" class="model-featured__view-all">Ver todo <span aria-hidden="true"></span></a>
 				</div>
-				<a href="/perfumes" class="model-featured__view-all">Ver todo <span aria-hidden="true"></span></a>
 			</div>
 
 			<div class="model-featured__panels" aria-live="polite">
-				<div class="model-featured__track" id="model-featured-new" data-featured-group="new" role="tabpanel" aria-labelledby="model-featured-tab-new">
-					<div class="model-featured__status" data-featured-status="new">Cargando productos...</div>
-				</div>
-
-				<div class="model-featured__track" id="model-featured-top" data-featured-group="top" role="tabpanel" aria-labelledby="model-featured-tab-top" hidden>
-					<div class="model-featured__status" data-featured-status="top">Cargando productos...</div>
+				<div class="model-featured__track" data-featured-group="featured">
+					<div class="model-featured__status">Cargando productos...</div>
 				</div>
 			</div>
 		</section>
@@ -107,7 +101,7 @@
 			title="Armaf"
 			description="Combina elegancia, potencia y precio inteligente. Fragancias versátiles, con gran presencia y fijación."
 			cta-label="EXPLORAR"
-			cta-href="/colecciones/241/lattafa-la-esencia"
+			cta-href="/colecciones/243/armaf"
 		></home-media-highlight>
 
 		<section class="model-testimonials model-reveal" aria-labelledby="model-testimonials-title">
