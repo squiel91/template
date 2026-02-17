@@ -6,8 +6,8 @@
 	/* Primary Colors */
 	--color-primary: #000000;
 	--color-primary-hover: #1e293b;
-	--color-accent: #2563eb;
-	--color-accent-hover: #1d4ed8;
+	--color-accent: var(--color-primary);
+	--color-accent-hover: var(--color-primary-hover);
 	
 	/* Neutral Colors */
 	--color-text: #0f172a;
@@ -111,24 +111,6 @@ body {
 	position: relative;
 }
 
-.body-bear-bg {
-	position: absolute;
-	left: 50%;
-	bottom: 0;
-	transform: translateX(-50%);
-	width: min(230px, 35vw);
-	height: auto;
-	pointer-events: none;
-	user-select: none;
-	z-index: 0;
-}
-
-@media (max-width: 767px) {
-	.body-bear-bg {
-		width: min(300px, 68vw);
-	}
-}
-
 .hero__title,
 .section__title,
 .page-content h1,
@@ -187,92 +169,6 @@ button {
 	.container {
 		padding: 0 12px;
 	}
-}
-
-/* ==========================================================================
-   Header
-   ========================================================================== */
-
-.top-banner {
-	background: var(--color-primary);
-	color: #ffffff;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.top-banner__inner {
-	min-height: 34px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 0.82rem;
-	font-weight: 700;
-	letter-spacing: 0.01em;
-	text-align: center;
-}
-
-.site-header {
-	position: sticky;
-	top: 0;
-	z-index: 50;
-	background: rgba(255, 255, 255, 0.95);
-	backdrop-filter: blur(12px);
-	border-bottom: 1px solid var(--border-light);
-	height: var(--header-height);
-}
-
-.site-header__inner {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-6);
-	height: 100%;
-}
-
-/* Left section: Menu button + Brand */
-.site-header__left {
-	display: flex;
-	align-items: center;
-	gap: var(--space-4);
-	flex-shrink: 0;
-}
-
-/* Right section: Actions */
-.site-header__right {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
-	flex-shrink: 0;
-}
-
-.site-header__right .storefront-search {
-	width: min(480px, 44vw);
-}
-
-.whatsapp-fab {
-	position: fixed;
-	right: 24px;
-	bottom: 24px;
-	width: 62px;
-	height: 62px;
-	border-radius: var(--radius-full);
-	background: var(--color-primary);
-	box-shadow: 0 10px 24px rgba(100, 149, 237, 0.38);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 55;
-	transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.whatsapp-fab:hover {
-	transform: translateY(-2px) scale(1.03);
-	box-shadow: 0 14px 28px rgba(100, 149, 237, 0.42);
-}
-
-.whatsapp-fab img {
-	width: 34px;
-	height: 34px;
-	object-fit: contain;
 }
 
 /* Menu Toggle */
@@ -950,14 +846,6 @@ tiendu-button.section__action-button button {
 	margin-bottom: 0;
 }
 
-@media (max-width: 767px) {
-	.top-banner__inner {
-		min-height: 38px;
-		font-size: 0.76rem;
-		padding: 0 8px;
-	}
-}
-
 .section__header {
 	display: flex;
 	align-items: flex-end;
@@ -1051,6 +939,53 @@ tiendu-button.section__action-button button {
 
 .page-content .size-full {
 	max-width: 100%;
+}
+
+.pages-directory {
+	display: grid;
+	gap: var(--space-4);
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.page-directory-card {
+	display: grid;
+	gap: var(--space-3);
+	padding: var(--space-5);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-xl);
+	background: #ffffff;
+	transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.page-directory-card:hover {
+	transform: translateY(-2px);
+	border-color: var(--border-medium);
+	box-shadow: var(--shadow-sm);
+}
+
+.page-directory-card h2 {
+	font-size: var(--text-xl);
+	line-height: 1.25;
+}
+
+.page-directory-card p {
+	color: var(--text-secondary);
+	line-height: 1.55;
+}
+
+.page-directory-card span {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--color-primary);
+}
+
+.page-directory-card span i,
+.page-directory-card span svg {
+	width: 15px;
+	height: 15px;
 }
 
 /* ==========================================================================
@@ -2246,22 +2181,6 @@ tiendu-button.section__action-button button {
 		animation-duration: 12s;
 	}
 
-
-	.site-header__right .storefront-search {
-		width: auto;
-	}
-
-	.whatsapp-fab {
-		right: 14px;
-		bottom: 14px;
-		width: 52px;
-		height: 52px;
-	}
-
-	.whatsapp-fab img {
-		width: 28px;
-		height: 28px;
-	}
 
 	.footer-subscribe-form {
 		width: 100%;

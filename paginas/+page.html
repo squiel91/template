@@ -1,0 +1,21 @@
+<div class="model-container page-shell">
+	<store-breadcrumbs
+		aria-label="Breadcrumb"
+		items='[{"label":"Inicio","href":"/"}]'
+		current-label="Páginas"
+	></store-breadcrumbs>
+
+	<section class="listing-head" aria-labelledby="pages-page-title">
+		<div class="listing-meta">
+			<h1 id="pages-page-title" class="product-info__title">Páginas</h1>
+			<p>Información útil sobre compras, envíos y políticas de Euforia.</p>
+		</div>
+		<div class="listing-subhead">
+			<p id="pages-results-summary" class="category-products-summary"></p>
+		</div>
+	</section>
+
+	<div id="pages-list" aria-live="polite"></div>
+</div>
+
+<script type="module" src="/paginas/script.js"></script>

@@ -9,8 +9,18 @@ import { refreshIcons } from '/shared/icons.js'
 import { createProductItemElement } from '/shared/product-item-element.js'
 import { escapeHtml } from '/shared/sanitize.js'
 
-const FEATURED_CATEGORY_ID = 242
 const FEATURED_PAGE_SIZE = 8
+const FEATURED_CATEGORY_IDS = [612, 611]
+const FEATURED_TAB_KEYS = ['new', 'top']
+
+const getFeaturedCategoryByTab = key => {
+	if (FEATURED_CATEGORY_IDS.length === 0) return null
+
+	const tabIndex = FEATURED_TAB_KEYS.indexOf(key)
+	if (tabIndex === -1) return FEATURED_CATEGORY_IDS[0]
+
+	return FEATURED_CATEGORY_IDS[tabIndex] || FEATURED_CATEGORY_IDS[0]
+}
 const renderFeaturedStatus = (key, message) => {
 	const track = document.querySelector(`[data-featured-group="${key}"]`)
 	if (!(track instanceof HTMLElement)) return
@@ -26,8 +36,9 @@ const loadFeaturedGroup = async ({ key, criteria, order }) => {
 	track.setAttribute('aria-busy', 'true')
 
 	try {
+		const featuredCategoryId = getFeaturedCategoryByTab(key)
 		const response = await tiendu.products.list({
-			categoryId: FEATURED_CATEGORY_ID,
+			...(featuredCategoryId ? { categoryId: featuredCategoryId } : {}),
 			includeProductsFromSubcategories: true,
 			criteria,
 			order,

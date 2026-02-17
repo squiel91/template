@@ -38,7 +38,7 @@ const init = async () => {
 			breadcrumbNode.setCurrentLabel(title)
 		}
 
-		document.title = `${title} | Tienda Genérica`
+		document.title = `${title} | Euforia - Perfumes Árabes`
 
 		const container = document.getElementById('page')
 		if (!container) return

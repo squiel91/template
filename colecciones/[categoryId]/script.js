@@ -13,6 +13,7 @@ import { refreshIcons } from '/shared/icons.js'
 import { escapeHtml } from '/shared/sanitize.js'
 
 const PAGE_SIZE = 20
+const CHEAPEST_VARIANT_CATEGORY_ID = 238
 
 const formatCategoryResultsCopy = total => {
 	if (total === 1) return '1 producto en esta colección'
@@ -73,12 +74,14 @@ const init = async () => {
 			categoryProductsSummary.textContent = formatCategoryResultsCopy(Number(category.productCount) || 0)
 		}
 
-		document.title = `${category.name} | Tienda Genérica`
+		document.title = `${category.name} | Euforia - Perfumes Árabes`
 
 		const productOrigin = {
 			url: getCurrentRelativeUrlWithoutOrigin(),
 			title: category.name || 'Colección'
 		}
+		const priceStrategy =
+			categoryId === CHEAPEST_VARIANT_CATEGORY_ID ? 'cheapest' : 'most-expensive'
 
 		await initPaginatedProductListing({
 			containerId: 'category-products',
@@ -90,6 +93,7 @@ const init = async () => {
 			emptyMessage: 'No hay productos publicados en esta colección.',
 			errorPrefix: 'Error al cargar la colección',
 			buildOrigin: () => productOrigin,
+			buildItemOptions: () => ({ priceStrategy }),
 			fetchPage: async ({ page, size, sort }) => {
 				const response = await tiendu.products.list({
 					categoryId,

@@ -19,13 +19,24 @@ const getVariantsWithPrice = variants => {
 	return variants.filter(variant => typeof variant?.priceInCents === 'number')
 }
 
-const getListingPriceVariant = variants => {
+const resolvePriceStrategy = strategy =>
+	strategy === 'cheapest' ? 'cheapest' : 'most-expensive'
+
+export const getProductVariantByPriceStrategy = (variants, strategy = 'most-expensive') => {
 	const variantsWithPrice = getVariantsWithPrice(variants)
 	if (variantsWithPrice.length === 0) return null
 
+	const normalizedStrategy = resolvePriceStrategy(strategy)
 	let selectedVariant = variantsWithPrice[0]
 	for (const variant of variantsWithPrice) {
-		if ((variant.priceInCents ?? Number.MAX_SAFE_INTEGER) < (selectedVariant.priceInCents ?? Number.MAX_SAFE_INTEGER)) {
+		const variantPrice = variant.priceInCents ?? null
+		const selectedPrice = selectedVariant.priceInCents ?? null
+		if (typeof variantPrice !== 'number' || typeof selectedPrice !== 'number') continue
+
+		if (
+			(normalizedStrategy === 'cheapest' && variantPrice < selectedPrice) ||
+			(normalizedStrategy === 'most-expensive' && variantPrice > selectedPrice)
+		) {
 			selectedVariant = variant
 		}
 	}
@@ -66,8 +77,11 @@ export const getProductStockOverview = product => {
 	}
 }
 
-export const getAggregateProductInfo = product => {
-	const listingVariant = getListingPriceVariant(product?.variants)
+export const getAggregateProductInfo = (product, options = {}) => {
+	const listingVariant = getProductVariantByPriceStrategy(
+		product?.variants,
+		resolvePriceStrategy(options?.strategy)
+	)
 	const priceInCents =
 		typeof listingVariant?.priceInCents === 'number'
 			? listingVariant.priceInCents

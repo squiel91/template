@@ -11,7 +11,7 @@ const ensureStyles = () => {
 	style.textContent = `
 		product-list {
 			display: grid;
-			gap: 24px;
+			gap: 16px;
 			grid-template-columns: repeat(2, 1fr);
 		}
 

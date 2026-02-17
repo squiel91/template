@@ -28,7 +28,7 @@ body.model-theme {
 .model-theme button:focus-visible,
 .model-theme input:focus-visible,
 .model-theme [role='tab']:focus-visible {
-	outline: 2px solid #1d4ed8;
+	outline: 2px solid var(--model-black);
 	outline-offset: 2px;
 }
 
@@ -101,7 +101,7 @@ body.model-theme {
 }
 
 .model-header__logo img {
-	height: 42px;
+	height: 34px;
 	width: auto;
 	object-fit: contain;
 	transition: filter 220ms ease;
@@ -258,10 +258,43 @@ body[data-home-header='transparent'] .model-header__logo img {
 	padding: 0 0.2rem;
 	font-size: 0.74rem;
 	line-height: 1;
-	background: #1e3a8a;
+	background: #dc2626;
 	color: #fff;
 	border-radius: 999px;
 	border: 2px solid #fff;
+	transform: scale(1);
+	transform-origin: top right;
+	opacity: 1;
+	transition: transform 180ms ease, opacity 180ms ease;
+}
+
+#open-cart-button .tiendu-button__badge.is-hidden {
+	transform: scale(0);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.model-header .storefront-search .storefront-search__mobile-trigger {
+	border-color: var(--model-border);
+	background: #fff;
+	color: #111827;
+	transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease;
+}
+
+.model-header .storefront-search .storefront-search__mobile-trigger:hover {
+	background: #f3f4f6;
+	border-color: #d1d5db;
+}
+
+body[data-home-header='transparent'] .model-header .storefront-search .storefront-search__mobile-trigger {
+	background: rgba(255, 255, 255, 0.14);
+	border-color: rgba(255, 255, 255, 0.45);
+	color: #ffffff;
+}
+
+body[data-home-header='transparent'] .model-header .storefront-search .storefront-search__mobile-trigger:hover {
+	background: rgba(255, 255, 255, 0.2);
+	border-color: rgba(255, 255, 255, 0.62);
 }
 
 .model-side-menu {
@@ -1433,7 +1466,7 @@ body[data-home-header='transparent'] .model-header__logo img {
 	}
 
 	.model-header__logo img {
-		height: 35px;
+		height: 24px;
 	}
 
 	.model-header .storefront-search {

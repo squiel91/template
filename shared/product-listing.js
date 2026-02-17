@@ -67,6 +67,7 @@ export const initPaginatedProductListing = async ({
 	errorPrefix,
 	fetchPage,
 	buildOrigin,
+	buildItemOptions,
 	sortSelectId,
 	sortParamName = 'orden',
 	resultsCopyId,
@@ -105,7 +106,14 @@ export const initPaginatedProductListing = async ({
 
 		const appendProducts = products => {
 			for (const product of products) {
-				list.appendChild(createProductItemElement(product, { origin: buildOrigin() }))
+				const itemOptions =
+					typeof buildItemOptions === 'function' ? buildItemOptions(product) : {}
+				list.appendChild(
+					createProductItemElement(product, {
+						origin: buildOrigin(),
+						...(itemOptions && typeof itemOptions === 'object' ? itemOptions : {})
+					})
+				)
 			}
 			refreshIcons()
 		}

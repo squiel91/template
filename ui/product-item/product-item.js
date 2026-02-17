@@ -3,6 +3,7 @@
 import { LitElement, html, nothing } from '/shared/lit.js'
 import '/ui/rating-stars/rating-stars.js'
 import { getAggregateProductInfo } from '/shared/aggregate-product-info.js'
+import { getProductVariantByPriceStrategy } from '/shared/aggregate-product-info.js'
 import { getMetadataBrand } from '/shared/product-metadata.js'
 
 const STYLE_ID = 'product-item-lit-styles'
@@ -194,13 +195,15 @@ const ensureStyles = () => {
 class ProductItem extends LitElement {
 	static properties = {
 		product: { attribute: false },
-		url: { type: String }
+		url: { type: String },
+		priceStrategy: { type: String, attribute: 'price-strategy' }
 	}
 
 	constructor() {
 		super()
 		this.product = null
 		this.url = ''
+		this.priceStrategy = 'most-expensive'
 	}
 
 	createRenderRoot() {
@@ -222,16 +225,19 @@ class ProductItem extends LitElement {
 
 		const product = this.product
 		const title = product.title || 'Producto'
-		const href = this.url || `/perfumes/${Number(product.id) || ''}`
+		const initialHref = this.url || `/perfumes/${Number(product.id) || ''}`
+		const resolvedUrl = new URL(initialHref, window.location.origin)
+		const selectedVariant = getProductVariantByPriceStrategy(product?.variants, this.priceStrategy)
+		if (Number.isFinite(Number(selectedVariant?.id))) {
+			resolvedUrl.searchParams.set('variantId', String(selectedVariant.id))
+		}
+		const href = `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`
 		const imageSrc = product?.coverImage?.url || FALLBACK_IMAGE_SRC
 		const alt = product?.coverImage?.alt || product?.title || 'Producto'
 		const brand = getMetadataBrand(product)
-		const listing = getAggregateProductInfo(product)
+		const listing = getAggregateProductInfo(product, { strategy: this.priceStrategy })
 		const averageRating = Number.isFinite(Number(product?.averageRating))
 			? Number(product.averageRating)
-			: 0
-		const reviewsQuantity = Number.isFinite(Number(product?.reviewsQuantity))
-			? Number(product.reviewsQuantity)
 			: 0
 
 		return html`
@@ -248,7 +254,7 @@ class ProductItem extends LitElement {
 					<h3 class="product-item__title">${title}</h3>
 					<div class="product-item__rating-line" aria-label="Calificación del producto">
 						<rating-stars value=${String(averageRating)} size="18"></rating-stars>
-						<span>${averageRating.toFixed(1)} (${reviewsQuantity})</span>
+						<span>${averageRating.toFixed(1)}</span>
 					</div>
 					${listing.hasDisplayPrice
 						? html`<div class="product-item__price-line">

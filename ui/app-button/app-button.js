@@ -253,7 +253,10 @@ class AppButton extends LitElement {
 		const iconName = this._loading ? this.loadingIcon : this.icon
 		const text = this._loading ? this.loadingLabel || this.label : this.label
 		const ariaLabel = this.getAttribute('aria-label') || this.label || ''
-		const hasBadge = this.badge !== ''
+		const badgeText = String(this.badge ?? '').trim()
+		const badgeNumber = Number(badgeText)
+		const hasVisibleBadge =
+			badgeText !== '' && (!Number.isFinite(badgeNumber) || badgeNumber > 0)
 
 		return html`
 			<button
@@ -267,8 +270,8 @@ class AppButton extends LitElement {
 					? html`<span class="tiendu-button__icon" aria-hidden="true">${this.renderIcon(iconName)}</span>`
 					: ''}
 				${text ? html`<span class="tiendu-button__label">${text}</span>` : ''}
-				${hasBadge
-					? html`<span class="cart-quantity tiendu-button__badge" id=${this.badgeId || nothing} aria-live="polite">${this.badge}</span>`
+				${badgeText !== ''
+					? html`<span class=${`cart-quantity tiendu-button__badge${hasVisibleBadge ? '' : ' is-hidden'}`} id=${this.badgeId || nothing} aria-live="polite">${badgeText}</span>`
 					: ''}
 			</button>
 		`

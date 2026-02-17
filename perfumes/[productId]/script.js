@@ -12,6 +12,7 @@ import '/ui/toast-stack/toast-stack.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { getPriceDataForVariant } from '/shared/aggregate-product-info.js'
 import { getProductStockOverview } from '/shared/aggregate-product-info.js'
+import { getProductVariantByPriceStrategy } from '/shared/aggregate-product-info.js'
 import { withPageLoading } from '/shared/page-loading.js'
 import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
@@ -72,12 +73,32 @@ const renderProduct = (product, relatedProducts = []) => {
 	if (!container) return
 
 	const variants = normalizeVariants(product.variants)
+	const currentUrl = new URL(window.location.href)
+	const hasVariantIdParam = currentUrl.searchParams.has('variantId')
+	const requestedVariantId = Number(currentUrl.searchParams.get('variantId'))
+	const requestedVariant =
+		Number.isFinite(requestedVariantId) && requestedVariantId > 0
+			? variants.find(variant => Number(variant.id) === requestedVariantId) || null
+			: null
+	const pricedVariants = variants.filter(variant => typeof variant?.priceInCents === 'number')
+	const hasDifferentVariantPrices = new Set(pricedVariants.map(variant => variant.priceInCents)).size > 1
+	const shouldShowFromCheapestVariant = !hasVariantIdParam && hasDifferentVariantPrices
+	const cheapestVariant = shouldShowFromCheapestVariant
+		? getProductVariantByPriceStrategy(variants, 'cheapest')
+		: null
 	const productAttributes = Array.isArray(product.attributes) ? product.attributes : []
 	const variantIndex = buildVariantIndex(variants)
-	const defaultVariant = variants[0] || null
+	const defaultVariant = requestedVariant || variants[0] || null
 	const requiresVariantSelection = variants.length > 1 && productAttributes.length > 0
 	const selectedValues =
 		requiresVariantSelection || !defaultVariant ? new Map() : extractVariantValueMap(defaultVariant)
+
+	if (requestedVariant) {
+		selectedValues.clear()
+		for (const [attributeId, valueId] of extractVariantValueMap(requestedVariant).entries()) {
+			selectedValues.set(attributeId, valueId)
+		}
+	}
 
 	const title = product.title || 'Producto'
 	const brand = getMetadataBrand(product)
@@ -302,7 +323,7 @@ const renderProduct = (product, relatedProducts = []) => {
 		breadcrumb.setCurrentLabel(title)
 	}
 
-	document.title = `${title} | Tienda Genérica`
+	document.title = `${title} | Euforia - Perfumes Árabes`
 	const descriptionMeta = document.querySelector('meta[name="description"]')
 	if (descriptionMeta) {
 		descriptionMeta.setAttribute('content', description.slice(0, 150))
@@ -338,7 +359,7 @@ const renderProduct = (product, relatedProducts = []) => {
 	let variantSelects = []
 	let metadataColorSelect = null
 
-	let currentVariant = requiresVariantSelection ? null : defaultVariant
+	let currentVariant = requestedVariant || (requiresVariantSelection ? null : defaultVariant)
 	let selectedMetadataColorOptionId = null
 	let quantity = 1
 
@@ -464,6 +485,53 @@ const renderProduct = (product, relatedProducts = []) => {
 	}
 
 	const updatePrice = () => {
+		if (shouldShowFromCheapestVariant && !currentVariant && cheapestVariant) {
+			const priceData = getPriceDataForVariant(product, cheapestVariant)
+			const hasPrice = hasPurchasablePrice(product, cheapestVariant)
+
+			if (priceLineNode) {
+				priceLineNode.hidden = !hasPrice
+			}
+
+			if (priceNode) {
+				priceNode.textContent = hasPrice ? `Desde ${priceData.label}` : ''
+			}
+			if (compareNode) {
+				compareNode.textContent =
+					hasPrice && priceData.compareLabel ? `Desde ${priceData.compareLabel}` : ''
+			}
+
+			if (stockNode) {
+				const stock = cheapestVariant?.stock
+				if (typeof stock === 'number') {
+					const normalizedStock = Math.max(0, Math.floor(stock))
+					if (normalizedStock === 0) {
+						setStockNote('error', 'Desde temporalmente agotado', { pulse: true })
+					} else if (normalizedStock <= 4) {
+						setStockNote(
+							'warning',
+							`Desde ${normalizedStock} ${
+								normalizedStock === 1 ? 'unidad' : 'unidades'
+							} en stock`,
+							{ pulse: true }
+						)
+					} else {
+						setStockNote(
+							'success',
+							`Desde ${normalizedStock} ${
+								normalizedStock === 1 ? 'unidad' : 'unidades'
+							} en stock`,
+							{ pulse: true }
+						)
+					}
+				} else {
+					setStockNote('success', 'Tenemos en stock', { pulse: true })
+				}
+			}
+
+			return priceData
+		}
+
 		const priceData = getPriceDataForVariant(product, currentVariant)
 		const hasPrice = hasPurchasablePrice(product, currentVariant)
 
@@ -772,16 +840,22 @@ const renderProduct = (product, relatedProducts = []) => {
 				addToCartButton.startLoading()
 			}
 			const addToCartNote = getAddToCartNote()
-			tiendu.cart
-				.addProductVariant(
-					currentVariant,
-					{
-						quantity: clampQuantity(quantity),
-						onClose: () => {
-							if (typeof addToCartButton.stopLoading === 'function') {
-								addToCartButton.stopLoading()
-							}
-						},
+				tiendu.cart
+					.addProductVariant(
+						currentVariant,
+						{
+							quantity: clampQuantity(quantity),
+							onClose: ({ updatedCartItemsQuantity } = {}) => {
+								if (typeof updatedCartItemsQuantity === 'number') {
+									const cartButton = document.getElementById('open-cart-button')
+									if (cartButton && typeof cartButton.setBadge === 'function') {
+										cartButton.setBadge(updatedCartItemsQuantity)
+									}
+								}
+								if (typeof addToCartButton.stopLoading === 'function') {
+									addToCartButton.stopLoading()
+								}
+							},
 						...(addToCartNote ? { note: addToCartNote } : {})
 					}
 				)
