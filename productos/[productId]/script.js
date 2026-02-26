@@ -10,8 +10,12 @@ import '/ui/quantity-input/quantity-input.js'
 import '/ui/stock-note/stock-note.js'
 import '/ui/toast-stack/toast-stack.js'
 import { tiendu } from '/shared/tiendu-client.js'
-import { getPriceDataForVariant } from '/shared/product-pricing.js'
-import { getProductStockOverview } from '/shared/product-pricing.js'
+import {
+	getPriceDataForVariant,
+	getVariantSetPriceData,
+	getVariantSetStockData,
+	getSharedVariantCoverImageId
+} from '/shared/product-pricing.js'
 import { withPageLoading } from '/shared/page-loading.js'
 import { getOriginFromCurrentUrl } from '/shared/navigation-origin.js'
 import { refreshIcons } from '/shared/icons.js'
@@ -27,7 +31,6 @@ import {
 	extractVariantValueMap,
 	serializeMap,
 	buildVariantIndex,
-	isValueEnabled,
 	formatRelativeTime,
 	getUnitsSoldCopy,
 	buildGalleryImages
@@ -73,6 +76,10 @@ const renderProduct = (product, relatedProducts = []) => {
 	const variants = normalizeVariants(product.variants)
 	const productAttributes = Array.isArray(product.attributes) ? product.attributes : []
 	const variantIndex = buildVariantIndex(variants)
+	const variantValueEntries = variants.map(variant => ({
+		variant,
+		valueMap: extractVariantValueMap(variant)
+	}))
 	const defaultVariant = variants[0] || null
 	const requiresVariantSelection = variants.length > 1 && productAttributes.length > 0
 	const selectedValues =
@@ -326,6 +333,7 @@ const renderProduct = (product, relatedProducts = []) => {
 	let variantSelects = []
 
 	let currentVariant = requiresVariantSelection ? null : defaultVariant
+	let matchingVariants = variants
 	let quantity = 1
 
 	const getVariantMaxQuantity = () => {
@@ -334,8 +342,6 @@ const renderProduct = (product, relatedProducts = []) => {
 		if (stock <= 0) return 0
 		return Math.floor(stock)
 	}
-
-	const stockOverview = getProductStockOverview(product)
 
 	const setStockNote = (tone, messageHtml, options = {}) => {
 		if (!stockNode) return
@@ -364,6 +370,10 @@ const renderProduct = (product, relatedProducts = []) => {
 		setStockNote('success', `${stock} ${stock === 1 ? 'unidad' : 'unidades'} en stock`, {
 			pulse: true
 		})
+	}
+
+	const setVariableStockNote = () => {
+		setStockNote('neutral', 'Selecciona una opción para ver el stock', { pulse: true })
 	}
 
 	const clampQuantity = value => {
@@ -414,7 +424,70 @@ const renderProduct = (product, relatedProducts = []) => {
 		return productAttributes.every(attribute => selectedValues.has(Number(attribute.id)))
 	}
 
+	const getMatchingVariants = () => {
+		if (!requiresVariantSelection) return variants
+		if (selectedValues.size === 0) return variants
+
+		return variantValueEntries
+			.filter(({ valueMap }) => {
+				for (const [attributeId, valueId] of selectedValues.entries()) {
+					if (valueMap.get(attributeId) !== valueId) {
+						return false
+					}
+				}
+				return true
+			})
+			.map(({ variant }) => variant)
+	}
+
+	const isValueEnabledForSelection = (attributeId, valueId) => {
+		return variantValueEntries.some(({ valueMap }) => {
+			if (valueMap.get(attributeId) !== valueId) return false
+
+			for (const [selectedAttrId, selectedValueId] of selectedValues.entries()) {
+				if (selectedAttrId === attributeId) continue
+				if (valueMap.has(selectedAttrId) && valueMap.get(selectedAttrId) !== selectedValueId) {
+					return false
+				}
+			}
+
+			return true
+		})
+	}
+
 	const updatePrice = () => {
+		if (requiresVariantSelection && !currentVariant) {
+			const priceData = getVariantSetPriceData({
+				product,
+				variants: matchingVariants
+			})
+			const hasPrice = typeof priceData?.label === 'string' && priceData.label.length > 0
+
+			if (priceLineNode) {
+				priceLineNode.hidden = !hasPrice
+			}
+
+			if (priceNode) {
+				priceNode.textContent = hasPrice ? priceData.label : ''
+			}
+			if (compareNode) {
+				compareNode.textContent = hasPrice ? priceData.compareLabel || '' : ''
+			}
+
+			if (stockNode) {
+				const stockData = getVariantSetStockData(matchingVariants)
+				if (stockData.mode === 'exact' && typeof stockData.value === 'number') {
+					setStockFromQuantity(stockData.value)
+				} else if (stockData.mode === 'untracked') {
+					setStockNote('success', 'Tenemos en stock', { pulse: true })
+				} else {
+					setVariableStockNote()
+				}
+			}
+
+			return priceData
+		}
+
 		const priceData = getPriceDataForVariant(product, currentVariant)
 		const hasPrice = hasPurchasablePrice(product, currentVariant)
 
@@ -429,18 +502,6 @@ const renderProduct = (product, relatedProducts = []) => {
 			compareNode.textContent = hasPrice ? priceData.compareLabel || '' : ''
 		}
 		if (stockNode) {
-			if (requiresVariantSelection && !currentVariant) {
-				const sharedStock = stockOverview.sharedVariantStock
-				if (typeof sharedStock === 'number') {
-					setStockFromQuantity(sharedStock)
-				} else if (stockOverview.allVariantsUntracked) {
-					setStockNote('success', 'Tenemos en stock', { pulse: true })
-				} else {
-					setStockNote('neutral', 'Selecciona una variante para ver stock', { pulse: true })
-				}
-				return priceData
-			}
-
 			const stock = currentVariant?.stock
 			if (typeof stock === 'number') {
 				setStockFromQuantity(Math.max(0, Math.floor(stock)))
@@ -590,7 +651,7 @@ const renderProduct = (product, relatedProducts = []) => {
 			if (!Number.isFinite(attributeId) || !Number.isFinite(valueId)) continue
 
 			const selected = selectedValues.get(attributeId) === valueId
-			const enabled = isValueEnabled(variants, attributeId, valueId, selectedValues)
+			const enabled = isValueEnabledForSelection(attributeId, valueId)
 			button.setAttribute('aria-pressed', selected ? 'true' : 'false')
 			button.disabled = !enabled
 		}
@@ -604,13 +665,15 @@ const renderProduct = (product, relatedProducts = []) => {
 			select.setValue(Number.isFinite(Number(selectedValueId)) ? selectedValueId : null)
 
 			const disabledIds = attribute.values
-				.filter(value => !isValueEnabled(variants, attributeId, value.id, selectedValues))
+				.filter(value => !isValueEnabledForSelection(attributeId, value.id))
 				.map(value => value.id)
 			select.setDisabledOptionIds(disabledIds)
 		}
 	}
 
 	const syncVariantFromSelection = () => {
+		matchingVariants = getMatchingVariants()
+
 		if (requiresVariantSelection && !isVariantSelectionComplete()) {
 			currentVariant = null
 		} else {
@@ -628,6 +691,14 @@ const renderProduct = (product, relatedProducts = []) => {
 			typeof currentVariant?.coverImage?.id === 'number'
 		) {
 			imageCarousel.setCurrentImageById(currentVariant.coverImage.id)
+			return
+		}
+
+		if (imageCarousel && typeof imageCarousel.setCurrentImageById === 'function') {
+			const sharedImageId = getSharedVariantCoverImageId(matchingVariants)
+			if (typeof sharedImageId === 'number') {
+				imageCarousel.setCurrentImageById(sharedImageId)
+			}
 		}
 	}
 

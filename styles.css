@@ -111,7 +111,16 @@ img {
 }
 
 a {
-	color: inherit;
+	color: var(--color-primary);
+	font-weight: 700;
+	text-decoration: none;
+}
+
+a:visited,
+a:hover,
+a:focus-visible,
+a:active {
+	color: var(--color-primary);
 	text-decoration: none;
 }
 
@@ -529,8 +538,8 @@ button {
 }
 
 .side-menu__list a:hover {
-	background: var(--bg-secondary);
-	color: var(--text-primary);
+	background: transparent;
+	color: var(--color-primary);
 }
 
 /* ==========================================================================
@@ -616,6 +625,15 @@ button {
 .btn--primary {
 	background: var(--color-primary);
 	color: white;
+}
+
+a.btn--primary,
+a.btn--primary:visited,
+a.btn--primary:hover,
+a.btn--primary:focus-visible,
+a.btn--primary:active {
+	color: #ffffff;
+	text-decoration: none;
 }
 
 .btn--primary:hover {
@@ -721,16 +739,15 @@ button {
 
 .section__action {
 	font-size: var(--text-sm);
-	font-weight: 600;
-	color: var(--color-accent);
-	transition: color var(--transition-fast);
+	font-weight: 700;
+	color: var(--color-primary);
+	transition: none;
 	flex-shrink: 0;
 }
 
 .section__action:hover {
-	color: var(--color-accent-hover);
-	text-decoration: underline;
-	text-underline-offset: 3px;
+	color: var(--color-primary);
+	text-decoration: none;
 }
 
 /* ==========================================================================
@@ -802,7 +819,7 @@ button {
 
 .blog-card h3 a:hover,
 .blog-list-item h2 a:hover {
-	color: var(--color-accent);
+	color: var(--color-primary);
 }
 
 .blog-card p,
@@ -950,10 +967,48 @@ button {
 	gap: var(--space-3);
 }
 
+.listing-results-meta {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
 .listing-controls {
 	display: flex;
 	align-items: center;
+	gap: var(--space-2);
 	margin-left: auto;
+}
+
+.listing-clear-search {
+	width: 36px;
+	height: 36px;
+	border-radius: 999px;
+	border: 1px solid #cbd5e1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
+	background: #ffffff;
+	text-decoration: none;
+	flex-shrink: 0;
+	transition: transform var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.listing-clear-search[hidden] {
+	display: none !important;
+}
+
+.listing-clear-search i,
+.listing-clear-search svg {
+	width: 16px;
+	height: 16px;
+}
+
+.listing-clear-search:hover {
+	transform: none;
+	border-color: #cbd5e1;
+	color: var(--color-primary);
 }
 
 .listing-controls tiendu-select {
@@ -983,6 +1038,23 @@ button {
 .listing-meta p {
 	font-size: var(--text-lg);
 	color: var(--text-secondary);
+}
+
+.category-description {
+	max-width: 68ch;
+	white-space: pre-line;
+	margin-top: var(--space-5);
+	margin-bottom: var(--space-6);
+}
+
+.category-products-summary {
+	font-size: var(--text-base);
+	color: var(--text-secondary);
+}
+
+#products-results-summary,
+#category-products-summary {
+	font-style: italic;
 }
 
 /* ==========================================================================
@@ -1015,14 +1087,15 @@ button {
 
 .breadcrumbs__item a {
 	color: var(--color-primary);
-	font-weight: 400;
+	font-weight: 700;
 	text-decoration: none;
 	flex-shrink: 0;
-	transition: color var(--transition-fast);
+	transition: none;
 }
 
 .breadcrumbs__item a:hover {
-	color: var(--color-primary-hover, #1e293b);
+	color: var(--color-primary);
+	text-decoration: none;
 }
 
 .breadcrumbs__separator {
@@ -1441,8 +1514,8 @@ button {
 	align-items: center;
 	gap: 0.35rem;
 	font-size: var(--text-sm);
-	font-weight: 600;
-	color: var(--color-accent);
+	font-weight: 700;
+	color: var(--color-primary);
 	width: fit-content;
 	padding: 0;
 	border: none;
@@ -1468,9 +1541,8 @@ button {
 }
 
 .description-toggle:hover {
-	color: var(--color-accent-hover);
-	text-decoration: underline;
-	text-underline-offset: 2px;
+	color: var(--color-primary);
+	text-decoration: none;
 }
 
 .reviews-section__header {
@@ -1683,8 +1755,8 @@ button {
 	align-items: center;
 	gap: 0.35rem;
 	font-size: var(--text-sm);
-	font-weight: 600;
-	color: var(--text-secondary);
+	font-weight: 700;
+	color: var(--color-primary);
 }
 
 .reviews-toggle i {
@@ -1846,7 +1918,8 @@ button {
 
 .footer-links a {
 	color: var(--text-secondary);
-	transition: color var(--transition-fast);
+	font-weight: 500;
+	transition: none;
 }
 
 .footer-subscribe-form {
@@ -1876,13 +1949,13 @@ button {
 	border: 1px solid var(--border-light);
 	background: var(--bg-primary);
 	color: var(--text-secondary);
-	transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+	transition: none;
 }
 
 .footer-social-links a:hover {
-	border-color: var(--border-medium);
-	background: #f8fafc;
-	color: var(--text-primary);
+	border-color: var(--border-light);
+	background: var(--bg-primary);
+	color: var(--text-secondary);
 }
 
 .footer-social-links svg {
@@ -1893,7 +1966,7 @@ button {
 }
 
 .footer-links a:hover {
-	color: var(--color-accent);
+	color: var(--text-secondary);
 }
 
 .footer-legal {
@@ -1905,17 +1978,27 @@ button {
 }
 
 .footer-legal__link {
+	color: var(--color-primary);
 	font-weight: 700;
 }
 
 .site-footer a {
 	color: var(--text-secondary);
 	font-weight: 500;
-	transition: color var(--transition-fast);
+	transition: none;
 }
 
 .site-footer a:hover {
-	color: var(--color-accent);
+	color: var(--text-secondary);
+}
+
+.site-footer a.footer-legal__link,
+.site-footer a.footer-legal__link:hover,
+.site-footer a.footer-legal__link:visited,
+.site-footer a.footer-legal__link:focus-visible,
+.site-footer a.footer-legal__link:active {
+	color: var(--color-primary);
+	font-weight: 700;
 }
 
 /* ==========================================================================
@@ -2012,8 +2095,30 @@ button {
 		display: none;
 	}
 
+	#category-products-summary {
+		display: none;
+	}
+
+	.category-description {
+		font-size: var(--text-md);
+	}
+
+	.listing-head.listing-head--search #products-results-summary {
+		display: block;
+	}
+
+	.listing-results-meta {
+		display: none;
+	}
+
+	.listing-head.listing-head--search .listing-results-meta {
+		display: inline-flex;
+	}
+
 	.listing-subhead {
-		justify-content: flex-end;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-start;
 	}
 
 	.listing-controls {
@@ -2024,6 +2129,17 @@ button {
 	.listing-controls tiendu-select {
 		min-width: 0;
 		width: 100%;
+	}
+
+	.listing-results-meta {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.listing-clear-search {
+		width: 34px;
+		height: 34px;
+		border-radius: 999px;
 	}
 
 	.product-actions__primary {

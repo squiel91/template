@@ -26,23 +26,31 @@ const toFiniteStock = value => {
 	return Math.max(0, Math.floor(value))
 }
 
-const getListingVariant = product => {
-	const variants = getValidVariants(product?.variants)
-	if (variants.length === 0) return null
-	let selected = variants[0]
+const getCompareLabelForVariants = variants => {
+	if (!Array.isArray(variants) || variants.length === 0) return null
+
+	const compareValues = []
 	for (const variant of variants) {
-		if ((variant.priceInCents ?? Number.MAX_SAFE_INTEGER) < (selected.priceInCents ?? Number.MAX_SAFE_INTEGER)) {
-			selected = variant
+		const price = variant?.priceInCents
+		const compare = variant?.compareAtPriceInCents
+		if (typeof price !== 'number' || typeof compare !== 'number' || compare <= price) {
+			return null
 		}
+		compareValues.push(compare)
 	}
-	return selected
+
+	if (compareValues.length === 0) return null
+	const minCompare = Math.min(...compareValues)
+	const maxCompare = Math.max(...compareValues)
+	return minCompare === maxCompare
+		? formatCurrency(minCompare)
+		: `Desde ${formatCurrency(minCompare)}`
 }
 
-export const getListingPriceData = product => {
-	const prices = getValidVariantPrices(product?.variants)
-	const listingVariant = getListingVariant(product)
+export const getVariantSetPriceData = ({ product, variants }) => {
+	const validVariants = getValidVariants(variants)
 
-	if (prices.length === 0) {
+	if (validVariants.length === 0) {
 		const basePrice = product?.basePriceInCents
 		const baseCompare = product?.baseCompareAtPriceInCents
 		return {
@@ -56,19 +64,19 @@ export const getListingPriceData = product => {
 		}
 	}
 
+	const prices = getValidVariantPrices(validVariants)
 	const minPrice = Math.min(...prices)
 	const maxPrice = Math.max(...prices)
 	const label = minPrice !== maxPrice ? `Desde ${formatCurrency(minPrice)}` : formatCurrency(minPrice)
 
-	const comparePrice = listingVariant?.compareAtPriceInCents
-	const compareLabel =
-		typeof comparePrice === 'number' &&
-		typeof listingVariant?.priceInCents === 'number' &&
-		comparePrice > listingVariant.priceInCents
-			? formatCurrency(comparePrice)
-			: null
+	return {
+		label,
+		compareLabel: getCompareLabelForVariants(validVariants)
+	}
+}
 
-	return { label, compareLabel }
+export const getListingPriceData = product => {
+	return getVariantSetPriceData({ product, variants: product?.variants })
 }
 
 export const getProductStockOverview = product => {
@@ -109,6 +117,56 @@ export const getListingProductState = product => {
 		quickAddVariantId: quickAddVariant?.id ?? null,
 		isOutOfStock
 	}
+}
+
+export const getVariantSetStockData = variants => {
+	if (!Array.isArray(variants) || variants.length === 0) {
+		return { mode: 'unknown' }
+	}
+
+	const stocks = variants.map(variant => toFiniteStock(variant?.stock))
+	const trackedStocks = stocks.filter(stock => stock != null)
+
+	if (trackedStocks.length === 0) {
+		return { mode: 'untracked' }
+	}
+
+	const min = Math.min(...trackedStocks)
+	const max = Math.max(...trackedStocks)
+	const hasUntracked = trackedStocks.length !== stocks.length
+
+	if (min === max && !hasUntracked) {
+		return { mode: 'exact', value: min }
+	}
+
+	return { mode: 'variable' }
+}
+
+export const getSharedVariantCoverImageId = variants => {
+	if (!Array.isArray(variants) || variants.length === 0) return null
+
+	let sharedImageUrl = null
+	let sharedImageId = null
+	for (const variant of variants) {
+		const imageUrl = typeof variant?.coverImage?.url === 'string'
+			? variant.coverImage.url.trim()
+			: ''
+		if (!imageUrl) {
+			return null
+		}
+		if (sharedImageUrl == null) {
+			sharedImageUrl = imageUrl
+		} else if (sharedImageUrl !== imageUrl) {
+			return null
+		}
+
+		const imageId = Number(variant?.coverImage?.id)
+		if (Number.isFinite(imageId) && sharedImageId == null) {
+			sharedImageId = imageId
+		}
+	}
+
+	return sharedImageId
 }
 
 export const getListingPriceLabel = product => {

@@ -14,6 +14,11 @@ import { escapeHtml } from '/shared/sanitize.js'
 
 const PAGE_SIZE = 20
 
+const formatCategoryResultsCopy = total => {
+	if (total === 1) return '1 producto en esta categoría'
+	return `${total} productos en esta categoría`
+}
+
 const renderState = message => {
 	const container = document.getElementById('category-products')
 	if (!container) return
@@ -58,7 +63,14 @@ const init = async () => {
 
 		const categoryDescription = document.getElementById('category-description')
 		if (categoryDescription) {
-			categoryDescription.textContent = category.description || `${category.productCount || 0} productos en esta categoría`
+			const description = String(category.description || '').trim()
+			categoryDescription.textContent = description
+			categoryDescription.hidden = description.length === 0
+		}
+
+		const categoryProductsSummary = document.getElementById('category-products-summary')
+		if (categoryProductsSummary) {
+			categoryProductsSummary.textContent = formatCategoryResultsCopy(Number(category.productCount) || 0)
 		}
 
 		document.title = `${category.name} | Tienda Genérica`
@@ -72,6 +84,8 @@ const init = async () => {
 			containerId: 'category-products',
 			sortSelectId: 'category-sort-select',
 			sortParamName: 'orden',
+			resultsCopyId: 'category-products-summary',
+			formatResultsCopy: formatCategoryResultsCopy,
 			pageSize: PAGE_SIZE,
 			emptyMessage: 'No hay productos publicados en esta categoría.',
 			errorPrefix: 'Error al cargar la categoría',

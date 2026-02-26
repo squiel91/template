@@ -8,6 +8,7 @@ import {
 	getCurrentRelativeUrlWithoutOrigin
 } from '/shared/navigation-origin.js'
 import { initPaginatedProductListing } from '/shared/product-listing.js'
+import { refreshIcons } from '/shared/icons.js'
 
 const url = new URL(window.location.href)
 const PAGE_SIZE = 20
@@ -23,6 +24,17 @@ const formatResultsCopy = (total, query) => {
 
 const init = async () => {
 	const search = url.searchParams.get('q')?.trim() || ''
+	const listingHead = document.querySelector('.listing-head')
+	if (listingHead instanceof HTMLElement) {
+		listingHead.classList.toggle('listing-head--search', search.length > 0)
+	}
+
+	const clearSearchLink = document.getElementById('products-clear-search')
+	if (clearSearchLink instanceof HTMLElement) {
+		clearSearchLink.hidden = search.length === 0
+	}
+	refreshIcons()
+
 	const origin = {
 		url: getCurrentRelativeUrlWithoutOrigin(),
 		title: search ? 'Búsqueda' : 'Productos'

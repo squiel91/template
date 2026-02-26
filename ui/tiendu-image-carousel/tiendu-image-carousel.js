@@ -4,6 +4,7 @@ import '/ui/tiendu-image-carousel/tiendu-image-lightbox.js'
 
 const STYLE_ID = 'tiendu-image-carousel-styles'
 const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
+const SWIPE_PROGRESS_THRESHOLD = 0.25
 
 const ensureStyles = () => {
 	if (document.getElementById(STYLE_ID)) return
@@ -325,6 +326,23 @@ class TienduImageCarousel extends HTMLElement {
 		this.goTo(this._currentIndex - 1, { animate: true })
 	}
 
+	resolveReleaseIndex(offsetX) {
+		const threshold = Math.max(this.slideWidth, 1) * SWIPE_PROGRESS_THRESHOLD
+		if (Math.abs(offsetX) < threshold) {
+			return this._currentIndex
+		}
+
+		if (offsetX < 0) {
+			return this.clampIndex(this._currentIndex + 1)
+		}
+
+		if (offsetX > 0) {
+			return this.clampIndex(this._currentIndex - 1)
+		}
+
+		return this._currentIndex
+	}
+
 	handlePointerDown(event) {
 		if (this._images.length < 2) return
 		if (event.button !== undefined && event.button !== 0) return
@@ -360,8 +378,7 @@ class TienduImageCarousel extends HTMLElement {
 		if (this._viewport) this._viewport.dataset.dragging = 'false'
 
 		const moved = Math.abs(this._drag.offsetX)
-		const currentTranslate = -this._currentIndex * this.slideWidth + this._drag.offsetX
-		const nextIndex = this.clampIndex(Math.round(-currentTranslate / this.slideWidth))
+		const nextIndex = this.resolveReleaseIndex(this._drag.offsetX)
 
 		this._drag.active = false
 		this._drag.pointerId = null

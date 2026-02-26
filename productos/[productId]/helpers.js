@@ -53,28 +53,6 @@ export const buildVariantIndex = variants => {
 	return index
 }
 
-/**
- * @param {Array<any>} variants
- * @param {number} attributeId
- * @param {number} valueId
- * @param {Map<number, number>} selectedValues
- */
-export const isValueEnabled = (variants, attributeId, valueId, selectedValues) => {
-	return variants.some(variant => {
-		const map = extractVariantValueMap(variant)
-		if (map.get(attributeId) !== valueId) return false
-
-		for (const [selectedAttrId, selectedValueId] of selectedValues.entries()) {
-			if (selectedAttrId === attributeId) continue
-			if (map.has(selectedAttrId) && map.get(selectedAttrId) !== selectedValueId) {
-				return false
-			}
-		}
-
-		return true
-	})
-}
-
 export const formatRelativeTime = value => {
 	if (!value) return 'hace un momento'
 	const date = new Date(value)

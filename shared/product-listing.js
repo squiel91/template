@@ -127,6 +127,8 @@ export const initPaginatedProductListing = async ({
 			if (version !== requestVersion) return false
 
 			if (page === 1 && products.length === 0) {
+				totalLoaded = 0
+				updateResultsCopy()
 				renderState(container, emptyMessage)
 				hasMore = false
 				return false
