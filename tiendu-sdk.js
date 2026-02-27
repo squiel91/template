@@ -346,6 +346,24 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				return response?.data ?? response
 			}
 		},
+		metadata: {
+			/** @param {string} key @returns {Promise<any>} */
+			get: async key => {
+				if (typeof key !== 'string' || !key.trim()) {
+					throw new Error('metadata key must be a non-empty string')
+				}
+				const response = await upFetch.get(
+					`${baseApiUrl}/metadata/${encodeURIComponent(key.trim())}`
+				)
+				if (response?.data && typeof response.data === 'object' && 'value' in response.data) {
+					return response.data.value
+				}
+				if (response && typeof response === 'object' && 'value' in response) {
+					return response.value
+				}
+				return response?.data ?? response
+			}
+		},
 		blogPosts: {
 			/** @returns {Promise<Array<BlogPostListing>>} */
 			list: async () => {

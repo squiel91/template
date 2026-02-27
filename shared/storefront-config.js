@@ -4,7 +4,8 @@ import {
 	PUBLIC_TIENDU_API_BASE_URL,
 	PUBLIC_TIENDU_STORE_ID,
 	PUBLIC_TIENDU_HOME_CATEGORY_IDS,
-	PUBLIC_TIENDU_HOME_LIST_CATEGORY_IDS
+	PUBLIC_TIENDU_HOME_LIST_CATEGORY_IDS,
+	PUBLIC_TIENDU_HOME_HERO_METADATA_KEY
 } from '/tiendu.config.js'
 
 const homeCategoryIds = Array.isArray(PUBLIC_TIENDU_HOME_CATEGORY_IDS)
@@ -20,10 +21,15 @@ const homeListCategoryIds = Array.isArray(PUBLIC_TIENDU_HOME_LIST_CATEGORY_IDS)
 	: []
 
 export const storefrontConfig = {
-	storeName: 'Tienda Genérica',
-	tagline: 'Vendemos todo lo que necesites. Todo, literal.',
+	storeName: 'Santu Market',
+	tagline: 'Cada compra sostiene una vida rescatada.',
 	storeId: PUBLIC_TIENDU_STORE_ID,
 	baseUrl: PUBLIC_TIENDU_API_BASE_URL,
 	homeCategoryIds,
-	homeListCategoryIds
+	homeListCategoryIds,
+	homeHeroMetadataKey:
+		typeof PUBLIC_TIENDU_HOME_HERO_METADATA_KEY === 'string' &&
+		PUBLIC_TIENDU_HOME_HERO_METADATA_KEY.trim()
+			? PUBLIC_TIENDU_HOME_HERO_METADATA_KEY.trim()
+			: 'home-hero-carousel'
 }

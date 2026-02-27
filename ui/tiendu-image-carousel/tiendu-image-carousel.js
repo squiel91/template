@@ -5,14 +5,107 @@ import '/ui/tiendu-image-carousel/tiendu-image-lightbox.js'
 const STYLE_ID = 'tiendu-image-carousel-styles'
 const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
 const SWIPE_PROGRESS_THRESHOLD = 0.25
+const DEFAULT_AUTOPLAY_INTERVAL = 6500
+
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+
+const escapeHtml = value =>
+	String(value ?? '')
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;')
+
+const resolveImageUrl = input => {
+	if (!input) return ''
+	if (typeof input === 'string') return input.trim()
+	if (typeof input === 'object' && typeof input.url === 'string') return input.url.trim()
+	return ''
+}
+
+const normalizeProductImage = image => {
+	if (!image || typeof image !== 'object') return null
+	const url = typeof image.url === 'string' && image.url.trim() ? image.url.trim() : null
+	if (!url) return null
+
+	const numericId = Number(image.id)
+	const id = Number.isFinite(numericId) ? numericId : null
+	const alt = typeof image.alt === 'string' ? image.alt : ''
+
+	return {
+		id,
+		url,
+		desktopUrl: '',
+		alt,
+		title: '',
+		description: '',
+		ctaText: '',
+		href: '',
+		newTab: false
+	}
+}
+
+const normalizeHeroSlide = (slide, index) => {
+	if (!slide || typeof slide !== 'object') return null
+
+	const title = typeof slide.title === 'string' ? slide.title.trim() : ''
+	const description = typeof slide.description === 'string' ? slide.description.trim() : ''
+	const mobileImage = resolveImageUrl(slide.mobileImage || slide.image || slide.url)
+	const desktopImage = resolveImageUrl(slide.desktopImage)
+	const imageUrl = mobileImage || desktopImage
+	const imageAlt =
+		typeof slide.imageAlt === 'string' && slide.imageAlt.trim()
+			? slide.imageAlt.trim()
+			: title || `Slide ${index + 1}`
+
+	const ctaText = typeof slide.ctaText === 'string' ? slide.ctaText.trim() : ''
+	const directHref = typeof slide.href === 'string' ? slide.href.trim() : ''
+	const ctaPath = typeof slide.ctaPath === 'string' ? slide.ctaPath.trim() : ''
+	const ctaUrl = typeof slide.ctaUrl === 'string' ? slide.ctaUrl.trim() : ''
+
+	let href = ''
+	if (/^https?:\/\//i.test(directHref) || directHref.startsWith('/')) {
+		href = directHref
+	} else if (/^https?:\/\//i.test(ctaUrl)) {
+		href = ctaUrl
+	} else if (/^https?:\/\//i.test(ctaPath)) {
+		href = ctaPath
+	} else if (ctaPath.startsWith('/')) {
+		href = ctaPath
+	}
+
+	const hasContent = Boolean(title || description || imageUrl)
+	if (!hasContent) return null
+
+	const numericId = Number(slide.id)
+	const id = Number.isFinite(numericId) ? numericId : null
+
+	return {
+		id,
+		url: imageUrl,
+		desktopUrl: desktopImage,
+		alt: imageAlt,
+		title,
+		description,
+		ctaText,
+		href,
+		newTab: Boolean(slide.ctaNewTab) || Boolean(slide.newTab) || /^https?:\/\//i.test(href)
+	}
+}
 
 const ensureStyles = () => {
 	if (document.getElementById(STYLE_ID)) return
+
 	const style = document.createElement('style')
 	style.id = STYLE_ID
 	style.textContent = `
 		tiendu-image-carousel {
 			display: block;
+		}
+
+		tiendu-image-carousel[mode='hero'] {
+			height: 100%;
 		}
 
 		.tiendu-carousel {
@@ -108,7 +201,8 @@ const ensureStyles = () => {
 		}
 
 		.tiendu-carousel__nav[hidden],
-		.tiendu-carousel__thumbs[hidden] {
+		.tiendu-carousel__thumbs[hidden],
+		.tiendu-carousel__dots[hidden] {
 			display: none !important;
 		}
 
@@ -179,30 +273,161 @@ const ensureStyles = () => {
 			object-fit: cover;
 		}
 
+		.tiendu-carousel--hero {
+			height: 100%;
+			gap: 0;
+		}
+
+		.tiendu-carousel--hero .tiendu-carousel__stage {
+			height: 100%;
+		}
+
+		.tiendu-carousel--hero .tiendu-carousel__viewport {
+			aspect-ratio: auto;
+			height: 100%;
+			min-height: inherit;
+			border-radius: inherit;
+			background: transparent;
+		}
+
+		.tiendu-carousel__slide--hero {
+			position: relative;
+		}
+
+		.tiendu-carousel__hero-media,
+		.tiendu-carousel__hero-media img {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.tiendu-carousel__hero-media--empty {
+			background: radial-gradient(circle at 20% 20%, #e5d6bf 0, #d8c6a9 45%, #ccb496 100%);
+		}
+
+		.tiendu-carousel__hero-overlay {
+			position: absolute;
+			inset: 0;
+			background:
+				linear-gradient(100deg, rgba(23, 27, 23, 0.78) 0%, rgba(23, 27, 23, 0.46) 52%, rgba(23, 27, 23, 0.35) 100%),
+				linear-gradient(to top, rgba(23, 27, 23, 0.24) 0%, transparent 55%);
+		}
+
+		.tiendu-carousel__hero-content {
+			position: relative;
+			z-index: 1;
+			height: 100%;
+			padding: var(--space-12, 3rem);
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			gap: var(--space-5, 1.25rem);
+			max-width: 760px;
+			color: #fff;
+		}
+
+		.tiendu-carousel__hero-title {
+			font-size: clamp(1.75rem, 4.4vw, 3.25rem);
+			line-height: 1.16;
+			font-weight: 800;
+			letter-spacing: -0.02em;
+			max-width: 18ch;
+		}
+
+		.tiendu-carousel__hero-subtitle {
+			font-size: clamp(1rem, 2.2vw, 1.2rem);
+			line-height: 1.6;
+			max-width: 56ch;
+			color: rgba(255, 255, 255, 0.94);
+		}
+
+		.tiendu-carousel__hero-cta {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--space-2, 0.5rem);
+			padding: var(--space-3, 0.75rem) var(--space-6, 1.5rem);
+			font-size: var(--text-base, 1rem);
+			font-weight: 700;
+			border-radius: var(--radius-xl, 1rem);
+			background: var(--home-olive, var(--color-primary, #4f6344));
+			color: #ffffff !important;
+			text-decoration: none;
+			width: fit-content;
+		}
+
+		.tiendu-carousel__hero-controls {
+			position: absolute;
+			left: var(--space-5, 1.25rem);
+			right: var(--space-5, 1.25rem);
+			bottom: var(--space-5, 1.25rem);
+			z-index: 2;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			pointer-events: none;
+		}
+
+		.tiendu-carousel--hero .tiendu-carousel__nav {
+			position: static;
+			transform: none;
+			pointer-events: auto;
+			background: rgba(255, 255, 255, 0.9);
+			border: 1px solid rgba(255, 255, 255, 0.7);
+		}
+
+		.tiendu-carousel__dots {
+			pointer-events: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-2, 0.5rem);
+			padding: 8px 12px;
+			border-radius: 999px;
+			background: rgba(20, 20, 20, 0.32);
+			backdrop-filter: blur(6px);
+		}
+
+		.tiendu-carousel__dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.55);
+			border: 1px solid transparent;
+			padding: 0;
+		}
+
+		.tiendu-carousel__dot.is-active {
+			background: #ffffff;
+			transform: scale(1.08);
+		}
+
 		@media (max-width: 768px) {
 			.tiendu-carousel__thumbs {
 				display: none;
 			}
+
+			.tiendu-carousel__hero-content {
+				padding: var(--space-8, 2rem) var(--space-6, 1.5rem) var(--space-10, 2.5rem);
+				max-width: 100%;
+			}
+
+			.tiendu-carousel__hero-controls {
+				left: var(--space-3, 0.75rem);
+				right: var(--space-3, 0.75rem);
+				bottom: var(--space-3, 0.75rem);
+			}
 		}
 	`
+
 	document.head.appendChild(style)
-}
-
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
-
-const normalizeImage = image => {
-	if (!image || typeof image !== 'object') return null
-	const url = typeof image.url === 'string' && image.url.trim() ? image.url : null
-	if (!url) return null
-	const id = typeof image.id === 'number' ? image.id : null
-	const alt = typeof image.alt === 'string' ? image.alt : ''
-	return { id, url, alt }
 }
 
 class TienduImageCarousel extends HTMLElement {
 	constructor() {
 		super()
-		this._images = []
+		this._slides = []
 		this._currentIndex = 0
 		this._drag = {
 			active: false,
@@ -212,28 +437,52 @@ class TienduImageCarousel extends HTMLElement {
 		}
 		this._suppressClick = false
 		this._canOpenLightbox = false
+		this._autoplayTimer = null
+
 		this._boundPointerDown = this.handlePointerDown.bind(this)
 		this._boundPointerMove = this.handlePointerMove.bind(this)
 		this._boundPointerEnd = this.handlePointerEnd.bind(this)
 		this._boundOpenClick = this.handleOpenClick.bind(this)
 		this._boundNavClick = this.handleNavClick.bind(this)
 		this._boundThumbClick = this.handleThumbClick.bind(this)
+		this._boundDotClick = this.handleDotClick.bind(this)
+		this._boundPauseAutoplay = this.pauseAutoplay.bind(this)
+		this._boundResumeAutoplay = this.resumeAutoplay.bind(this)
+
 		this._resizeObserver = null
 
 		this._track = null
 		this._viewport = null
 		this._openButton = null
 		this._thumbs = null
+		this._dots = null
 		this._prevButton = null
 		this._nextButton = null
 		this._lightbox = null
+	}
+
+	get isHeroMode() {
+		return String(this.getAttribute('mode') || '').toLowerCase() === 'hero'
+	}
+
+	get maxIndex() {
+		return Math.max(0, this._slides.length - 1)
+	}
+
+	get slideWidth() {
+		return this._viewport?.clientWidth || 1
+	}
+
+	get autoplayInterval() {
+		const parsed = Number(this.getAttribute('autoplay-interval'))
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_AUTOPLAY_INTERVAL
 	}
 
 	connectedCallback() {
 		ensureStyles()
 		this.renderBase()
 		this.bindEvents()
-		this.setImages(this._images)
+		this.refreshView()
 
 		this._resizeObserver = new ResizeObserver(() => {
 			this.updateTrack({ animate: false })
@@ -242,27 +491,10 @@ class TienduImageCarousel extends HTMLElement {
 	}
 
 	disconnectedCallback() {
-		if (this._viewport) {
-			this._viewport.removeEventListener('pointerdown', this._boundPointerDown)
-			this._viewport.removeEventListener('pointermove', this._boundPointerMove)
-			this._viewport.removeEventListener('pointerup', this._boundPointerEnd)
-			this._viewport.removeEventListener('pointercancel', this._boundPointerEnd)
-			this._viewport.removeEventListener('click', this._boundOpenClick)
-		}
-		this._openButton?.removeEventListener('click', this._boundOpenClick)
-		this._prevButton?.removeEventListener('click', this._boundNavClick)
-		this._nextButton?.removeEventListener('click', this._boundNavClick)
-		this._thumbs?.removeEventListener('click', this._boundThumbClick)
+		this.unbindEvents()
 		this._resizeObserver?.disconnect()
 		this._resizeObserver = null
-	}
-
-	get maxIndex() {
-		return Math.max(0, this._images.length - 1)
-	}
-
-	get slideWidth() {
-		return this._viewport?.clientWidth || 1
+		this.stopAutoplay()
 	}
 
 	clampIndex(index) {
@@ -271,34 +503,71 @@ class TienduImageCarousel extends HTMLElement {
 
 	setImages(images) {
 		const normalized = Array.isArray(images)
-			? images.map(normalizeImage).filter(Boolean)
+			? images.map(normalizeProductImage).filter(Boolean)
 			: []
 
 		this._canOpenLightbox = normalized.length > 0
-
-		this._images = this._canOpenLightbox
+		this._slides = this._canOpenLightbox
 			? normalized
-			: [{ id: null, url: FALLBACK_IMAGE_SRC, alt: 'Sin imagen' }]
+			: [
+				{
+					id: null,
+					url: FALLBACK_IMAGE_SRC,
+					desktopUrl: '',
+					alt: 'Sin imagen',
+					title: '',
+					description: '',
+					ctaText: '',
+					href: '',
+					newTab: false
+				}
+			]
 		this._currentIndex = this.clampIndex(this._currentIndex)
-		this.renderSlides()
-		this.syncThumbs()
-		this.syncControls()
-		this.syncLightbox()
-		this.updateTrack({ animate: false })
+		this.refreshView()
+	}
+
+	setSlides(slides) {
+		const normalized = Array.isArray(slides)
+			? slides.map((slide, index) => normalizeHeroSlide(slide, index)).filter(Boolean)
+			: []
+
+		this._canOpenLightbox = false
+		this._slides = normalized
+		this._currentIndex = this.clampIndex(this._currentIndex)
+		this.refreshView()
 	}
 
 	setCurrentImageById(imageId) {
 		if (imageId == null) return
-		const index = this._images.findIndex(image => image.id === Number(imageId))
+		const index = this._slides.findIndex(image => image.id === Number(imageId))
 		if (index < 0) return
 		this.goTo(index, { animate: true })
+	}
+
+	refreshView() {
+		if (!this.isConnected) return
+
+		this.renderSlides()
+		this.syncThumbs()
+		this.syncDots()
+		this.syncControls()
+		this.syncLightbox()
+		this.updateTrack({ animate: false })
+
+		if (this.isHeroMode) {
+			this.startAutoplay()
+		} else {
+			this.stopAutoplay()
+		}
 	}
 
 	goTo(index, { animate = true, emit = true, force = false } = {}) {
 		const nextIndex = this.clampIndex(index)
 		if (nextIndex === this._currentIndex && !this._drag.active && !force) return
+
 		this._currentIndex = nextIndex
 		this.syncThumbs()
+		this.syncDots()
 		this.syncControls()
 		this.updateTrack({ animate })
 
@@ -309,7 +578,7 @@ class TienduImageCarousel extends HTMLElement {
 					composed: true,
 					detail: {
 						index: this._currentIndex,
-						imageId: this._images[this._currentIndex]?.id ?? null
+						imageId: this._slides[this._currentIndex]?.id ?? null
 					}
 				})
 			)
@@ -317,12 +586,23 @@ class TienduImageCarousel extends HTMLElement {
 	}
 
 	next() {
-		if (this._images.length < 2) return
+		if (this._slides.length < 2) return
+		if (this.isHeroMode) {
+			this.goTo((this._currentIndex + 1) % this._slides.length, { animate: true, force: true })
+			return
+		}
 		this.goTo(this._currentIndex + 1, { animate: true })
 	}
 
 	prev() {
-		if (this._images.length < 2) return
+		if (this._slides.length < 2) return
+		if (this.isHeroMode) {
+			this.goTo((this._currentIndex - 1 + this._slides.length) % this._slides.length, {
+				animate: true,
+				force: true
+			})
+			return
+		}
 		this.goTo(this._currentIndex - 1, { animate: true })
 	}
 
@@ -344,7 +624,7 @@ class TienduImageCarousel extends HTMLElement {
 	}
 
 	handlePointerDown(event) {
-		if (this._images.length < 2) return
+		if (this._slides.length < 2) return
 		if (event.button !== undefined && event.button !== 0) return
 
 		this._drag.active = true
@@ -353,6 +633,11 @@ class TienduImageCarousel extends HTMLElement {
 		this._drag.offsetX = 0
 		this._viewport?.setPointerCapture?.(event.pointerId)
 		if (this._viewport) this._viewport.dataset.dragging = 'true'
+
+		if (this.isHeroMode) {
+			this.pauseAutoplay()
+		}
+
 		this.updateTrack({ animate: false })
 	}
 
@@ -386,9 +671,15 @@ class TienduImageCarousel extends HTMLElement {
 		this._suppressClick = moved > 6
 
 		this.goTo(nextIndex, { animate: true, force: true })
+
+		if (this.isHeroMode) {
+			this.resumeAutoplay()
+		}
 	}
 
 	handleOpenClick(event) {
+		if (this.isHeroMode) return
+
 		if (!this._canOpenLightbox) {
 			event.preventDefault()
 			event.stopPropagation()
@@ -410,46 +701,110 @@ class TienduImageCarousel extends HTMLElement {
 	handleNavClick(event) {
 		const target = event.currentTarget
 		if (!(target instanceof HTMLButtonElement)) return
+
 		if (target.dataset.role === 'prev-image') this.prev()
 		if (target.dataset.role === 'next-image') this.next()
+
+		if (this.isHeroMode) {
+			this.resumeAutoplay()
+		}
 	}
 
 	handleThumbClick(event) {
 		const button = event.target instanceof Element ? event.target.closest('[data-thumb-index]') : null
 		if (!(button instanceof HTMLButtonElement)) return
+
 		const index = Number(button.dataset.thumbIndex)
 		if (!Number.isFinite(index)) return
+
 		this.goTo(index, { animate: true })
 	}
 
+	handleDotClick(event) {
+		const button = event.target instanceof Element ? event.target.closest('[data-dot-index]') : null
+		if (!(button instanceof HTMLButtonElement)) return
+
+		const index = Number(button.dataset.dotIndex)
+		if (!Number.isFinite(index)) return
+
+		this.goTo(index, { animate: true })
+		this.resumeAutoplay()
+	}
+
+	pauseAutoplay() {
+		this.stopAutoplay()
+	}
+
+	resumeAutoplay() {
+		this.startAutoplay()
+	}
+
+	startAutoplay() {
+		this.stopAutoplay()
+		if (!this.isHeroMode) return
+		if (this._slides.length < 2) return
+
+		this._autoplayTimer = window.setInterval(() => {
+			this.next()
+		}, this.autoplayInterval)
+	}
+
+	stopAutoplay() {
+		if (!this._autoplayTimer) return
+		window.clearInterval(this._autoplayTimer)
+		this._autoplayTimer = null
+	}
+
 	renderBase() {
-		this.innerHTML = `
-			<div class="tiendu-carousel">
-				<div class="tiendu-carousel__stage">
-					<div class="tiendu-carousel__viewport" data-role="viewport" data-dragging="false">
-						<div class="tiendu-carousel__track" data-role="track"></div>
-						<button class="tiendu-carousel__open" type="button" data-role="open-lightbox" aria-label="Ampliar imagen">
-							<span class="tiendu-carousel__open-indicator tiendu-carousel__action-surface" aria-hidden="true">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-							</span>
+		if (this.isHeroMode) {
+			this.innerHTML = `
+				<div class="tiendu-carousel tiendu-carousel--hero">
+					<div class="tiendu-carousel__stage">
+						<div class="tiendu-carousel__viewport" data-role="viewport" data-dragging="false">
+							<div class="tiendu-carousel__track" data-role="track"></div>
+						</div>
+						<div class="tiendu-carousel__hero-controls" data-role="hero-controls" aria-label="Controles del carrusel principal">
+							<button class="tiendu-carousel__nav tiendu-carousel__action-surface" type="button" data-role="prev-image" aria-label="Slide anterior">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+							</button>
+							<div class="tiendu-carousel__dots" data-role="dots" role="tablist" aria-label="Slides del hero"></div>
+							<button class="tiendu-carousel__nav tiendu-carousel__action-surface" type="button" data-role="next-image" aria-label="Slide siguiente">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+							</button>
+						</div>
+					</div>
+				</div>
+			`
+		} else {
+			this.innerHTML = `
+				<div class="tiendu-carousel">
+					<div class="tiendu-carousel__stage">
+						<div class="tiendu-carousel__viewport" data-role="viewport" data-dragging="false">
+							<div class="tiendu-carousel__track" data-role="track"></div>
+							<button class="tiendu-carousel__open" type="button" data-role="open-lightbox" aria-label="Ampliar imagen">
+								<span class="tiendu-carousel__open-indicator tiendu-carousel__action-surface" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+								</span>
+							</button>
+						</div>
+						<button class="tiendu-carousel__nav tiendu-carousel__nav--prev tiendu-carousel__action-surface" type="button" data-role="prev-image" aria-label="Imagen anterior">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+						</button>
+						<button class="tiendu-carousel__nav tiendu-carousel__nav--next tiendu-carousel__action-surface" type="button" data-role="next-image" aria-label="Imagen siguiente">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
 						</button>
 					</div>
-					<button class="tiendu-carousel__nav tiendu-carousel__nav--prev tiendu-carousel__action-surface" type="button" data-role="prev-image" aria-label="Imagen anterior">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-					</button>
-					<button class="tiendu-carousel__nav tiendu-carousel__nav--next tiendu-carousel__action-surface" type="button" data-role="next-image" aria-label="Imagen siguiente">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
-					</button>
+					<div class="tiendu-carousel__thumbs" data-role="thumbs" aria-label="Selector de imagenes"></div>
 				</div>
-				<div class="tiendu-carousel__thumbs" data-role="thumbs" aria-label="Selector de imagenes"></div>
-			</div>
-			<tiendu-image-lightbox data-role="lightbox"></tiendu-image-lightbox>
-		`
+				<tiendu-image-lightbox data-role="lightbox"></tiendu-image-lightbox>
+			`
+		}
 
 		this._track = this.querySelector('[data-role="track"]')
 		this._viewport = this.querySelector('[data-role="viewport"]')
 		this._openButton = this.querySelector('[data-role="open-lightbox"]')
 		this._thumbs = this.querySelector('[data-role="thumbs"]')
+		this._dots = this.querySelector('[data-role="dots"]')
 		this._prevButton = this.querySelector('[data-role="prev-image"]')
 		this._nextButton = this.querySelector('[data-role="next-image"]')
 		this._lightbox = this.querySelector('[data-role="lightbox"]')
@@ -457,45 +812,133 @@ class TienduImageCarousel extends HTMLElement {
 
 	bindEvents() {
 		if (!this._viewport) return
+
 		this._viewport.addEventListener('pointerdown', this._boundPointerDown)
 		this._viewport.addEventListener('pointermove', this._boundPointerMove)
 		this._viewport.addEventListener('pointerup', this._boundPointerEnd)
 		this._viewport.addEventListener('pointercancel', this._boundPointerEnd)
-		this._viewport.addEventListener('click', this._boundOpenClick)
+
+		if (!this.isHeroMode) {
+			this._viewport.addEventListener('click', this._boundOpenClick)
+		}
+
 		this._prevButton?.addEventListener('click', this._boundNavClick)
 		this._nextButton?.addEventListener('click', this._boundNavClick)
 		this._thumbs?.addEventListener('click', this._boundThumbClick)
+		this._dots?.addEventListener('click', this._boundDotClick)
+
+		if (this.isHeroMode) {
+			this.addEventListener('mouseenter', this._boundPauseAutoplay)
+			this.addEventListener('mouseleave', this._boundResumeAutoplay)
+			this.addEventListener('focusin', this._boundPauseAutoplay)
+			this.addEventListener('focusout', this._boundResumeAutoplay)
+		}
+	}
+
+	unbindEvents() {
+		this._viewport?.removeEventListener('pointerdown', this._boundPointerDown)
+		this._viewport?.removeEventListener('pointermove', this._boundPointerMove)
+		this._viewport?.removeEventListener('pointerup', this._boundPointerEnd)
+		this._viewport?.removeEventListener('pointercancel', this._boundPointerEnd)
+		this._viewport?.removeEventListener('click', this._boundOpenClick)
+
+		this._prevButton?.removeEventListener('click', this._boundNavClick)
+		this._nextButton?.removeEventListener('click', this._boundNavClick)
+		this._thumbs?.removeEventListener('click', this._boundThumbClick)
+		this._dots?.removeEventListener('click', this._boundDotClick)
+
+		this.removeEventListener('mouseenter', this._boundPauseAutoplay)
+		this.removeEventListener('mouseleave', this._boundResumeAutoplay)
+		this.removeEventListener('focusin', this._boundPauseAutoplay)
+		this.removeEventListener('focusout', this._boundResumeAutoplay)
 	}
 
 	renderSlides() {
-		if (!this._track || !this._thumbs) return
+		if (!this._track) return
 
-		this._track.innerHTML = this._images
-			.map(
-				image => `<div class="tiendu-carousel__slide"><img src="${image.url || FALLBACK_IMAGE_SRC}" alt="${image.alt || ''}" loading="eager" /></div>`
-			)
-			.join('')
+		if (this.isHeroMode) {
+			this._track.innerHTML = this._slides
+				.map((slide, index) => {
+					const hasImage = Boolean(slide.url)
+					const desktopSource =
+						slide.desktopUrl && slide.desktopUrl !== slide.url
+							? `<source media="(min-width: 768px)" srcset="${escapeHtml(slide.desktopUrl)}" />`
+							: ''
+					const media = hasImage
+						? `<picture class="tiendu-carousel__hero-media">${desktopSource}<img src="${escapeHtml(slide.url)}" alt="${escapeHtml(slide.alt || 'Slide')}" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async" /></picture>`
+						: '<div class="tiendu-carousel__hero-media tiendu-carousel__hero-media--empty" aria-hidden="true"></div>'
 
-		const hasMultiple = this._images.length > 1
+					const cta =
+						slide.ctaText && slide.href
+							? `<a class="tiendu-carousel__hero-cta" href="${escapeHtml(slide.href)}" ${slide.newTab ? 'target="_blank" rel="noopener noreferrer"' : ''}>${escapeHtml(slide.ctaText)}</a>`
+							: ''
+
+					const headingTag = index === 0 ? 'h1' : 'h2'
+
+					return `
+						<div class="tiendu-carousel__slide tiendu-carousel__slide--hero">
+							${media}
+							<div class="tiendu-carousel__hero-overlay"></div>
+							<div class="tiendu-carousel__hero-content">
+								${slide.title ? `<${headingTag} class="tiendu-carousel__hero-title">${escapeHtml(slide.title)}</${headingTag}>` : ''}
+								${slide.description ? `<p class="tiendu-carousel__hero-subtitle">${escapeHtml(slide.description)}</p>` : ''}
+								${cta}
+							</div>
+						</div>
+					`
+				})
+				.join('')
+		} else {
+			this._track.innerHTML = this._slides
+				.map(
+					slide =>
+						`<div class="tiendu-carousel__slide"><img src="${escapeHtml(slide.url || FALLBACK_IMAGE_SRC)}" alt="${escapeHtml(slide.alt || '')}" loading="eager" /></div>`
+				)
+				.join('')
+		}
+
+		const hasMultiple = this._slides.length > 1
+
+		if (this._prevButton) this._prevButton.hidden = !hasMultiple
+		if (this._nextButton) this._nextButton.hidden = !hasMultiple
+
+		if (this.isHeroMode) {
+			if (!this._dots) return
+			if (!hasMultiple) {
+				this._dots.hidden = true
+				this._dots.innerHTML = ''
+				return
+			}
+
+			this._dots.hidden = false
+			this._dots.innerHTML = this._slides
+				.map(
+					(_, index) =>
+						`<button type="button" class="tiendu-carousel__dot ${index === this._currentIndex ? 'is-active' : ''}" data-dot-index="${index}" role="tab" aria-label="Ir al slide ${index + 1}" aria-selected="${index === this._currentIndex ? 'true' : 'false'}"></button>`
+				)
+				.join('')
+			return
+		}
+
+		if (!this._thumbs) return
 		this._thumbs.hidden = !hasMultiple
-		this._prevButton.hidden = !hasMultiple
-		this._nextButton.hidden = !hasMultiple
 
 		if (!hasMultiple) {
 			this._thumbs.innerHTML = ''
 			return
 		}
 
-		this._thumbs.innerHTML = this._images
+		this._thumbs.innerHTML = this._slides
 			.map(
-				(image, index) =>
-					`<button class="tiendu-carousel__thumb" type="button" data-thumb-index="${index}" aria-current="${index === this._currentIndex ? 'true' : 'false'}" aria-label="Ver imagen ${index + 1}"><img src="${image.url || FALLBACK_IMAGE_SRC}" alt="${image.alt || ''}" loading="lazy" /></button>`
+				(slide, index) =>
+					`<button class="tiendu-carousel__thumb" type="button" data-thumb-index="${index}" aria-current="${index === this._currentIndex ? 'true' : 'false'}" aria-label="Ver imagen ${index + 1}"><img src="${escapeHtml(slide.url || FALLBACK_IMAGE_SRC)}" alt="${escapeHtml(slide.alt || '')}" loading="lazy" /></button>`
 			)
 			.join('')
 	}
 
 	updateTrack({ animate }) {
 		if (!this._track) return
+
 		const baseTranslate = -this._currentIndex * this.slideWidth
 		const dragOffset = this._drag.active ? this._drag.offsetX : 0
 		const translate = baseTranslate + dragOffset
@@ -515,19 +958,48 @@ class TienduImageCarousel extends HTMLElement {
 		}
 	}
 
+	syncDots() {
+		if (!this._dots) return
+		for (const button of this._dots.querySelectorAll('[data-dot-index]')) {
+			const index = Number(button.getAttribute('data-dot-index'))
+			const isActive = index === this._currentIndex
+			button.classList.toggle('is-active', isActive)
+			button.setAttribute('aria-selected', isActive ? 'true' : 'false')
+		}
+	}
+
 	syncControls() {
-		const hasMultiple = this._images.length > 1
+		const hasMultiple = this._slides.length > 1
+
 		if (this._prevButton) this._prevButton.hidden = !hasMultiple
 		if (this._nextButton) this._nextButton.hidden = !hasMultiple
-		if (this._prevButton) this._prevButton.disabled = !hasMultiple || this._currentIndex === 0
-		if (this._nextButton) this._nextButton.disabled = !hasMultiple || this._currentIndex === this.maxIndex
-		if (this._openButton) this._openButton.disabled = !this._canOpenLightbox
+
+		if (this._prevButton) {
+			this._prevButton.disabled = this.isHeroMode ? !hasMultiple : !hasMultiple || this._currentIndex === 0
+		}
+		if (this._nextButton) {
+			this._nextButton.disabled = this.isHeroMode ? !hasMultiple : !hasMultiple || this._currentIndex === this.maxIndex
+		}
+
+		if (this._openButton) {
+			this._openButton.disabled = !this._canOpenLightbox
+		}
 	}
 
 	syncLightbox() {
-		if (this._lightbox && typeof this._lightbox.setImages === 'function') {
-			this._lightbox.setImages(this._images)
+		if (!this._lightbox || typeof this._lightbox.setImages !== 'function') return
+		if (this.isHeroMode) {
+			this._lightbox.setImages([])
+			return
 		}
+
+		this._lightbox.setImages(
+			this._slides.map(slide => ({
+				id: slide.id,
+				url: slide.url,
+				alt: slide.alt
+			}))
+		)
 	}
 }
 
