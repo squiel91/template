@@ -567,8 +567,18 @@ class StorefrontSearch extends LitElement {
 	}
 
 	handleSubmit(event) {
-		if (!this.query.trim()) {
+		const normalizedQuery = this.query.trim()
+		if (!normalizedQuery) {
 			event.preventDefault()
+			return
+		}
+
+		if (tiendu?.analytics && typeof tiendu.analytics.trackSearch === 'function') {
+			tiendu.analytics.trackSearch({
+				query: normalizedQuery,
+				source: 'header-submit',
+				resultsCount: this.items.length
+			})
 		}
 	}
 
