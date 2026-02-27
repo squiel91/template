@@ -1,4 +1,11 @@
 // @ts-nocheck
+import {
+	trackAddToCartEvent,
+	trackBeginCheckoutEvent,
+	trackPurchaseEvent,
+	trackSearchEvent
+} from '/shared/tracking.js'
+
 const SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY = 'shopper_session_token'
 const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 
@@ -192,9 +199,6 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {{ criteria?: 'name' | 'created' | 'updated' | 'sales' | 'price'; order?: 'asc' | 'desc' }} sort
 	*/
 
-const trackMetaAddToCart = () => {}
-const trackMetaInitiateCheckout = () => {}
-const trackMetaPurchase = () => {}
 let activeCartOverlayCleanup = null
 
 const up = baseFetch => {
@@ -358,6 +362,17 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				return response?.data ?? response
 			}
 		},
+		analytics: {
+			trackSearch: ({ query, source, resultsCount } = {}) => {
+				trackSearchEvent({
+					storeId,
+					baseUrl,
+					query,
+					source,
+					resultsCount
+				})
+			}
+		},
 		cart: {
 			addProductVariant: async (productVariant, quantity, onClose) => {
 				const shopperSessionToken = await methods.shoppers.getToken()
@@ -375,7 +390,13 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				if (token) methods.shoppers.setToken(token)
 				methods.cart.open(onClose)
 
-				trackMetaAddToCart(productVariant, quantity)
+				trackAddToCartEvent({
+					storeId,
+					baseUrl,
+					productVariantId: productVariant?.id,
+					quantity,
+					priceInCents: productVariant?.priceInCents
+				})
 			},
 			getQuantity: async () => {
 				const shopperSessionToken = await methods.shoppers.getToken()
@@ -393,6 +414,7 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			open: async onClose => {
 				const shopperSessionToken = await methods.shoppers.getToken()
 				const checkoutOrigin = new URL(baseUrl, window.location.href).origin
+				let hasTrackedBeginCheckout = false
 
 				if (typeof activeCartOverlayCleanup === 'function') {
 					activeCartOverlayCleanup()
@@ -475,10 +497,41 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 						return
 					}
 					const { totalPriceInCents, items } = event.data
-					if (event.data.step === 'delivery') {
-						trackMetaInitiateCheckout(totalPriceInCents, items)
-					} else if (event.data.step === 'success') {
-						trackMetaPurchase(totalPriceInCents, items)
+					const normalizedCurrencyCode =
+						typeof event.data.currencyCode === 'string' &&
+						event.data.currencyCode.trim() !== ''
+							? event.data.currencyCode.trim().toUpperCase()
+							: 'UYU'
+
+					const checkoutStartedSteps = new Set([
+						'delivery',
+						'contact',
+						'summary',
+						'payment-options',
+						'payment'
+					])
+
+					if (!hasTrackedBeginCheckout && checkoutStartedSteps.has(event.data.step)) {
+						hasTrackedBeginCheckout = true
+						trackBeginCheckoutEvent({
+							storeId,
+							baseUrl,
+							totalPriceInCents,
+							items,
+							currency: normalizedCurrencyCode
+						})
+					}
+
+					if (event.data.step === 'success') {
+						trackPurchaseEvent({
+							storeId,
+							baseUrl,
+							totalPriceInCents,
+							items,
+							currency: normalizedCurrencyCode,
+							orderId: event.data.orderId,
+							paymentExternalReference: event.data.paymentExternalReference
+						})
 					}
 				}
 

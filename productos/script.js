@@ -24,6 +24,13 @@ const formatResultsCopy = (total, query) => {
 
 const init = async () => {
 	const search = url.searchParams.get('q')?.trim() || ''
+	if (search && tiendu?.analytics && typeof tiendu.analytics.trackSearch === 'function') {
+		tiendu.analytics.trackSearch({
+			query: search,
+			source: 'products-page'
+		})
+	}
+
 	const listingHead = document.querySelector('.listing-head')
 	if (listingHead instanceof HTMLElement) {
 		listingHead.classList.toggle('listing-head--search', search.length > 0)
