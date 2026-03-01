@@ -3,7 +3,8 @@ import {
 	trackAddToCartEvent,
 	trackBeginCheckoutEvent,
 	trackPurchaseEvent,
-	trackSearchEvent
+	trackSearchEvent,
+	trackViewContentEvent
 } from '/shared/tracking.js'
 
 const SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY = 'shopper_session_token'
@@ -370,6 +371,17 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 					query,
 					source,
 					resultsCount
+				})
+			},
+			trackViewContent: ({ productId, productTitle, productVariantId, priceInCents, currency } = {}) => {
+				trackViewContentEvent({
+					storeId,
+					baseUrl,
+					productId,
+					productTitle,
+					productVariantId,
+					priceInCents,
+					currency
 				})
 			}
 		},

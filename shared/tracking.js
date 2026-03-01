@@ -15,14 +15,16 @@ const META_EVENT_NAMES = {
 	search: 'Search',
 	addToCart: 'AddToCart',
 	beginCheckout: 'InitiateCheckout',
-	purchase: 'Purchase'
+	purchase: 'Purchase',
+	viewContent: 'ViewContent'
 }
 
 const GOOGLE_EVENT_NAMES = {
 	search: 'search',
 	addToCart: 'add_to_cart',
 	beginCheckout: 'begin_checkout',
-	purchase: 'purchase'
+	purchase: 'purchase',
+	viewContent: 'view_item'
 }
 
 const toPositiveInt = value => {
@@ -90,6 +92,15 @@ const buildEventId = prefix => {
 		return `${prefix}_${crypto.randomUUID()}`
 	}
 	return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+const getTestEventCode = () => {
+	if (typeof window === 'undefined') return null
+	try {
+		return new URL(window.location.href).searchParams.get('meta_test_event_code') || null
+	} catch {
+		return null
+	}
 }
 
 const now = () => Date.now()
@@ -218,6 +229,73 @@ const trackMeta = (eventName, params, eventId) => {
 	}
 }
 
+const resolveGA4ClientId = () => {
+	const gaCookie = getCookieValue('_ga')
+	if (!gaCookie) return null
+	const parts = gaCookie.split('.')
+	if (parts.length < 4) return null
+	return parts.slice(-2).join('.')
+}
+
+const sendGA4MeasurementProtocolEvent = async ({
+	storeId,
+	baseUrl,
+	eventName,
+	customData
+}) => {
+	const normalizedStoreId = toPositiveInt(storeId)
+	if (!normalizedStoreId) return
+
+	const clientId = resolveGA4ClientId()
+	if (!clientId) return
+
+	const origin = typeof window !== 'undefined' ? window.location.origin : baseUrl
+	if (typeof origin !== 'string' || !origin.trim()) return
+
+	const endpoint = new URL(
+		`/api/stores/${normalizedStoreId}/analytics/ga4-events`,
+		origin
+	).toString()
+
+	const headers = {
+		'Content-Type': 'application/json'
+	}
+
+	const shopperSessionToken = getShopperSessionToken()
+	if (shopperSessionToken) {
+		headers[SHOPPER_SESSION_TOKEN_HEADER] = shopperSessionToken
+	}
+
+	const payload = {
+		eventName,
+		clientId,
+		customData
+	}
+
+	try {
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify(payload),
+			keepalive: true
+		})
+
+		if (!response.ok) {
+			warnCapiErrorOnce(
+				`ga4-mp-${response.status}`,
+				'[analytics] GA4 Measurement Protocol endpoint returned a non-success response.',
+				{ status: response.status }
+			)
+		}
+	} catch (error) {
+		warnCapiErrorOnce(
+			'ga4-mp-network-error',
+			'[analytics] Failed to send GA4 Measurement Protocol event.',
+			{ eventName, error }
+		)
+	}
+}
+
 const sendMetaConversionApiEvent = async ({
 	storeId,
 	baseUrl,
@@ -226,11 +304,14 @@ const sendMetaConversionApiEvent = async ({
 	customData
 }) => {
 	const normalizedStoreId = toPositiveInt(storeId)
-	if (!normalizedStoreId || typeof baseUrl !== 'string' || !baseUrl.trim()) return
+	if (!normalizedStoreId) return
+
+	const origin = typeof window !== 'undefined' ? window.location.origin : baseUrl
+	if (typeof origin !== 'string' || !origin.trim()) return
 
 	const endpoint = new URL(
 		`/api/stores/${normalizedStoreId}/analytics/meta-events`,
-		baseUrl
+		origin
 	).toString()
 
 	const headers = {
@@ -249,7 +330,8 @@ const sendMetaConversionApiEvent = async ({
 			typeof window !== 'undefined' ? window.location.href : undefined,
 		fbp: getCookieValue('_fbp'),
 		fbc: resolveFbc(),
-		customData
+		customData,
+		testEventCode: getTestEventCode()
 	}
 
 	try {
@@ -257,9 +339,7 @@ const sendMetaConversionApiEvent = async ({
 			method: 'POST',
 			headers,
 			body: JSON.stringify(payload),
-			keepalive: true,
-			mode: 'cors',
-			credentials: 'omit'
+			keepalive: true
 		})
 
 		if (!response.ok) {
@@ -345,6 +425,63 @@ export const trackSearchEvent = ({ storeId, baseUrl, query, source, resultsCount
 			results_count: safeResultsCount
 		}
 	})
+
+	void sendGA4MeasurementProtocolEvent({
+		storeId,
+		baseUrl,
+		eventName: GOOGLE_EVENT_NAMES.search,
+		customData: {
+			search_term: normalizedQuery
+		}
+	})
+}
+
+export const trackViewContentEvent = ({
+	storeId,
+	baseUrl,
+	productId,
+	productTitle,
+	productVariantId,
+	priceInCents,
+	currency = 'UYU'
+}) => {
+	const eventId = buildEventId('view_content')
+	const value = toMoney(priceInCents)
+	const contentId = String(productVariantId || productId || '')
+
+	trackGoogle(GOOGLE_EVENT_NAMES.viewContent, {
+		currency,
+		...(typeof value === 'number' ? { value } : {}),
+		...(contentId ? { items: [{ item_id: contentId, quantity: 1 }] } : {})
+	})
+
+	const metaParams = {
+		content_type: 'product',
+		...(contentId ? { content_ids: [contentId] } : {}),
+		...(productTitle ? { content_name: productTitle } : {}),
+		...(currency ? { currency } : {}),
+		...(typeof value === 'number' ? { value } : {})
+	}
+	trackMeta(META_EVENT_NAMES.viewContent, metaParams, eventId)
+
+	void sendMetaConversionApiEvent({
+		storeId,
+		baseUrl,
+		eventName: META_EVENT_NAMES.viewContent,
+		eventId,
+		customData: metaParams
+	})
+
+	void sendGA4MeasurementProtocolEvent({
+		storeId,
+		baseUrl,
+		eventName: GOOGLE_EVENT_NAMES.viewContent,
+		customData: {
+			currency,
+			...(typeof value === 'number' ? { value } : {}),
+			...(contentId ? { items: [{ item_id: contentId, quantity: 1 }] } : {})
+		}
+	})
 }
 
 export const trackAddToCartEvent = ({
@@ -384,6 +521,17 @@ export const trackAddToCartEvent = ({
 		eventId,
 		customData: metaPayload
 	})
+
+	void sendGA4MeasurementProtocolEvent({
+		storeId,
+		baseUrl,
+		eventName: GOOGLE_EVENT_NAMES.addToCart,
+		customData: {
+			currency,
+			...(typeof value === 'number' ? { value } : {}),
+			items: googleItems
+		}
+	})
 }
 
 export const trackBeginCheckoutEvent = ({
@@ -417,6 +565,17 @@ export const trackBeginCheckoutEvent = ({
 		eventName: META_EVENT_NAMES.beginCheckout,
 		eventId,
 		customData: metaPayload
+	})
+
+	void sendGA4MeasurementProtocolEvent({
+		storeId,
+		baseUrl,
+		eventName: GOOGLE_EVENT_NAMES.beginCheckout,
+		customData: {
+			currency,
+			...(typeof value === 'number' ? { value } : {}),
+			items: googleItems
+		}
 	})
 }
 
@@ -483,6 +642,18 @@ export const trackPurchaseEvent = ({
 		customData: {
 			...metaPayload,
 			payment_external_reference: paymentExternalReference || null
+		}
+	})
+
+	void sendGA4MeasurementProtocolEvent({
+		storeId,
+		baseUrl,
+		eventName: GOOGLE_EVENT_NAMES.purchase,
+		customData: {
+			transaction_id: transactionId,
+			currency,
+			...(typeof value === 'number' ? { value } : {}),
+			items: googleItems
 		}
 	})
 }

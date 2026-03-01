@@ -336,6 +336,13 @@ const renderProduct = (product, relatedProducts = []) => {
 	let matchingVariants = variants
 	let quantity = 1
 
+	tiendu.analytics.trackViewContent({
+		productId: product.id,
+		productTitle: product.title,
+		productVariantId: defaultVariant?.id,
+		priceInCents: defaultVariant?.priceInCents ?? product.basePriceInCents
+	})
+
 	const getVariantMaxQuantity = () => {
 		const stock = currentVariant?.stock
 		if (typeof stock !== 'number') return null
