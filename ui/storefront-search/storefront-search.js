@@ -107,9 +107,11 @@ const ensureStyles = () => {
 		}
 
 		storefront-search .storefront-search__submit {
+			font-family: 'Bebas Neue', sans-serif;
 			padding: 0 14px;
-			font-size: 14px;
-			font-weight: 600;
+			font-size: var(--text-lg, 1.125rem);
+			font-weight: 400;
+			letter-spacing: 0.03em;
 			color: #0f172a;
 			border: none;
 			border-left: 1px solid #cbd5e1;

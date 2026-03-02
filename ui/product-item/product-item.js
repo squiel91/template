@@ -115,8 +115,9 @@ const ensureStyles = () => {
 		}
 
 		.product-item__title {
+			font-family: inherit;
 			font-size: 15px;
-			font-weight: 500;
+			font-weight: 700;
 			color: #0f172a;
 			line-height: 1.4;
 			display: -webkit-box;

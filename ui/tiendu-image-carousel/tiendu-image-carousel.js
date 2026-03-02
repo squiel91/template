@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import '/ui/tiendu-image-carousel/tiendu-image-lightbox.js'
+import '/ui/app-button/app-button.js'
 
 const STYLE_ID = 'tiendu-image-carousel-styles'
 const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
@@ -311,28 +312,39 @@ const ensureStyles = () => {
 			position: absolute;
 			inset: 0;
 			background:
-				linear-gradient(100deg, rgba(23, 27, 23, 0.78) 0%, rgba(23, 27, 23, 0.46) 52%, rgba(23, 27, 23, 0.35) 100%),
-				linear-gradient(to top, rgba(23, 27, 23, 0.24) 0%, transparent 55%);
+				linear-gradient(90deg, rgba(23, 27, 23, 0.74) 0%, rgba(23, 27, 23, 0.58) 24%, rgba(23, 27, 23, 0.26) 46%, rgba(23, 27, 23, 0.08) 60%, rgba(23, 27, 23, 0) 72%),
+				linear-gradient(0deg, rgba(23, 27, 23, 0.28) 0%, rgba(23, 27, 23, 0.12) 26%, rgba(23, 27, 23, 0) 50%);
 		}
 
 		.tiendu-carousel__hero-content {
 			position: relative;
 			z-index: 1;
 			height: 100%;
-			padding: var(--space-12, 3rem);
+			width: 100%;
+		}
+
+		.tiendu-carousel__hero-content .container {
+			height: 100%;
+			display: flex;
+		}
+
+		.tiendu-carousel__hero-content-inner {
+			width: 100%;
+			max-width: 760px;
+			padding: var(--space-12, 3rem) 0;
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-end;
 			gap: var(--space-5, 1.25rem);
-			max-width: 760px;
 			color: #fff;
 		}
 
 		.tiendu-carousel__hero-title {
+			font-family: 'Suez One', serif;
 			font-size: clamp(1.75rem, 4.4vw, 3.25rem);
 			line-height: 1.16;
-			font-weight: 800;
-			letter-spacing: -0.02em;
+			font-weight: 400;
+			letter-spacing: 0;
 			max-width: 18ch;
 		}
 
@@ -345,28 +357,48 @@ const ensureStyles = () => {
 
 		.tiendu-carousel__hero-cta {
 			display: inline-flex;
+			width: fit-content;
+		}
+
+		.tiendu-carousel__hero-cta button,
+		.tiendu-carousel__hero-cta a {
+			display: inline-flex;
 			align-items: center;
 			justify-content: center;
 			gap: var(--space-2, 0.5rem);
-			padding: var(--space-3, 0.75rem) var(--space-6, 1.5rem);
-			font-size: var(--text-base, 1rem);
-			font-weight: 700;
+			padding: var(--space-4, 1rem) var(--space-8, 2rem);
+			font-family: 'Bebas Neue', sans-serif;
+			font-size: var(--text-lg, 1.125rem);
+			font-weight: 400;
+			letter-spacing: 0;
 			border-radius: var(--radius-xl, 1rem);
 			background: var(--home-olive, var(--color-primary, #4f6344));
-			color: #ffffff !important;
+			border-color: var(--home-olive, var(--color-primary, #4f6344));
+			color: #ffffff;
 			text-decoration: none;
-			width: fit-content;
+			white-space: nowrap;
+			transition: all var(--transition-fast, 0.15s ease);
+		}
+
+		.tiendu-carousel__hero-cta button:hover:not(:disabled),
+		.tiendu-carousel__hero-cta a:hover {
+			background: #405138;
+			border-color: #405138;
+			transform: translateY(-2px);
+			box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+			text-decoration: none;
+			color: #ffffff;
 		}
 
 		.tiendu-carousel__hero-controls {
 			position: absolute;
-			left: var(--space-5, 1.25rem);
-			right: var(--space-5, 1.25rem);
+			left: 50%;
+			transform: translateX(-50%);
 			bottom: var(--space-5, 1.25rem);
 			z-index: 2;
-			display: flex;
+			display: inline-flex;
 			align-items: center;
-			justify-content: space-between;
+			gap: var(--space-2, 0.5rem);
 			pointer-events: none;
 		}
 
@@ -374,26 +406,41 @@ const ensureStyles = () => {
 			position: static;
 			transform: none;
 			pointer-events: auto;
-			background: rgba(255, 255, 255, 0.9);
-			border: 1px solid rgba(255, 255, 255, 0.7);
+			width: 24px;
+			height: 24px;
+			min-width: 24px;
+			background: transparent;
+			border: 0;
+			box-shadow: none;
+			color: rgba(255, 255, 255, 0.82);
+		}
+
+		.tiendu-carousel--hero .tiendu-carousel__nav svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		.tiendu-carousel--hero .tiendu-carousel__nav:hover:not(:disabled) {
+			background: transparent;
+			box-shadow: none;
+			color: #ffffff;
 		}
 
 		.tiendu-carousel__dots {
 			pointer-events: auto;
 			display: inline-flex;
 			align-items: center;
-			gap: var(--space-2, 0.5rem);
-			padding: 8px 12px;
-			border-radius: 999px;
-			background: rgba(20, 20, 20, 0.32);
-			backdrop-filter: blur(6px);
+			gap: 6px;
+			padding: 0;
+			background: transparent;
+			backdrop-filter: none;
 		}
 
 		.tiendu-carousel__dot {
-			width: 10px;
-			height: 10px;
+			width: 8px;
+			height: 8px;
 			border-radius: 999px;
-			background: rgba(255, 255, 255, 0.55);
+			background: rgba(255, 255, 255, 0.5);
 			border: 1px solid transparent;
 			padding: 0;
 		}
@@ -408,14 +455,12 @@ const ensureStyles = () => {
 				display: none;
 			}
 
-			.tiendu-carousel__hero-content {
+			.tiendu-carousel__hero-content-inner {
 				padding: var(--space-8, 2rem) var(--space-6, 1.5rem) var(--space-10, 2.5rem);
 				max-width: 100%;
 			}
 
 			.tiendu-carousel__hero-controls {
-				left: var(--space-3, 0.75rem);
-				right: var(--space-3, 0.75rem);
 				bottom: var(--space-3, 0.75rem);
 			}
 		}
@@ -765,11 +810,11 @@ class TienduImageCarousel extends HTMLElement {
 						</div>
 						<div class="tiendu-carousel__hero-controls" data-role="hero-controls" aria-label="Controles del carrusel principal">
 							<button class="tiendu-carousel__nav tiendu-carousel__action-surface" type="button" data-role="prev-image" aria-label="Slide anterior">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
 							</button>
 							<div class="tiendu-carousel__dots" data-role="dots" role="tablist" aria-label="Slides del hero"></div>
 							<button class="tiendu-carousel__nav tiendu-carousel__action-surface" type="button" data-role="next-image" aria-label="Slide siguiente">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
 							</button>
 						</div>
 					</div>
@@ -870,7 +915,7 @@ class TienduImageCarousel extends HTMLElement {
 
 					const cta =
 						slide.ctaText && slide.href
-							? `<a class="tiendu-carousel__hero-cta" href="${escapeHtml(slide.href)}" ${slide.newTab ? 'target="_blank" rel="noopener noreferrer"' : ''}>${escapeHtml(slide.ctaText)}</a>`
+							? `<tiendu-button class="tiendu-carousel__hero-cta" variant="primary" label="${escapeHtml(slide.ctaText)}" href="${escapeHtml(slide.href)}" aria-label="${escapeHtml(slide.ctaText)}" ${slide.newTab ? 'new-tab' : ''}></tiendu-button>`
 							: ''
 
 					const headingTag = index === 0 ? 'h1' : 'h2'
@@ -880,9 +925,13 @@ class TienduImageCarousel extends HTMLElement {
 							${media}
 							<div class="tiendu-carousel__hero-overlay"></div>
 							<div class="tiendu-carousel__hero-content">
-								${slide.title ? `<${headingTag} class="tiendu-carousel__hero-title">${escapeHtml(slide.title)}</${headingTag}>` : ''}
-								${slide.description ? `<p class="tiendu-carousel__hero-subtitle">${escapeHtml(slide.description)}</p>` : ''}
-								${cta}
+								<div class="container">
+									<div class="tiendu-carousel__hero-content-inner">
+										${slide.title ? `<${headingTag} class="tiendu-carousel__hero-title">${escapeHtml(slide.title)}</${headingTag}>` : ''}
+										${slide.description ? `<p class="tiendu-carousel__hero-subtitle">${escapeHtml(slide.description)}</p>` : ''}
+										${cta}
+									</div>
+								</div>
 							</div>
 						</div>
 					`

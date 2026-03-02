@@ -13,7 +13,8 @@ const ensureStyles = () => {
 			display: inline-flex;
 		}
 
-		tiendu-button button {
+		tiendu-button button,
+		tiendu-button a {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
@@ -28,6 +29,7 @@ const ensureStyles = () => {
 			border: 1px solid transparent;
 			cursor: pointer;
 			line-height: 1;
+			text-decoration: none;
 		}
 
 		tiendu-button .tiendu-button__icon {
@@ -43,24 +45,28 @@ const ensureStyles = () => {
 			height: 18px;
 		}
 
-		tiendu-button[variant='secondary'] button {
+		tiendu-button[variant='secondary'] button,
+		tiendu-button[variant='secondary'] a {
 			background: #ffffff;
 			border-color: #cbd5e1;
 			color: var(--text-primary, #0f172a);
 		}
 
-		tiendu-button[variant='secondary'] button:hover:not(:disabled) {
+		tiendu-button[variant='secondary'] button:hover:not(:disabled),
+		tiendu-button[variant='secondary'] a:hover {
 			background: #e2e8f0;
 			border-color: #64748b;
 		}
 
-		tiendu-button[variant='primary'] button {
+		tiendu-button[variant='primary'] button,
+		tiendu-button[variant='primary'] a {
 			background: var(--color-primary, #0f172a);
 			border-color: var(--color-primary, #0f172a);
 			color: #ffffff;
 		}
 
-		tiendu-button[variant='primary'] button:hover:not(:disabled) {
+		tiendu-button[variant='primary'] button:hover:not(:disabled),
+		tiendu-button[variant='primary'] a:hover {
 			background: var(--color-primary-hover, #1e293b);
 			border-color: var(--color-primary-hover, #1e293b);
 		}
@@ -70,7 +76,14 @@ const ensureStyles = () => {
 			cursor: wait;
 		}
 
-		tiendu-button[variant='secondary'] button:disabled:hover {
+		tiendu-button a[aria-disabled='true'] {
+			opacity: 0.78;
+			cursor: wait;
+			pointer-events: none;
+		}
+
+		tiendu-button[variant='secondary'] button:disabled:hover,
+		tiendu-button[variant='secondary'] a[aria-disabled='true']:hover {
 			background: #ffffff;
 			border-color: #cbd5e1;
 		}
@@ -83,6 +96,13 @@ const ensureStyles = () => {
 		tiendu-button .tiendu-button__label {
 			display: inline-flex;
 			align-items: center;
+		}
+
+		tiendu-button#open-cart-button button {
+			font-family: 'Bebas Neue', sans-serif;
+			font-weight: 400;
+			font-size: var(--text-lg, 1.125rem);
+			letter-spacing: 0.03em;
 		}
 
 		tiendu-button .tiendu-button__badge {
@@ -106,6 +126,8 @@ class AppButton extends LitElement {
 		loadingLabel: { type: String, attribute: 'loading-label' },
 		icon: { type: String },
 		loadingIcon: { type: String, attribute: 'loading-icon' },
+		href: { type: String },
+		newTab: { type: Boolean, attribute: 'new-tab' },
 		variant: { type: String },
 		type: { type: String },
 		badge: { type: String },
@@ -120,6 +142,8 @@ class AppButton extends LitElement {
 		this.loadingLabel = ''
 		this.icon = ''
 		this.loadingIcon = 'loader-2'
+		this.href = ''
+		this.newTab = false
 		this.variant = 'secondary'
 		this.type = 'button'
 		this.badge = ''
@@ -218,6 +242,35 @@ class AppButton extends LitElement {
 		const text = this._loading ? this.loadingLabel || this.label : this.label
 		const ariaLabel = this.getAttribute('aria-label') || this.label || ''
 		const hasBadge = this.badge !== ''
+		const hasHref = typeof this.href === 'string' && this.href.trim().length > 0
+		const href = hasHref ? this.href.trim() : ''
+		const target = this.newTab ? '_blank' : nothing
+		const rel = this.newTab ? 'noopener noreferrer' : nothing
+
+		const content = html`
+			${iconName
+				? html`<span class="tiendu-button__icon" aria-hidden="true">${this.renderIcon(iconName)}</span>`
+				: ''}
+			${text ? html`<span class="tiendu-button__label">${text}</span>` : ''}
+			${hasBadge
+				? html`<span class="cart-quantity tiendu-button__badge" id=${this.badgeId || nothing} aria-live="polite">${this.badge}</span>`
+				: ''}
+		`
+
+		if (hasHref) {
+			return html`
+				<a
+					href=${href}
+					target=${target}
+					rel=${rel}
+					aria-label=${ariaLabel}
+					aria-disabled=${isDisabled ? 'true' : 'false'}
+					@click=${this.handleClick}
+				>
+					${content}
+				</a>
+			`
+		}
 
 		return html`
 			<button
@@ -227,13 +280,7 @@ class AppButton extends LitElement {
 				data-loading=${this._loading ? 'true' : 'false'}
 				@click=${this.handleClick}
 			>
-				${iconName
-					? html`<span class="tiendu-button__icon" aria-hidden="true">${this.renderIcon(iconName)}</span>`
-					: ''}
-				${text ? html`<span class="tiendu-button__label">${text}</span>` : ''}
-				${hasBadge
-					? html`<span class="cart-quantity tiendu-button__badge" id=${this.badgeId || nothing} aria-live="polite">${this.badge}</span>`
-					: ''}
+				${content}
 			</button>
 		`
 	}

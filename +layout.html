@@ -16,7 +16,7 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Suez+One&display=swap"
 			rel="stylesheet"
 		/>
 		<style>
@@ -47,11 +47,11 @@
 				transform: scale(1);
 			}
 
-			#boot-page-overlay .boot-page-overlay__panel svg {
-				width: 48px;
-				height: 48px;
-				color: #0f172a;
-				animation: boot-page-overlay-spin 1s linear infinite;
+			#boot-page-overlay .boot-page-overlay__panel img {
+				width: 176px;
+				height: 176px;
+				object-fit: contain;
+				animation: boot-page-overlay-pulse 1.25s ease-in-out infinite;
 			}
 
 			#boot-page-overlay[data-animate-in='true'][data-state='opening'] .boot-page-overlay__surface {
@@ -73,9 +73,16 @@
 				animation: boot-page-overlay-zoom-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 			}
 
-			@keyframes boot-page-overlay-spin {
-				to {
-					transform: rotate(360deg);
+			@keyframes boot-page-overlay-pulse {
+				0%,
+				100% {
+					opacity: 0.82;
+					transform: scale(0.94);
+				}
+
+				50% {
+					opacity: 1;
+					transform: scale(1);
 				}
 			}
 
@@ -119,7 +126,7 @@
 				}
 			}
 		</style>
-		<link rel="icon" type="image/svg+xml" href="/public/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href="/public/favicon.png" />
 		<link rel="stylesheet" href="/styles.css" />
 		<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
 		<script>
@@ -192,12 +199,10 @@
 		>
 			<div class="boot-page-overlay__surface" role="status" aria-live="polite" aria-label="Cargando página">
 				<div class="boot-page-overlay__panel" aria-hidden="true">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle-icon lucide-loader-circle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+					<img src="/public/green-logo.png" alt="" loading="eager" decoding="async" />
 				</div>
 			</div>
 		</div>
-		<a href="#contenido" class="skip-link">Saltar al contenido</a>
-
 		<div class="top-banner" role="status" aria-live="polite">
 			<div class="container top-banner__inner">Envíos de 48 a 72hs hábiles | 10% OFF pagando con transferencia</div>
 		</div>
@@ -208,8 +213,8 @@
 					<button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menú">
 						<i data-lucide="align-left"></i>
 					</button>
-					<a href="/" class="brand brand__name" aria-label="Inicio Santu Market">
-						Santu Market
+					<a href="/" class="brand" aria-label="Inicio Santu Market">
+						<img src="/public/green-logo.png" class="brand__logo" alt="Santu Market" loading="eager" decoding="async" />
 					</a>
 				</div>
 				
@@ -259,7 +264,7 @@
 		</main>
 
 		<a
-			href="https://wa.me/59896267541?text=%C2%A1Hola%21%20Tengo%20una%20consulta%20sobre%20algo%20que%20v%C3%AD%20en%20su%20web."
+			href="https://wa.me/59896267541?text=%C2%A1Hola%21%20Tengo%20una%20consulta%20sobre%20algo%20que%20v%C3%AD%20en%20Santu%20Market."
 			class="whatsapp-fab"
 			target="_blank"
 			rel="noopener noreferrer"
@@ -273,7 +278,10 @@
 			<div class="container">
 				<div class="footer-grid">
 					<section class="footer-column" aria-labelledby="footer-store-title">
-						<h2 id="footer-store-title">Santu Market</h2>
+						<h2 id="footer-store-title" class="sr-only">Santu Market</h2>
+						<a href="/" class="footer-brand" aria-label="Inicio Santu Market">
+							<img src="/public/white-logo.avif" class="footer-brand__logo" alt="Santu Market" loading="lazy" decoding="async" />
+						</a>
 						<p>
 							Esta tienda es una extensión del Santuario: cada compra ayuda a sostener la alimentación,
 							atención veterinaria y refugio para animales rescatados.
@@ -330,6 +338,9 @@
 							</li>
 							<li>
 								<a href="https://www.instagram.com/santuarioanimallibre" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><i data-lucide="instagram"></i></a>
+							</li>
+							<li>
+								<a href="https://www.youtube.com/channel/UCphXlfl2LrfTDlJxEjoh0Iw" target="_blank" rel="noopener noreferrer" aria-label="Youtube" title="Youtube"><i data-lucide="youtube"></i></a>
 							</li>
 						</ul>
 					</section>

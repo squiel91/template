@@ -336,6 +336,31 @@ const renderProduct = (product, relatedProducts = []) => {
 	let matchingVariants = variants
 	let quantity = 1
 
+	const setPriceLabel = label => {
+		if (!(priceNode instanceof HTMLElement)) return
+		const rawLabel = String(label || '')
+		const trimmedLabel = rawLabel.trim()
+		priceNode.textContent = ''
+		if (!trimmedLabel) return
+
+		const fromPrefixMatch = trimmedLabel.match(/^desde\s+/i)
+		if (!fromPrefixMatch) {
+			priceNode.textContent = trimmedLabel
+			return
+		}
+
+		const priceSuffix = trimmedLabel.slice(fromPrefixMatch[0].length)
+		const prefixNode = document.createElement('span')
+		prefixNode.className = 'product-price__prefix'
+		prefixNode.textContent = 'Desde '
+
+		const amountNode = document.createElement('span')
+		amountNode.className = 'product-price__amount'
+		amountNode.textContent = priceSuffix
+
+		priceNode.append(prefixNode, amountNode)
+	}
+
 	tiendu.analytics.trackViewContent({
 		productId: product.id,
 		productTitle: product.title,
@@ -475,7 +500,7 @@ const renderProduct = (product, relatedProducts = []) => {
 			}
 
 			if (priceNode) {
-				priceNode.textContent = hasPrice ? priceData.label : ''
+				setPriceLabel(hasPrice ? priceData.label : '')
 			}
 			if (compareNode) {
 				compareNode.textContent = hasPrice ? priceData.compareLabel || '' : ''
@@ -503,7 +528,7 @@ const renderProduct = (product, relatedProducts = []) => {
 		}
 
 		if (priceNode) {
-			priceNode.textContent = hasPrice ? priceData.label : ''
+			setPriceLabel(hasPrice ? priceData.label : '')
 		}
 		if (compareNode) {
 			compareNode.textContent = hasPrice ? priceData.compareLabel || '' : ''

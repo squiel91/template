@@ -104,11 +104,23 @@ html {
 }
 
 body {
-	font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+	font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
 	font-size: var(--text-base);
 	line-height: 1.6;
 	color: var(--text-primary);
 	background: var(--bg-primary);
+}
+
+.suez-one-regular {
+	font-family: 'Suez One', serif;
+	font-weight: 400;
+	font-style: normal;
+}
+
+.bebas-neue-regular {
+	font-family: 'Bebas Neue', sans-serif;
+	font-weight: 400;
+	font-style: normal;
 }
 
 img {
@@ -132,7 +144,8 @@ a:active {
 }
 
 button {
-	font-family: inherit;
+	font-family: 'Bebas Neue', sans-serif;
+	font-weight: 400;
 	cursor: pointer;
 	border: none;
 	background: none;
@@ -154,6 +167,21 @@ button {
 	border: 0;
 }
 
+/*
+Source - https://stackoverflow.com/a/4407335
+Posted by Blowsie, modified by community. See post 'Timeline' for change history
+Retrieved 2026-03-02, License - CC BY-SA 4.0
+*/
+
+.noselect {
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Old versions of Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
 .container {
 	width: 100%;
 	max-width: var(--max-width);
@@ -168,35 +196,13 @@ button {
 }
 
 /* ==========================================================================
-   Skip Link
-   ========================================================================== */
-
-.skip-link {
-	position: absolute;
-	left: var(--space-4);
-	top: -100%;
-	background: var(--color-primary);
-	color: white;
-	padding: var(--space-3) var(--space-4);
-	border-radius: var(--radius-md);
-	z-index: 100;
-	font-weight: 500;
-	font-size: var(--text-sm);
-	transition: top var(--transition-fast);
-}
-
-.skip-link:focus {
-	top: var(--space-4);
-}
-
-/* ==========================================================================
    Header
    ========================================================================== */
 
 .top-banner {
-	background: #0f172a;
-	color: #ffffff;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	background: #ebeadf;
+	color: var(--home-ink);
+	border-bottom: 1px solid #dddaca;
 }
 
 .top-banner__inner {
@@ -205,7 +211,7 @@ button {
 	align-items: center;
 	justify-content: center;
 	font-size: 0.82rem;
-	font-weight: 700;
+	font-weight: 400;
 	letter-spacing: 0.01em;
 	text-align: center;
 }
@@ -277,8 +283,8 @@ button {
 
 /* Menu Toggle */
 .menu-toggle {
-	width: 40px;
-	height: 40px;
+	width: 46px;
+	height: 46px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -293,16 +299,21 @@ button {
 }
 
 .menu-toggle i {
-	width: 20px;
-	height: 20px;
+	width: 24px;
+	height: 24px;
 	stroke-width: 2;
 }
 
 /* Brand */
 .brand {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
+	display: inline-flex;
+	align-items: center;
+	line-height: 0;
+}
+
+.brand__logo {
+	height: 44px;
+	width: auto;
 }
 
 .brand__name {
@@ -337,7 +348,6 @@ button {
 	background: var(--color-primary);
 	color: white;
 	font-size: var(--text-xs);
-	font-weight: 700;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -483,14 +493,15 @@ button {
 }
 
 .side-menu__header strong {
-	font-size: var(--text-lg);
-	font-weight: 700;
+	font-family: 'Bebas Neue', sans-serif;
+	font-size: var(--text-2xl);
+	font-weight: 400;
 	color: var(--text-primary);
 }
 
 .side-menu__close {
-	width: 36px;
-	height: 36px;
+	width: 42px;
+	height: 42px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -519,8 +530,9 @@ button {
 }
 
 .side-menu__section-title {
-	font-size: var(--text-xs);
-	font-weight: 700;
+	font-family: 'Bebas Neue', sans-serif;
+	font-size: var(--text-base);
+	font-weight: 400;
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
 	color: var(--text-muted);
@@ -535,11 +547,13 @@ button {
 }
 
 .side-menu__list a {
+	font-family: 'Bebas Neue', sans-serif;
 	display: block;
-	padding: var(--space-3) var(--space-4);
+	padding: var(--space-1) var(--space-5);
 	border-radius: var(--radius-lg);
-	font-size: var(--text-base);
-	font-weight: 500;
+	font-size: var(--text-xl);
+	font-weight: 400;
+	letter-spacing: 0.02em;
 	color: var(--text-secondary);
 	transition: all var(--transition-fast);
 }
@@ -559,6 +573,24 @@ button {
 	padding-bottom: var(--space-20);
 }
 
+#contenido.page-shell:has(.home-santuario) {
+	padding-top: 0;
+	max-width: none;
+	padding-inline: 0;
+}
+
+#contenido.page-shell:has(.home-santuario) .home-sections {
+	max-width: var(--max-width);
+	margin-inline: auto;
+	padding-inline: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+	#contenido.page-shell:has(.home-santuario) .home-sections {
+		padding-inline: 12px;
+	}
+}
+
 /* ==========================================================================
    Home - Santuario
    ========================================================================== */
@@ -570,23 +602,34 @@ button {
 
 .home-hero {
 	position: relative;
+	width: 100%;
 	min-height: min(72vh, 620px);
-	border-radius: var(--radius-2xl);
+	border-radius: 0;
 	overflow: hidden;
 	background: linear-gradient(140deg, var(--home-beige) 0%, #e7dcc9 100%);
 	box-shadow: var(--shadow-md);
 }
 
 .btn {
+	font-family: 'Bebas Neue', sans-serif;
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
-	padding: var(--space-3) var(--space-6);
-	font-size: var(--text-base);
-	font-weight: 600;
+	padding: var(--space-4) var(--space-8);
+	font-size: var(--text-xl);
+	font-weight: 400;
+	letter-spacing: 0.03em;
 	border-radius: var(--radius-xl);
 	transition: all var(--transition-fast);
 	white-space: nowrap;
+}
+
+.tiendu-carousel__hero-cta,
+.inline-form-control__button {
+	font-family: 'Bebas Neue', sans-serif;
+	font-weight: 400;
+	font-size: var(--text-lg);
+	letter-spacing: 0.03em;
 }
 
 .btn--primary {
@@ -623,6 +666,18 @@ a.btn--primary:active {
 .btn i {
 	width: 18px;
 	height: 18px;
+}
+
+.home-santuario .btn {
+	font-size: var(--text-lg);
+	letter-spacing: 0;
+}
+
+.home-santuario .section__action {
+	font-family: 'Bebas Neue', sans-serif;
+	font-size: var(--text-lg);
+	font-weight: 400;
+	letter-spacing: 0;
 }
 
 
@@ -676,6 +731,8 @@ a.btn--primary:active {
 
 .home-campaign__content h2,
 .home-impact__content h2 {
+	font-family: 'Suez One', serif;
+	font-weight: 400;
 	font-size: clamp(1.45rem, 2.5vw, 2rem);
 	line-height: 1.25;
 	color: var(--home-ink);
@@ -687,13 +744,35 @@ a.btn--primary:active {
 	max-width: 56ch;
 }
 
-.home-campaign .btn--primary {
+
+.home-campaign__cta {
 	justify-self: start;
-	background: var(--home-olive);
 }
 
-.home-campaign .btn--primary:hover {
+.home-campaign__cta button,
+.home-campaign__cta a {
+	padding: var(--space-4) var(--space-8);
+	font-family: 'Bebas Neue', sans-serif;
+	font-size: var(--text-lg);
+	font-weight: 400;
+	letter-spacing: 0;
+	border-radius: var(--radius-xl);
+	background: var(--home-olive);
+	border-color: var(--home-olive);
+	color: #ffffff;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: all var(--transition-fast);
+}
+
+.home-campaign__cta button:hover:not(:disabled),
+.home-campaign__cta a:hover {
 	background: #405138;
+	border-color: #405138;
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-lg);
+	color: #ffffff;
+	text-decoration: none;
 }
 
 .home-categories-list category-list {
@@ -760,10 +839,11 @@ a.btn--primary:active {
 }
 
 .section__title {
+	font-family: 'Suez One', serif;
 	font-size: var(--text-2xl);
-	font-weight: 700;
+	font-weight: 400;
 	color: var(--text-primary);
-	letter-spacing: -0.02em;
+	letter-spacing: 0;
 }
 
 .section__title--large {
@@ -932,17 +1012,23 @@ a.btn--primary:active {
 .page-content h1,
 .page-content h2,
 .page-content h3 {
+	font-family: 'Suez One', serif;
+	font-weight: 400;
 	line-height: 1.3;
-	letter-spacing: -0.01em;
+	letter-spacing: 0;
 	margin-top: var(--space-4);
 }
 
+.page-content h1 {
+	font-size: clamp(2.1rem, 4.4vw, 3.3rem);
+}
+
 .page-content h2 {
-	font-size: var(--text-2xl);
+	font-size: clamp(1.8rem, 3.3vw, 2.6rem);
 }
 
 .page-content h3 {
-	font-size: var(--text-xl);
+	font-size: clamp(1.45rem, 2.5vw, 2rem);
 }
 
 .page-content figure {
@@ -1053,17 +1139,19 @@ a.btn--primary:active {
 }
 
 .listing-meta h1 {
-	font-size: var(--text-3xl);
-	font-weight: 800;
-	letter-spacing: -0.03em;
+	font-family: 'Suez One', serif;
+	font-size: clamp(1.9rem, 6.2vw, 2.3rem);
+	font-weight: 400;
+	letter-spacing: 0;
 	color: var(--text-primary);
 	margin-bottom: var(--space-2);
 }
 
 .page-title {
-	font-size: clamp(2rem, 3vw, 2.75rem);
-	font-weight: 800;
-	letter-spacing: -0.03em;
+	font-family: 'Suez One', serif;
+	font-size: clamp(2.35rem, 4.2vw, 3.5rem);
+	font-weight: 400;
+	letter-spacing: 0;
 	line-height: 1.15;
 	color: var(--text-primary);
 }
@@ -1200,22 +1288,25 @@ a.btn--primary:active {
 }
 
 .product-info__title {
-	font-size: clamp(1.48rem, 5.7vw, 1.86rem);
-	font-weight: 800;
-	letter-spacing: -0.03em;
+	font-family: 'Suez One', serif;
+	font-size: clamp(1.9rem, 6.2vw, 2.3rem);
+	font-weight: 400;
+	letter-spacing: 0;
 	line-height: 1.14;
 	color: var(--text-primary);
 }
 
 @media (min-width: 768px) {
-	.product-info__title {
-		font-size: clamp(1.68rem, 2.8vw, 1.98rem);
+	.product-info__title,
+	.listing-meta h1 {
+		font-size: clamp(2.1rem, 3.3vw, 2.55rem);
 	}
 }
 
 @media (min-width: 1200px) {
-	.product-info__title {
-		font-size: 2.12rem;
+	.product-info__title,
+	.listing-meta h1 {
+		font-size: 2.8rem;
 	}
 }
 
@@ -1235,6 +1326,15 @@ a.btn--primary:active {
 	font-weight: 700;
 	color: var(--text-primary);
 	letter-spacing: -0.02em;
+}
+
+
+.product-price__prefix {
+	font-weight: 400;
+}
+
+.product-price__amount {
+	font-weight: 700;
 }
 
 .product-compare {
@@ -1331,6 +1431,7 @@ a.btn--primary:active {
 	border-radius: 14px;
 	border: 1px solid #cbd5e1;
 	background: #ffffff;
+	font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
 	font-size: var(--text-sm);
 	font-weight: 600;
 	color: var(--text-primary);
@@ -1416,10 +1517,21 @@ a.btn--primary:active {
 
 .product-actions__primary tiendu-button button {
 	width: 100%;
+	font-family: 'Bebas Neue', sans-serif;
+	font-weight: 400;
+	font-size: var(--text-lg);
+	letter-spacing: 0.03em;
 }
 
 .product-actions > #share-product-button {
 	width: fit-content;
+}
+
+.product-actions > #share-product-button button {
+	font-family: 'Bebas Neue', sans-serif;
+	font-weight: 400;
+	font-size: var(--text-lg);
+	letter-spacing: 0.03em;
 }
 
 
@@ -1512,6 +1624,7 @@ a.btn--primary:active {
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-2) 0;
+	font-family: inherit;
 	font-size: var(--text-base);
 	color: var(--text-secondary);
 	transition: color var(--transition-fast);
@@ -1546,8 +1659,7 @@ a.btn--primary:active {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
-	font-size: var(--text-sm);
-	font-weight: 700;
+	font-size: var(--text-lg);
 	color: var(--color-primary);
 	width: fit-content;
 	padding: 0;
@@ -1868,16 +1980,27 @@ a.btn--primary:active {
    ========================================================================== */
 
 .site-footer {
-	background: var(--bg-secondary);
-	border-top: 1px solid var(--border-light);
+	background: var(--color-primary);
+	border-top: 1px solid rgba(255, 255, 255, 0.18);
 	padding: var(--space-12) 0;
 	margin-top: auto;
+}
+
+.footer-brand {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+}
+
+.footer-brand__logo {
+	height: 88px;
+	width: auto;
 }
 
 .footer-grid {
 	display: grid;
 	grid-template-columns: repeat(1, minmax(0, 1fr));
-	gap: var(--space-8);
+	gap: var(--space-12);
 	margin-bottom: var(--space-8);
 }
 
@@ -1890,6 +2013,7 @@ a.btn--primary:active {
 @media (min-width: 900px) {
 	.footer-grid {
 		grid-template-columns: 1.2fr 1fr 1fr 1.1fr;
+		column-gap: var(--space-12);
 	}
 }
 
@@ -1901,10 +2025,11 @@ a.btn--primary:active {
 
 .footer-column h2,
 .footer-column h3 {
-	font-size: var(--text-lg);
-	font-weight: 700;
-	color: var(--text-primary);
-	letter-spacing: -0.01em;
+	font-family: 'Suez One', serif;
+	font-size: var(--text-xl);
+	font-weight: 400;
+	color: #ffffff;
+	letter-spacing: 0;
 }
 
 .footer-column h3 {
@@ -1915,7 +2040,7 @@ a.btn--primary:active {
 .footer-column p,
 .footer-links li {
 	font-size: var(--text-sm);
-	color: var(--text-secondary);
+	color: rgba(255, 255, 255, 0.88);
 }
 
 .footer-contact-list {
@@ -1929,13 +2054,13 @@ a.btn--primary:active {
 	align-items: center;
 	gap: var(--space-2);
 	font-size: var(--text-sm);
-	color: var(--text-secondary);
+	color: rgba(255, 255, 255, 0.88);
 }
 
 .footer-contact-list i {
 	width: 14px;
 	height: 14px;
-	color: var(--text-tertiary);
+	color: rgba(255, 255, 255, 0.75);
 	flex-shrink: 0;
 }
 
@@ -1950,7 +2075,7 @@ a.btn--primary:active {
 }
 
 .footer-links a {
-	color: var(--text-secondary);
+	color: rgba(255, 255, 255, 0.92);
 	font-weight: 500;
 	transition: none;
 }
@@ -1979,16 +2104,16 @@ a.btn--primary:active {
 	width: 42px;
 	height: 42px;
 	border-radius: 999px;
-	border: 1px solid var(--border-light);
-	background: var(--bg-primary);
-	color: var(--text-secondary);
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	background: transparent;
+	color: rgba(255, 255, 255, 0.92);
 	transition: none;
 }
 
 .footer-social-links a:hover {
-	border-color: var(--border-light);
-	background: var(--bg-primary);
-	color: var(--text-secondary);
+	border-color: rgba(255, 255, 255, 0.65);
+	background: rgba(255, 255, 255, 0.1);
+	color: #ffffff;
 }
 
 .footer-social-links svg {
@@ -1999,30 +2124,30 @@ a.btn--primary:active {
 }
 
 .footer-links a:hover {
-	color: var(--text-secondary);
+	color: #ffffff;
 }
 
 .footer-legal {
 	text-align: left;
 	font-size: var(--text-sm);
-	color: var(--text-tertiary);
+	color: rgba(255, 255, 255, 0.82);
 	padding-top: var(--space-6);
-	border-top: 1px solid var(--border-light);
+	border-top: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .footer-legal__link {
-	color: var(--color-primary);
+	color: #ffffff;
 	font-weight: 700;
 }
 
 .site-footer a {
-	color: var(--text-secondary);
+	color: rgba(255, 255, 255, 0.92);
 	font-weight: 500;
 	transition: none;
 }
 
 .site-footer a:hover {
-	color: var(--text-secondary);
+	color: #ffffff;
 }
 
 .site-footer a.footer-legal__link,
@@ -2030,7 +2155,7 @@ a.btn--primary:active {
 .site-footer a.footer-legal__link:visited,
 .site-footer a.footer-legal__link:focus-visible,
 .site-footer a.footer-legal__link:active {
-	color: var(--color-primary);
+	color: #ffffff;
 	font-weight: 700;
 }
 
@@ -2118,7 +2243,7 @@ a.btn--primary:active {
 	}
 	
 	.listing-meta h1 {
-		font-size: var(--text-2xl);
+		font-size: clamp(1.9rem, 6.2vw, 2.3rem);
 	}
 
 	.listing-head {

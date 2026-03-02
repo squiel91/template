@@ -68,8 +68,9 @@ const ensureStyles = () => {
 		}
 
 		.category-item__name {
+			font-family: 'Suez One', serif;
 			font-size: 1.125rem;
-			font-weight: 700;
+			font-weight: 400;
 			line-height: 1.2;
 			margin: 0 0 4px;
 		}
