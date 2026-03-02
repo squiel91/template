@@ -8,34 +8,17 @@ import { renderContentBlocks } from '/shared/content-blocks.js'
 
 const normalizeText = value => String(value || '').trim().toLowerCase()
 
-const stripLeadingPageHeaderBlocks = (blocks, title) => {
+const stripLeadingTitleBlock = (blocks, title) => {
 	if (!Array.isArray(blocks)) return []
 	const filteredBlocks = [...blocks]
 	const normalizedTitle = normalizeText(title)
-	let removedTitle = false
-	let removedImage = false
 
-	while (filteredBlocks.length > 0) {
-		const firstBlock = filteredBlocks[0]
-		const isTitleHeading =
-			!removedTitle &&
-			firstBlock?.type === 'heading' &&
-			normalizeText(firstBlock.text) === normalizedTitle
-		const isCoverImage = !removedImage && firstBlock?.type === 'image'
-
-		if (isTitleHeading) {
-			filteredBlocks.shift()
-			removedTitle = true
-			continue
-		}
-
-		if (isCoverImage) {
-			filteredBlocks.shift()
-			removedImage = true
-			continue
-		}
-
-		break
+	if (
+		filteredBlocks.length > 0 &&
+		filteredBlocks[0]?.type === 'heading' &&
+		normalizeText(filteredBlocks[0].text) === normalizedTitle
+	) {
+		filteredBlocks.shift()
 	}
 
 	return filteredBlocks
@@ -75,9 +58,12 @@ const init = async () => {
 
 		document.title = `${title} | Tienda Genérica`
 
+		const titleNode = document.getElementById('page-title')
+		if (titleNode) titleNode.textContent = title
+
 		const container = document.getElementById('page')
 		if (!container) return
-		renderContentBlocks(container, stripLeadingPageHeaderBlocks(page.content, title))
+		renderContentBlocks(container, stripLeadingTitleBlock(page.content, title))
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Error inesperado.'
 		renderMessage(`Error al cargar la página: ${message}`)

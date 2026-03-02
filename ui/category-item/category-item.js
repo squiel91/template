@@ -17,7 +17,7 @@ const ensureStyles = () => {
 		.category-item__link {
 			position: relative;
 			display: block;
-			aspect-ratio: 1 / 1;
+			aspect-ratio: 2 / 3;
 			border-radius: 16px;
 			overflow: hidden;
 			text-decoration: none;
@@ -77,6 +77,8 @@ const ensureStyles = () => {
 
 		.category-item__count {
 			font-size: 0.875rem;
+			font-weight: 400;
+			font-style: italic;
 			opacity: 0.88;
 			margin: 0;
 		}

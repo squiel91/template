@@ -111,6 +111,17 @@ const ensureStyles = () => {
 			justify-content: center;
 		}
 
+		tiendu-button[size='xl'] button,
+		tiendu-button[size='xl'] a {
+			height: 48px;
+			padding: 0 var(--space-8, 2rem);
+			font-family: 'Bebas Neue', sans-serif;
+			font-size: var(--text-xl, 1.25rem);
+			font-weight: 400;
+			letter-spacing: 0.03em;
+			border-radius: var(--radius-xl, 1rem);
+		}
+
 		@keyframes app-button-spin {
 			to {
 				transform: rotate(360deg);
@@ -129,6 +140,7 @@ class AppButton extends LitElement {
 		href: { type: String },
 		newTab: { type: Boolean, attribute: 'new-tab' },
 		variant: { type: String },
+		size: { type: String },
 		type: { type: String },
 		badge: { type: String },
 		badgeId: { type: String, attribute: 'badge-id' },
@@ -145,6 +157,7 @@ class AppButton extends LitElement {
 		this.href = ''
 		this.newTab = false
 		this.variant = 'secondary'
+		this.size = ''
 		this.type = 'button'
 		this.badge = ''
 		this.badgeId = ''

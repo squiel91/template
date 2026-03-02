@@ -1,19 +1,23 @@
 // @ts-nocheck
 
-import '/ui/product-item/product-item.js'
-import '/ui/product-list/product-list.js'
 import '/ui/category-item/category-item.js'
 import '/ui/category-list/category-list.js'
 import '/ui/app-button/app-button.js'
 import '/ui/tiendu-image-carousel/tiendu-image-carousel.js'
+import '/ui/home-category-products-section/home-category-products-section.js'
+import '/ui/home-banner/home-banner.js'
 import { tiendu } from '/shared/tiendu-client.js'
 import { storefrontConfig } from '/shared/storefront-config.js'
 import { withPageLoading } from '/shared/page-loading.js'
-import { createProductItemElement } from '/shared/product-item-element.js'
 import { createCategoryItemElement } from '/shared/category-item-element.js'
 import { refreshIcons } from '/shared/icons.js'
 
-const FALLBACK_IMAGE_SRC = '/public/no-image.svg'
+const HOME_PINNED_FIRST_CATEGORY_ID = 255
+const HOME_PINNED_LAST_CATEGORY_IDS = [252, 253, 254, 250]
+const HOME_CATEGORY_PRODUCT_SECTION_IDS = [
+	HOME_PINNED_FIRST_CATEGORY_ID,
+	...HOME_PINNED_LAST_CATEGORY_IDS
+]
 
 const normalizeImageUrl = input => {
 	if (!input) return ''
@@ -112,71 +116,56 @@ const renderHeroCarousel = slides => {
 	carousel.setSlides(slides)
 }
 
-const renderFeaturedProducts = products => {
-	const container = document.getElementById('home-featured-products')
-	if (!(container instanceof HTMLElement)) return
-
-	if (!Array.isArray(products) || products.length === 0) {
-		container.innerHTML =
-			'<div class="empty-state"><i data-lucide="package-search"></i><span class="empty-state__title">No hay productos destacados disponibles.</span></div>'
-		refreshIcons()
-		return
-	}
-
-	const list = document.createElement('product-list')
-	for (const product of products.slice(0, 4)) {
-		if (!product || !product.id) continue
-		list.appendChild(createProductItemElement(product))
-	}
-
-	container.innerHTML = ''
-	container.appendChild(list)
-	refreshIcons()
+const createCategoryProductSectionElement = sectionData => {
+	if (!sectionData?.category?.id) return null
+	const el = document.createElement('home-category-products-section')
+	if (typeof el.setData === 'function') el.setData(sectionData)
+	return el
 }
 
-const loadFeaturedProducts = async () => {
-	try {
-		const featuredResponse = await tiendu.products.list({
-			isFeatured: true,
-			page: 1,
-			size: 8
-		})
-		const featured = Array.isArray(featuredResponse?.data) ? featuredResponse.data : []
-		if (featured.length >= 4) return featured.slice(0, 4)
+const createCategoriesListingElement = categories => {
+	const section = document.createElement('section')
+	section.className = 'section'
+	section.setAttribute('aria-labelledby', 'home-categories-title')
 
-		const fallbackResponse = await tiendu.products.list({ page: 1, size: 8 })
-		const fallback = Array.isArray(fallbackResponse?.data) ? fallbackResponse.data : []
-		return (featured.length > 0 ? [...featured, ...fallback] : fallback).slice(0, 4)
-	} catch (error) {
-		console.error('[Home] Error loading featured products:', error)
-		return []
-	}
-}
+	const header = document.createElement('div')
+	header.className = 'section__header'
 
-const renderHomeCategories = categories => {
-	const container = document.getElementById('home-categories-list')
-	if (!(container instanceof HTMLElement)) return
+	const title = document.createElement('h2')
+	title.id = 'home-categories-title'
+	title.className = 'section__title section__title--large'
+	title.textContent = 'Categorías'
+
+	header.appendChild(title)
+	section.appendChild(header)
+
+	const container = document.createElement('div')
+	container.className = 'home-categories-list'
 
 	if (!Array.isArray(categories) || categories.length === 0) {
 		container.innerHTML =
 			'<div class="empty-state"><i data-lucide="layout-grid"></i><span class="empty-state__title">No hay categorías disponibles por ahora.</span></div>'
-		refreshIcons()
-		return
+	} else {
+		const list = document.createElement('category-list')
+		for (const category of categories) {
+			if (!category || !category.id) continue
+			list.appendChild(
+				createCategoryItemElement(category, {
+					origin: { url: '/', title: 'Inicio' }
+				})
+			)
+		}
+		container.appendChild(list)
 	}
 
-	const list = document.createElement('category-list')
-	for (const category of categories.slice(0, 4)) {
-		if (!category || !category.id) continue
-		list.appendChild(
-			createCategoryItemElement(category, {
-				origin: { url: '/', title: 'Inicio' }
-			})
-		)
-	}
+	section.appendChild(container)
+	return section
+}
 
-	container.innerHTML = ''
-	container.appendChild(list)
-	refreshIcons()
+const createBannerElement = bannerData => {
+	const el = document.createElement('home-banner')
+	if (typeof el.setData === 'function') el.setData(bannerData)
+	return el
 }
 
 const loadHomeCategories = async () => {
@@ -186,73 +175,106 @@ const loadHomeCategories = async () => {
 			? categoriesResponse
 			: categoriesResponse?.data || []
 
-		const configuredListIds = Array.isArray(storefrontConfig.homeListCategoryIds)
-			? storefrontConfig.homeListCategoryIds
-			: []
-
-		const byId = new Map(categories.map(category => [Number(category.id), category]))
-		let selected = configuredListIds
-			.map(categoryId => byId.get(Number(categoryId)))
-			.filter(Boolean)
-
-		if (selected.length === 0) {
-			selected = categories.filter(category => Number(category?.productCount) > 0)
-		}
-
-		return selected.slice(0, 4)
+		return categories.filter(category => category && category.id)
 	} catch (error) {
 		console.error('[Home] Error loading categories:', error)
 		return []
 	}
 }
 
-const setSectionImage = (imageId, sectionId, imageUrl, alt) => {
-	const image = document.getElementById(imageId)
-	const section = document.getElementById(sectionId)
-	if (!(image instanceof HTMLImageElement) || !(section instanceof HTMLElement)) return
+const loadHomeCategoryProductSections = async categories => {
+	const categoryMap = new Map(
+		(Array.isArray(categories) ? categories : []).map(category => [Number(category.id), category])
+	)
 
-	if (typeof imageUrl === 'string' && imageUrl.trim()) {
-		image.src = imageUrl.trim()
-		if (typeof alt === 'string' && alt.trim()) image.alt = alt.trim()
-		section.classList.remove('is-empty')
-		return
+	const sections = await Promise.all(
+		HOME_CATEGORY_PRODUCT_SECTION_IDS.map(async categoryId => {
+			let category = categoryMap.get(categoryId)
+			if (!category) {
+				try {
+					category = await tiendu.categories.get(categoryId)
+				} catch {
+					return null
+				}
+			}
+
+			try {
+				const response = await tiendu.products.list({
+					categoryId,
+					page: 1,
+					size: 8
+				})
+				const products = Array.isArray(response?.data) ? response.data : []
+				return { category, products }
+			} catch (error) {
+				console.error(`[Home] Error loading category products (${categoryId}):`, error)
+				return { category, products: [] }
+			}
+		})
+	)
+
+	return sections.filter(Boolean)
+}
+
+const loadHomeBanners = async () => {
+	try {
+		const metadataValue = await tiendu.metadata.get('home-page-banners')
+		const items = resolveMetadataPayload(metadataValue)
+		if (!Array.isArray(items)) return []
+		return items.filter(item => item && typeof item === 'object' && item.title)
+	} catch (error) {
+		console.warn('[Home] Could not load banner metadata:', error)
+		return []
+	}
+}
+
+const renderHomeSections = ({ categoryProductSections, categories, banners }) => {
+	const container = document.getElementById('home-sections')
+	if (!(container instanceof HTMLElement)) return
+
+	container.innerHTML = ''
+
+	const catSections = Array.isArray(categoryProductSections) ? categoryProductSections : []
+	const bannerItems = Array.isArray(banners) ? banners : []
+
+	let catIndex = 0
+	let bannerIndex = 0
+
+	// 1. First category products section
+	if (catIndex < catSections.length) {
+		const el = createCategoryProductSectionElement(catSections[catIndex++])
+		if (el) container.appendChild(el)
 	}
 
-	image.src = FALLBACK_IMAGE_SRC
-	section.classList.add('is-empty')
+	// 2. Categorías listing
+	container.appendChild(createCategoriesListingElement(categories))
+
+	// 3. Interleave: banner, category products, banner, category products...
+	while (catIndex < catSections.length || bannerIndex < bannerItems.length) {
+		if (bannerIndex < bannerItems.length) {
+			const el = createBannerElement(bannerItems[bannerIndex++])
+			if (el) container.appendChild(el)
+		}
+
+		if (catIndex < catSections.length) {
+			const el = createCategoryProductSectionElement(catSections[catIndex++])
+			if (el) container.appendChild(el)
+		}
+	}
+
+	refreshIcons()
 }
 
 const init = async () => {
-	const [heroSlides, featuredProducts, categories] = await Promise.all([
+	const [heroSlides, categories, banners] = await Promise.all([
 		loadHeroSlides(),
-		loadFeaturedProducts(),
-		loadHomeCategories()
+		loadHomeCategories(),
+		loadHomeBanners()
 	])
+	const categoryProductSections = await loadHomeCategoryProductSections(categories)
 
 	renderHeroCarousel(heroSlides)
-	renderFeaturedProducts(featuredProducts)
-	renderHomeCategories(categories)
-
-	const campaignSlide = heroSlides[1] || heroSlides[0] || null
-	const impactSlide = heroSlides[2] || heroSlides[0] || null
-	const firstCategoryImage = categories[0]?.coverImage?.url || ''
-	const secondCategoryImage = categories[1]?.coverImage?.url || ''
-
-	setSectionImage(
-		'home-campaign-image',
-		'home-campaign',
-		campaignSlide?.desktopImage || campaignSlide?.mobileImage || firstCategoryImage,
-		campaignSlide?.imageAlt || 'Campaña del Santuario Animal Libre'
-	)
-
-	setSectionImage(
-		'home-impact-image',
-		'home-impact',
-		impactSlide?.desktopImage || impactSlide?.mobileImage || secondCategoryImage,
-		impactSlide?.imageAlt || 'Animal rescatado del santuario'
-	)
-
-	refreshIcons()
+	renderHomeSections({ categoryProductSections, categories, banners })
 }
 
 if (document.readyState === 'loading') {

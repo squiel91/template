@@ -204,7 +204,7 @@ const renderProduct = (product, relatedProducts = []) => {
 					</div>
 					<ul class="purchase-notes" aria-label="Beneficios de compra">
 						<li class="purchase-notes__item"><i data-lucide="truck" aria-hidden="true"></i><span>Envío gratis en pedidos superiores a $ 2.000</span></li>
-						<li class="purchase-notes__item"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Devolución simplificada</span></li>
+						<li class="purchase-notes__item"><i data-lucide="piggy-bank" aria-hidden="true"></i><span><span class="purchase-notes__badge">10% OFF</span> con transferencia bancaria</span></li>
 						<li class="purchase-notes__item"><i data-lucide="credit-card" aria-hidden="true"></i><span>Pagalo hasta en 12 cuotas sin recargo con tarjeta de crédito</span></li>
 					</ul>
 					<ul class="payment-methods" aria-label="Medios de pago disponibles">

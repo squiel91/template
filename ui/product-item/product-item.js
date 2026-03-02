@@ -87,12 +87,12 @@ const ensureStyles = () => {
 			width: 40px;
 			height: 40px;
 			padding: 0;
-			background: #0f172a;
+			background: var(--color-primary);
 			color: white;
 		}
 
 		.product-item__quick-action-btn--cart:hover {
-			background: #1e293b;
+			background: var(--color-primary-hover, var(--color-primary));
 			transform: scale(1.05);
 		}
 
@@ -147,6 +147,7 @@ const ensureStyles = () => {
 		.product-item__rating-line span {
 			display: inline-flex;
 			align-items: center;
+			font-weight: 400;
 		}
 
 		.product-item__price {

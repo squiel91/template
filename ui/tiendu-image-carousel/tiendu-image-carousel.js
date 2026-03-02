@@ -360,36 +360,6 @@ const ensureStyles = () => {
 			width: fit-content;
 		}
 
-		.tiendu-carousel__hero-cta button,
-		.tiendu-carousel__hero-cta a {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			gap: var(--space-2, 0.5rem);
-			padding: var(--space-4, 1rem) var(--space-8, 2rem);
-			font-family: 'Bebas Neue', sans-serif;
-			font-size: var(--text-lg, 1.125rem);
-			font-weight: 400;
-			letter-spacing: 0;
-			border-radius: var(--radius-xl, 1rem);
-			background: var(--home-olive, var(--color-primary, #4f6344));
-			border-color: var(--home-olive, var(--color-primary, #4f6344));
-			color: #ffffff;
-			text-decoration: none;
-			white-space: nowrap;
-			transition: all var(--transition-fast, 0.15s ease);
-		}
-
-		.tiendu-carousel__hero-cta button:hover:not(:disabled),
-		.tiendu-carousel__hero-cta a:hover {
-			background: #405138;
-			border-color: #405138;
-			transform: translateY(-2px);
-			box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
-			text-decoration: none;
-			color: #ffffff;
-		}
-
 		.tiendu-carousel__hero-controls {
 			position: absolute;
 			left: 50%;
@@ -915,7 +885,7 @@ class TienduImageCarousel extends HTMLElement {
 
 					const cta =
 						slide.ctaText && slide.href
-							? `<tiendu-button class="tiendu-carousel__hero-cta" variant="primary" label="${escapeHtml(slide.ctaText)}" href="${escapeHtml(slide.href)}" aria-label="${escapeHtml(slide.ctaText)}" ${slide.newTab ? 'new-tab' : ''}></tiendu-button>`
+							? `<tiendu-button class="tiendu-carousel__hero-cta" variant="primary" size="xl" label="${escapeHtml(slide.ctaText)}" href="${escapeHtml(slide.href)}" aria-label="${escapeHtml(slide.ctaText)}" ${slide.newTab ? 'new-tab' : ''}></tiendu-button>`
 							: ''
 
 					const headingTag = index === 0 ? 'h1' : 'h2'
