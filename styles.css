@@ -3,11 +3,15 @@
    ========================================================================== */
 
 :root {
-	/* Primary Colors */
+	/* __VAR:PRIMARY_COLOR__START */
 	--color-primary: #0f172a;
 	--color-primary-hover: #1e293b;
+	/* __VAR:PRIMARY_COLOR__END */
+
+	/* __VAR:ACCENT_COLOR__START */
 	--color-accent: #2563eb;
 	--color-accent-hover: #1d4ed8;
+	/* __VAR:ACCENT_COLOR__END */
 	
 	/* Neutral Colors */
 	--color-text: #0f172a;
@@ -16,10 +20,11 @@
 	--text-tertiary: #64748b;
 	--text-muted: #c7c7c7;
 	
-	/* Background Colors */
+	/* __VAR:BG_COLOR__START */
 	--bg-primary: #ffffff;
 	--bg-secondary: #f8fafc;
 	--bg-tertiary: #f1f5f9;
+	/* __VAR:BG_COLOR__END */
 	
 	/* Border Colors */
 	--border-light: #e2e8f0;
@@ -71,13 +76,19 @@
 	--transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 	--transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 	
-	/* Border Radius */
+	/* __VAR:BORDER_RADIUS__START */
 	--radius-sm: 0.375rem;
 	--radius-md: 0.5rem;
 	--radius-lg: 0.75rem;
 	--radius-xl: 1rem;
 	--radius-2xl: 1.5rem;
 	--radius-full: 9999px;
+	/* __VAR:BORDER_RADIUS__END */
+
+	/* __VAR:FONT_FAMILY__START */
+	--font-title: 'DM Sans', system-ui, -apple-system, sans-serif;
+	--font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+	/* __VAR:FONT_FAMILY__END */
 }
 
 /* ==========================================================================
@@ -97,11 +108,20 @@ html {
 }
 
 body {
-	font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+	font-family: var(--font-body, system-ui, -apple-system, sans-serif);
 	font-size: var(--text-base);
 	line-height: 1.6;
 	color: var(--text-primary);
 	background: var(--bg-primary);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-title, system-ui, -apple-system, sans-serif);
 }
 
 img {
@@ -187,7 +207,7 @@ button {
    ========================================================================== */
 
 .top-banner {
-	background: #0f172a;
+	background: var(--color-primary);
 	color: #ffffff;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -349,15 +369,15 @@ button {
 	align-items: center;
 	padding: 0 0 0 10px;
 	height: 40px;
-	background: #ffffff;
+	background: var(--bg-primary);
 	border-radius: 14px;
 	overflow: hidden;
-	border: 1px solid #cbd5e1;
+	border: 1px solid var(--border-medium);
 	transition: all 0.15s ease;
 }
 
 .inline-form-control:focus-within {
-	background: #f8fafc;
+	background: var(--bg-secondary);
 	border-color: #94a3b8;
 }
 
@@ -388,7 +408,7 @@ button {
 	padding: 0;
 	margin-left: 8px;
 	font-size: 14px;
-	color: #0f172a;
+	color: var(--text-primary);
 	background: transparent;
 }
 
@@ -400,10 +420,10 @@ button {
 	padding: 0 14px;
 	font-size: 14px;
 	font-weight: 600;
-	color: #0f172a;
-	background: #ffffff;
+	color: var(--text-primary);
+	background: var(--bg-primary);
 	border: none;
-	border-left: 1px solid #cbd5e1;
+	border-left: 1px solid var(--border-medium);
 	border-radius: 0;
 	height: 100%;
 	align-self: stretch;
@@ -416,8 +436,8 @@ button {
 .inline-form-control__button:hover,
 .inline-form-control__button:focus-visible {
 	outline: none;
-	color: #1e293b;
-	background: #ffffff;
+	color: var(--color-primary-hover);
+	background: var(--bg-primary);
 	border-left-color: #94a3b8;
 }
 
@@ -770,7 +790,7 @@ a.btn--primary:active {
 	border: 1px solid var(--border-light);
 	border-radius: var(--radius-xl);
 	overflow: hidden;
-	background: #fff;
+	background: var(--bg-primary);
 	transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
@@ -844,7 +864,7 @@ a.btn--primary:active {
 	padding: var(--space-6);
 	border: 1px solid var(--border-light);
 	border-radius: var(--radius-2xl);
-	background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+	background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 	border-bottom: 1px solid var(--border-light);
 }
 
@@ -984,12 +1004,12 @@ a.btn--primary:active {
 	width: 36px;
 	height: 36px;
 	border-radius: 999px;
-	border: 1px solid #cbd5e1;
+	border: 1px solid var(--border-medium);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--text-secondary);
-	background: #ffffff;
+	background: var(--bg-primary);
 	text-decoration: none;
 	flex-shrink: 0;
 	transition: transform var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
@@ -1007,7 +1027,7 @@ a.btn--primary:active {
 
 .listing-clear-search:hover {
 	transform: none;
-	border-color: #cbd5e1;
+	border-color: var(--border-medium);
 	color: var(--color-primary);
 }
 
@@ -1296,8 +1316,8 @@ a.btn--primary:active {
 	height: 40px;
 	padding: 0;
 	border-radius: 14px;
-	border: 1px solid #cbd5e1;
-	background: #ffffff;
+	border: 1px solid var(--border-medium);
+	background: var(--bg-primary);
 	font-size: var(--text-sm);
 	font-weight: 600;
 	color: var(--text-primary);
@@ -1319,19 +1339,19 @@ a.btn--primary:active {
 }
 
 .option-chip:hover:not([disabled]) {
-	background: #f8fafc;
+	background: var(--bg-secondary);
 	border-color: #94a3b8;
 }
 
 .option-chip[aria-pressed='true'] {
 	border-color: var(--color-primary);
 	border-width: 3px;
-	background: #ffffff;
+	background: var(--bg-primary);
 	color: var(--text-primary);
 }
 
 .option-chip[aria-pressed='true']:hover:not([disabled]) {
-	background: #f8fafc;
+	background: var(--bg-secondary);
 	border-color: var(--color-primary);
 	color: var(--text-primary);
 }
@@ -1424,7 +1444,7 @@ a.btn--primary:active {
 .payment-methods__item {
 	border: 1px solid var(--border-light);
 	border-radius: var(--radius-md);
-	background: #fff;
+	background: var(--bg-primary);
 	padding: 0.4rem;
 	display: flex;
 	align-items: center;
@@ -1587,7 +1607,7 @@ a.btn--primary:active {
 	padding: var(--space-6);
 	border: 1px solid var(--border-light);
 	border-radius: var(--radius-xl);
-	background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+	background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 @media (min-width: 820px) {
@@ -1632,7 +1652,7 @@ a.btn--primary:active {
 .reviews-overview__bar {
 	height: 8px;
 	border-radius: 999px;
-	background: #e2e8f0;
+	background: var(--border-light);
 	overflow: hidden;
 }
 
@@ -1716,7 +1736,7 @@ a.btn--primary:active {
 }
 
 .review-item__content {
-	color: #0f172a;
+	color: var(--text-primary);
 	font-size: 1.06rem;
 	font-weight: 500;
 	line-height: 1.65;
