@@ -13,8 +13,8 @@ const CART_BUTTON_LOADING_TIMEOUT_MS = 4000
 const PAGE_NAVIGATION_DELAY_MS = 120
 const PAGE_OVERLAY_MAX_WAIT_MS = 2000
 const HOME_HEADER_TRANSPARENT_SCROLL_MAX = 160
-const MENU_CATEGORY_LIMIT = 6
 const FOOTER_INFO_PAGE_LIMIT = 6
+const NAV_CATEGORY_IDS = [238, 236, 237]
 const NEWSLETTER_SUCCESS_MESSAGE =
 	'¡Enviado el email de confirmación! Suscribite al confirmar tu correo.'
 const NEWSLETTER_INVALID_EMAIL_MESSAGE = 'Ingresá un email válido para suscribirte.'
@@ -165,7 +165,31 @@ const normalizeCategories = categories => {
 		.filter(category => Number.isFinite(Number(category?.id)) && String(category?.name || '').trim().length > 0)
 		.slice()
 		.sort((a, b) => Number(b.productCount || 0) - Number(a.productCount || 0))
-		.slice(0, MENU_CATEGORY_LIMIT)
+}
+
+const normalizeNavCategories = categories => {
+	const source = Array.isArray(categories) ? categories : categories?.data
+	if (!Array.isArray(source)) return []
+
+	return NAV_CATEGORY_IDS
+		.map(id => source.find(c => Number(c?.id) === id))
+		.filter(Boolean)
+}
+
+const normalizeSideMenuCategories = categories => {
+	const source = Array.isArray(categories) ? categories : categories?.data
+	if (!Array.isArray(source)) return []
+
+	const pinned = NAV_CATEGORY_IDS
+		.map(id => source.find(c => Number(c?.id) === id))
+		.filter(Boolean)
+
+	const rest = source
+		.filter(c => Number.isFinite(Number(c?.id)) && String(c?.name || '').trim().length > 0 && !NAV_CATEGORY_IDS.includes(Number(c?.id)))
+		.slice()
+		.sort((a, b) => Number(b.productCount || 0) - Number(a.productCount || 0))
+
+	return [...pinned, ...rest]
 }
 
 const normalizePages = pages => {
@@ -250,11 +274,13 @@ const initCategoryNavigation = async () => {
 			tiendu.categories.list(),
 			tiendu.pages.list()
 		])
-		const categories = normalizeCategories(categoriesResponse)
+		const navCategories = normalizeNavCategories(categoriesResponse)
+		const sideMenuCategories = normalizeSideMenuCategories(categoriesResponse)
+		const footerCategories = normalizeCategories(categoriesResponse)
 		const pages = normalizePages(pagesResponse)
-		renderHeaderCategoryLinks(categories)
-		renderSideMenuCategoryLinks(categories)
-		renderFooterFragranceLinks(categories)
+		renderHeaderCategoryLinks(navCategories)
+		renderSideMenuCategoryLinks(sideMenuCategories)
+		renderFooterFragranceLinks(footerCategories)
 		renderFooterInfoLinks(pages)
 	} catch {
 		renderHeaderCategoryLinks([])

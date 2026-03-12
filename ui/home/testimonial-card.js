@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import { refreshIcons } from '/shared/icons.js'
+import { escapeHtml } from '/shared/sanitize.js'
 
 const clampRating = value => {
 	const parsed = Number(value)
@@ -17,6 +18,7 @@ class HomeTestimonialCard extends HTMLElement {
 		const initial = (this.getAttribute('initial') || author.charAt(0) || 'C').slice(0, 1)
 		const imageSrc = this.getAttribute('image-src') || '/public/no-image.svg'
 		const imageAlt = this.getAttribute('image-alt') || 'Producto'
+		const isVerified = this.getAttribute('verified') !== 'false'
 
 		const stars = Array.from({ length: 5 })
 			.map((_, index) => {
@@ -29,16 +31,18 @@ class HomeTestimonialCard extends HTMLElement {
 		this.innerHTML = `
 			<div class="model-review-card__top">
 				<div class="model-review-card__stars" aria-label="${rating} estrellas de 5">${stars}</div>
-				<span class="model-review-card__thumb"><img src="${imageSrc}" alt="${imageAlt}" /></span>
+				<span class="model-review-card__thumb"><img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(imageAlt)}" /></span>
 			</div>
-			<h3>${title}</h3>
-			<p class="model-review-card__quote">${quote}</p>
+			<h3>${escapeHtml(title)}</h3>
+			<p class="model-review-card__quote">${escapeHtml(quote)}</p>
 			<div class="model-review-card__bottom">
-				<span class="model-review-card__avatar" aria-hidden="true">${initial}</span>
+				<span class="model-review-card__avatar" aria-hidden="true">${escapeHtml(initial)}</span>
 				<div class="model-review-card__meta">
-					<strong>${author}</strong>
+					<strong>${escapeHtml(author)}</strong>
 				</div>
-				<span class="model-review-card__verified"><i data-lucide="circle-check"></i>Verificado</span>
+				${isVerified
+					? '<span class="model-review-card__verified"><i data-lucide="circle-check"></i>Verificado</span>'
+					: ''}
 			</div>
 		`
 
