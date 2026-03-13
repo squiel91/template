@@ -116,6 +116,77 @@ const renderHeroCarousel = slides => {
 	carousel.setSlides(slides)
 }
 
+const HOME_MARQUEE_PIXELS_PER_SECOND = 42
+const HOME_MARQUEE_MIN_DURATION = 30
+
+const setupHomeMarquee = () => {
+	const marquee = document.querySelector('.home-marquee')
+	if (!(marquee instanceof HTMLElement)) return
+
+	const viewport = marquee.querySelector('.home-marquee__viewport')
+	const track = marquee.querySelector('.home-marquee__track')
+	const sourceList = marquee.querySelector('[data-home-marquee-source]')
+
+	if (!(viewport instanceof HTMLElement)) return
+	if (!(track instanceof HTMLElement)) return
+	if (!(sourceList instanceof HTMLElement)) return
+
+	const sync = () => {
+		for (const clone of track.querySelectorAll('.home-marquee__list[aria-hidden="true"]')) {
+			clone.remove()
+		}
+
+		sourceList.removeAttribute('aria-hidden')
+
+		const sourceWidth = Math.ceil(sourceList.getBoundingClientRect().width)
+		const viewportWidth = Math.ceil(viewport.getBoundingClientRect().width)
+		if (!sourceWidth || !viewportWidth) return
+
+		const totalCopies = Math.max(2, Math.ceil(viewportWidth / sourceWidth) + 2)
+		for (let index = 1; index < totalCopies; index += 1) {
+			const clone = sourceList.cloneNode(true)
+			clone.removeAttribute('data-home-marquee-source')
+			clone.setAttribute('aria-hidden', 'true')
+			track.appendChild(clone)
+		}
+
+		const duration = Math.max(
+			HOME_MARQUEE_MIN_DURATION,
+			Number((sourceWidth / HOME_MARQUEE_PIXELS_PER_SECOND).toFixed(2))
+		)
+
+		track.style.setProperty('--home-marquee-loop-distance', `${sourceWidth}px`)
+		track.style.setProperty('--home-marquee-duration', `${duration}s`)
+	}
+
+	const scheduleSync = () => {
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(sync)
+		})
+	}
+
+	scheduleSync()
+
+	if (marquee._resizeObserver && typeof marquee._resizeObserver.disconnect === 'function') {
+		marquee._resizeObserver.disconnect()
+	}
+
+	if (typeof ResizeObserver === 'function') {
+		const resizeObserver = new ResizeObserver(() => {
+			scheduleSync()
+		})
+		resizeObserver.observe(viewport)
+		resizeObserver.observe(sourceList)
+		marquee._resizeObserver = resizeObserver
+	}
+
+	if (document.fonts?.ready) {
+		void document.fonts.ready.then(() => {
+			scheduleSync()
+		})
+	}
+}
+
 const createCategoryProductSectionElement = sectionData => {
 	if (!sectionData?.category?.id) return null
 	const el = document.createElement('home-category-products-section')
@@ -275,6 +346,7 @@ const init = async () => {
 
 	renderHeroCarousel(heroSlides)
 	renderHomeSections({ categoryProductSections, categories, banners })
+	setupHomeMarquee()
 }
 
 if (document.readyState === 'loading') {
