@@ -1,0 +1,29 @@
+{% layout 'theme' %}
+{% block head %}
+{{ 'listing.css' | asset_url | stylesheet_tag }}
+{% endblock %}
+{% block content %}
+{% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', current_label: 'Categorías' %}
+
+<section class="listing-head" aria-labelledby="categories-page-title">
+	<div class="listing-meta">
+		<h1 id="categories-page-title" class="page-title">Categorías</h1>
+		<p>Explorá nuestro catálogo por categoría</p>
+	</div>
+</section>
+
+{% categories as: 'all_categories' %}
+{% if all_categories.size > 0 %}
+<div class="category-list">
+	{% for category in all_categories %}
+		{% render 'category-item', category: category %}
+	{% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+	{% render 'icon-layout-grid', size: 48 %}
+	<span class="empty-state__title">No hay categorías disponibles</span>
+</div>
+{% endif %}
+{% endcategories %}
+{% endblock %}

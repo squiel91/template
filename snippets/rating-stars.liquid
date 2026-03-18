@@ -1,0 +1,30 @@
+{% assign rs_value = stars.averageRating | default: stars.rating | default: 0 %}
+{% assign rs_max = 5 %}
+{% assign rs_fill = rs_value | times: 100.0 | divided_by: rs_max %}
+{% if rs_fill < 0 %}{% assign rs_fill = 0 %}{% endif %}
+{% if rs_fill > 100 %}{% assign rs_fill = 100 %}{% endif %}
+{% assign rs_label = label | default: rs_value | append: ' de ' | append: rs_max | append: ' estrellas' %}
+
+<span
+	class="rating-stars"
+	role="img"
+	aria-label="{{ rs_label | escape }}"
+	style="--rating-stars-fill: {{ rs_fill }}%;"
+>
+	<span class="rating-stars__layer rating-stars__layer--base" aria-hidden="true">
+		{% render 'icon-star', size: 16 %}
+		{% render 'icon-star', size: 16 %}
+		{% render 'icon-star', size: 16 %}
+		{% render 'icon-star', size: 16 %}
+		{% render 'icon-star', size: 16 %}
+	</span>
+	<span class="rating-stars__fill-wrap" aria-hidden="true">
+		<span class="rating-stars__layer rating-stars__layer--fill">
+			{% render 'icon-star', size: 16 %}
+			{% render 'icon-star', size: 16 %}
+			{% render 'icon-star', size: 16 %}
+			{% render 'icon-star', size: 16 %}
+			{% render 'icon-star', size: 16 %}
+		</span>
+	</span>
+</span>

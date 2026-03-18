@@ -1,0 +1,21 @@
+{% comment %}
+Renders a blog card matching storefront 2's blog-card markup.
+
+Required variables: post
+{% endcomment %}
+
+{% assign bc_title = post.title | default: "Artículo" %}
+{% assign bc_excerpt = post.excerpt | default: "Léelo completo en nuestro blog." %}
+{% assign bc_href = "/blog/" | append: post.id | append: "/" | append: bc_title | url_safe %}
+{% assign bc_cover = post.coverImage.url | default: '/assets/no-image.svg' %}
+
+<article class="blog-card">
+  <a class="blog-card__media" href="{{ bc_href }}" aria-label="Leer {{ bc_title | escape }}">
+    <img src="{{ bc_cover }}" alt="{{ bc_title | escape }}" loading="lazy" />
+  </a>
+  <div class="blog-card__body">
+    {% if post.createdAt %}<p class="blog-card__meta">{{ post.createdAt | date: "%e %b %Y" }}</p>{% endif %}
+    <h3><a href="{{ bc_href }}">{{ bc_title | escape }}</a></h3>
+    <p>{{ bc_excerpt | escape }}</p>
+  </div>
+</article>

@@ -1,0 +1,60 @@
+{% layout 'theme' %}
+{% block head %}
+{{ 'listing.css' | asset_url | stylesheet_tag }}
+{% endblock %}
+{% block content %}
+{% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', current_label: 'Blog' %}
+
+<section class="listing-head" aria-labelledby="blog-page-title">
+	<div class="listing-meta">
+		<h1 id="blog-page-title" class="page-title">Blog</h1>
+		<p>Ideas, novedades y recomendaciones para comprar mejor.</p>
+	</div>
+</section>
+
+{% blog_posts as: 'all_posts' %}
+{% if all_posts.size > 0 %}
+<div class="blog-list">
+	{% for post in all_posts %}
+		{% if forloop.first %}
+		{% comment %} Featured post {% endcomment %}
+		<article class="blog-list-item blog-list-item--featured">
+			<a class="blog-list-item__media" href="/blog/{{ post.id }}/{{ post.title | url_safe }}">
+				<img src="{{ post.coverImage.url | default: '/assets/no-image.svg' }}" alt="{{ post.title | escape }}" loading="lazy" />
+			</a>
+			<div class="blog-list-item__body">
+				<span class="blog-list-item__tag">Último artículo</span>
+				{% if post.createdAt %}<p class="blog-list-item__meta">{{ post.createdAt | date: "%e %b %Y" }}{% if post.manager %} - {{ post.manager.name | default: "Equipo de la tienda" }}{% endif %}</p>{% endif %}
+				<h2><a href="/blog/{{ post.id }}/{{ post.title | url_safe }}">{{ post.title | escape }}</a></h2>
+				{% if post.excerpt %}<p>{{ post.excerpt | escape }}</p>{% endif %}
+				<a class="section__action" href="/blog/{{ post.id }}/{{ post.title | url_safe }}">
+					Leer artículo <span class="section__action-icon">{% render 'icon-arrow-right', size: 14 %}</span>
+				</a>
+			</div>
+		</article>
+		{% else %}
+		{% comment %} Regular post {% endcomment %}
+		<article class="blog-list-item">
+			<a class="blog-list-item__media" href="/blog/{{ post.id }}/{{ post.title | url_safe }}">
+				<img src="{{ post.coverImage.url | default: '/assets/no-image.svg' }}" alt="{{ post.title | escape }}" loading="lazy" />
+			</a>
+			<div class="blog-list-item__body">
+				{% if post.createdAt %}<p class="blog-list-item__meta">{{ post.createdAt | date: "%e %b %Y" }}{% if post.manager %} - {{ post.manager.name | default: "Equipo de la tienda" }}{% endif %}</p>{% endif %}
+				<h2><a href="/blog/{{ post.id }}/{{ post.title | url_safe }}">{{ post.title | escape }}</a></h2>
+				{% if post.excerpt %}<p>{{ post.excerpt | escape }}</p>{% endif %}
+				<a class="section__action" href="/blog/{{ post.id }}/{{ post.title | url_safe }}">
+					Leer artículo <span class="section__action-icon">{% render 'icon-arrow-right', size: 14 %}</span>
+				</a>
+			</div>
+		</article>
+		{% endif %}
+	{% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+	{% render 'icon-newspaper', size: 48 %}
+	<span class="empty-state__title">Todavía no hay artículos en el blog.</span>
+</div>
+{% endif %}
+{% endblog_posts %}
+{% endblock %}

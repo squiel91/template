@@ -1,0 +1,36 @@
+{% layout 'theme' %}
+{% block content %}
+<article>
+	{% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', level_2_href: '/blog', level_2_label: 'Blog', current_label: blogPost.title | default: 'Artículo' %}
+
+	<div class="page-content">
+		{% if blogPost.content and blogPost.content.size > 0 %}
+			{% for block in blogPost.content %}
+				{% case block.type %}
+					{% when 'heading' %}
+						{% if block.level == 1 %}
+						<h1>{{ block.text }}</h1>
+						{% elsif block.level == 2 %}
+						<h2>{{ block.text }}</h2>
+						{% else %}
+						<h3>{{ block.text }}</h3>
+						{% endif %}
+					{% when 'paragraph' %}
+						<p>{{ block.text }}</p>
+					{% when 'image' %}
+						<figure class="{% if block.align %}align-{{ block.align }}{% else %}align-center{% endif %} {% if block.size %}size-{{ block.size }}{% else %}size-large{% endif %}">
+							<img src="{{ block.image.url }}" alt="{{ block.image.alt | default: blogPost.title }}" loading="lazy" />
+						</figure>
+					{% when 'html' %}
+						{{ block.code }}
+				{% endcase %}
+			{% endfor %}
+		{% else %}
+			<div class="empty-state">
+				{% render 'icon-file-warning', size: 48 %}
+				<span class="empty-state__title">Este artículo todavía no tiene contenido.</span>
+			</div>
+		{% endif %}
+	</div>
+</article>
+{% endblock %}

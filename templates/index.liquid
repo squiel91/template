@@ -1,0 +1,93 @@
+{% layout 'theme' %}
+{% block content %}
+<header class="hero hero__content" aria-labelledby="store-home-title">
+	<h1 id="store-home-title" class="hero__title">Descubrí productos increíbles</h1>
+	<p class="hero__subtitle">Explorá nuestra selección curada con los mejores productos, envíos a todo el país y la mejor atención.</p>
+	<div class="hero__actions">
+		<a class="btn btn--primary" href="/productos">
+			<span>Explorar productos</span>
+			{% render 'icon-arrow-right', size: 18 %}
+		</a>
+		<a class="btn btn--secondary" href="/categorias">
+			{% render 'icon-layout-grid', size: 18 %}
+			<span>Explorar categorías</span>
+		</a>
+	</div>
+	<div class="benefits-strip">
+		<div class="hero-benefit">
+			{% render 'icon-truck', size: 20 %}
+			<span>Envíos a todo el país</span>
+		</div>
+		<div class="hero-benefit">
+			{% render 'icon-shield-check', size: 20 %}
+			<span>Compra segura</span>
+		</div>
+		<div class="hero-benefit">
+			{% render 'icon-refresh-cw', size: 20 %}
+			<span>Cambios sencillos</span>
+		</div>
+	</div>
+</header>
+
+<div class="home-sections">
+
+	{% products limit: 8, sort: 'sales', order: 'desc' %}
+	{% if products.size > 0 %}
+	<section class="section" aria-labelledby="home-featured-title">
+		<div class="section__header">
+			<h2 id="home-featured-title" class="section__title section__title--large">Los más pedidos</h2>
+			<a class="section__action" href="/productos">
+				Ver todos <span class="section__action-icon">{% render 'icon-arrow-right', size: 14 %}</span>
+			</a>
+		</div>
+		<div class="product-list">
+			{% for product in products %}
+				{% render 'product-item', product: product %}
+			{% endfor %}
+		</div>
+	</section>
+	{% endif %}
+	{% endproducts %}
+
+	{% categories as: 'home_categories' %}
+	{% if home_categories.size > 0 %}
+	<section class="section" aria-labelledby="home-categories-title">
+		<div class="section__header">
+			<h2 id="home-categories-title" class="section__title section__title--large">Categorías</h2>
+			<a class="section__action" href="/categorias">
+				Ver todas <span class="section__action-icon">{% render 'icon-arrow-right', size: 14 %}</span>
+			</a>
+		</div>
+		<div class="category-list">
+			{% for category in home_categories %}
+				{% render 'category-item', category: category %}
+			{% endfor %}
+		</div>
+	</section>
+	{% endif %}
+	{% endcategories %}
+
+	{% blog_posts limit: 4 as: 'latest_posts' %}
+	{% if latest_posts.size > 0 %}
+	<section class="section" aria-labelledby="home-blog-title">
+		<div class="section__header">
+			<h2 id="home-blog-title" class="section__title section__title--large">Desde el blog</h2>
+			<a class="section__action" href="/blog">
+				Ver todos <span class="section__action-icon">{% render 'icon-arrow-right', size: 14 %}</span>
+			</a>
+		</div>
+		<div class="blog-grid">
+			{% for post in latest_posts %}
+				{% render 'blog-card', post: post %}
+			{% endfor %}
+		</div>
+	</section>
+	{% endif %}
+	{% endblog_posts %}
+
+</div>
+
+<script type="module">
+import '/assets/listing-quick-add.js'
+</script>
+{% endblock %}

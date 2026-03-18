@@ -1,0 +1,123 @@
+{% comment %}
+Renders a server-side product card so listings stay visible without JavaScript.
+
+Required variables: product
+{% endcomment %}
+
+{% assign p_variants = product.variants | default: empty %}
+{% assign p_valid_variants_count = 0 %}
+{% assign p_min_price = nil %}
+{% assign p_max_price = nil %}
+{% assign p_compare_ok = true %}
+{% assign p_compare_count = 0 %}
+{% assign p_min_compare = nil %}
+{% assign p_all_out_of_stock = true %}
+{% assign p_single_variant_id = nil %}
+
+{% for v in p_variants %}
+  {% if v.priceInCents != blank %}
+    {% assign p_valid_variants_count = p_valid_variants_count | plus: 1 %}
+    {% if p_min_price == nil or v.priceInCents < p_min_price %}{% assign p_min_price = v.priceInCents %}{% endif %}
+    {% if p_max_price == nil or v.priceInCents > p_max_price %}{% assign p_max_price = v.priceInCents %}{% endif %}
+    {% if v.compareAtPriceInCents != blank and v.compareAtPriceInCents > v.priceInCents %}
+      {% assign p_compare_count = p_compare_count | plus: 1 %}
+      {% if p_min_compare == nil or v.compareAtPriceInCents < p_min_compare %}{% assign p_min_compare = v.compareAtPriceInCents %}{% endif %}
+    {% else %}
+      {% assign p_compare_ok = false %}
+    {% endif %}
+    {% if v.stock == nil or v.stock > 0 %}{% assign p_all_out_of_stock = false %}{% endif %}
+  {% endif %}
+{% endfor %}
+
+{% if p_valid_variants_count == 0 and product.stock != nil and product.stock == 0 %}
+  {% assign p_all_out_of_stock = true %}
+{% elsif p_valid_variants_count == 0 %}
+  {% assign p_all_out_of_stock = false %}
+{% endif %}
+
+{% if p_valid_variants_count == 0 and product.basePriceInCents != blank %}
+  {% assign p_min_price = product.basePriceInCents %}
+{% endif %}
+
+{% comment %} Compare label {% endcomment %}
+{% assign p_compare_label = "" %}
+{% if p_compare_ok and p_compare_count == p_valid_variants_count and p_min_compare != nil %}
+  {% assign p_compare_label = p_min_compare | money %}
+{% elsif product.baseCompareAtPriceInCents != blank and product.basePriceInCents != blank and product.baseCompareAtPriceInCents > product.basePriceInCents %}
+  {% assign p_compare_label = product.baseCompareAtPriceInCents | money %}
+{% endif %}
+
+{% comment %} Quick-add logic {% endcomment %}
+{% if p_valid_variants_count == 1 and p_all_out_of_stock == false %}
+  {% for v in p_variants %}
+    {% if v.priceInCents != blank %}
+      {% assign p_single_variant_id = v.id %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% assign p_url = product.publicUrl %}
+{% if p_url contains request.host %}
+  {% assign p_url = p_url | split: request.host | last %}
+{% endif %}
+{% if origin_url != blank and origin_title != blank %}
+  {% assign encoded_origin_url = origin_url | url_encode %}
+  {% assign encoded_origin_title = origin_title | url_encode %}
+  {% assign p_url = p_url | append: '?url-origen=' | append: encoded_origin_url | append: '&titulo-origen=' | append: encoded_origin_title %}
+{% endif %}
+{% assign p_image_url = 'no-image.svg' | asset_url %}
+{% assign p_image_alt = 'Sin imagen' %}
+{% if product.coverImage %}
+  {% assign p_image_url = product.coverImage.url %}
+  {% assign p_image_alt = product.coverImage.alt | default: product.title %}
+{% endif %}
+
+<article class="product-card" data-product-card>
+  <div class="product-card__media-wrap">
+    <a href="{{ p_url }}" class="product-card__media-link" aria-label="Ver {{ product.title | escape }}">
+      <div class="product-card__media">
+        <img src="{{ p_image_url }}" alt="{{ p_image_alt | escape }}" loading="lazy" />
+        {% if p_all_out_of_stock %}
+          <span class="product-card__soldout">Agotado</span>
+        {% endif %}
+      </div>
+    </a>
+    {% if p_single_variant_id and p_all_out_of_stock == false %}
+      <button
+        type="button"
+        class="product-card__quick-action"
+        data-product-card-add
+        data-variant-id="{{ p_single_variant_id }}"
+        aria-label="Agregar {{ product.title | escape }} al carrito"
+      >
+        {% render 'icon-shopping-cart', size: 16 %}
+      </button>
+    {% endif %}
+  </div>
+
+  <div class="product-card__meta">
+    <h3 class="product-card__title">
+      <a href="{{ p_url }}">{{ product.title | escape }}</a>
+    </h3>
+
+    <p class="product-card__rating-line">
+      {% render 'rating-stars', stars: product %}
+      <span>{{ product.averageRating | default: 0 | round: 1 }} ({{ product.reviewsQuantity | default: 0 }})</span>
+    </p>
+
+    {% if p_min_price != nil %}
+      <div class="product-card__price-line">
+        <span class="product-card__price">
+          {% if p_min_price != p_max_price and p_valid_variants_count > 0 %}
+            Desde {{ p_min_price | money }}
+          {% else %}
+            {{ p_min_price | money }}
+          {% endif %}
+        </span>
+        {% if p_compare_label != "" %}
+          <span class="product-card__compare">{{ p_compare_label }}</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</article>

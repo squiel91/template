@@ -5,7 +5,7 @@ import {
 	trackPurchaseEvent,
 	trackSearchEvent,
 	trackViewContentEvent
-} from '/shared/tracking.js'
+} from '/assets/tracking.js'
 
 const SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY = 'shopper_session_token'
 const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
@@ -64,6 +64,33 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	*/
 
 /**
+	* @typedef {Object} ProductReview
+	* @property {number} id
+	* @property {string} authorName
+	* @property {number} rating
+	* @property {boolean} isVerifiedPurchase
+	* @property {string} content
+	* @property {Array<PublicImage>} images
+	*/
+
+/**
+	* @typedef {Object} StoreReview
+	* @property {number} id
+	* @property {number} productId
+	* @property {string} authorName
+	* @property {number} rating
+	* @property {boolean} isVerifiedPurchase
+	* @property {string} content
+	* @property {Array<PublicImage>} images
+	* @property {string} updatedAt
+	* @property {string} createdAt
+	*/
+
+/**
+	* @typedef {StoreReview & { product: ProductListing | null }} HydratedStoreReview
+	*/
+
+/**
 	* @typedef {Object} ProductListing
 	* @property {number} id
 	* @property {string} title
@@ -91,7 +118,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {Array<{ name: string; value: string }> | null} specifications
 	* @property {string | null} videoUrl
 	* @property {boolean} isPhysical
-	* @property {Array<unknown>} reviews
+	* @property {Array<ProductReview>} reviews
 	* @property {number} reviewsQuantity
 	* @property {number | null} averageRating
 	* @property {Array<ProductAttribute>} attributes
@@ -194,10 +221,18 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 
 /**
 	* @typedef {Object} PaginatedProductsResponse
-	* @property {{ includeProductsFromSubcategories: boolean }} filters
+	* @property {{ search?: string; categoryId?: number; includeProductsFromSubcategories?: boolean; ids?: number[] }} filters
 	* @property {Array<ProductListing>} data
 	* @property {{ total: number; page: number; size: number }} pagination
 	* @property {{ criteria?: 'name' | 'created' | 'updated' | 'sales' | 'price'; order?: 'asc' | 'desc' }} sort
+	*/
+
+/**
+	* @typedef {Object} PaginatedReviewsResponse
+	* @property {{ productId?: number }} filters
+	* @property {Array<HydratedStoreReview>} data
+	* @property {{ total: number; page: number; size: number }} pagination
+	* @property {{ criteria?: 'rating' | 'createdAt' | 'updatedAt'; order?: 'asc' | 'desc' }} sort
 	*/
 
 let activeCartOverlayCleanup = null
@@ -208,6 +243,13 @@ const up = baseFetch => {
 		const resolved = new URL(url, window.location.origin)
 		Object.entries(queryParams).forEach(([key, value]) => {
 			if (value === undefined || value === null) return
+			if (Array.isArray(value)) {
+				for (const item of value) {
+					if (item === undefined || item === null) continue
+					resolved.searchParams.append(key, String(item))
+				}
+				return
+			}
 			resolved.searchParams.set(key, String(value))
 		})
 		return resolved.toString()
@@ -266,6 +308,7 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			/**
 			 * @param {{
 			 *   search?: string | null
+			 *   ids?: number[]
 			 *   isFeatured?: boolean
 			 *   page?: number
 			 *   size?: number
@@ -285,6 +328,9 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				const response = await upFetch.get(`${baseApiUrl}/products`, {
 					queryParams: {
 						...(options.search ? { q: options.search } : {}),
+						...(Array.isArray(options.ids) && options.ids.length > 0
+							? { id: options.ids }
+							: {}),
 						...(options.isFeatured ? { isFeatured: 'true' } : {}),
 						...(options.categoryId
 							? { categoryId: options.categoryId.toString() }
@@ -311,6 +357,73 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 					`${baseApiUrl}/products/${productId}/related`
 				)
 				return response?.data ?? response
+			}
+		},
+		reviews: {
+			/**
+			 * @param {{
+			 *   productId?: number
+			 *   page?: number
+			 *   size?: number
+			 *   criteria?: 'rating' | 'createdAt' | 'updatedAt'
+			 *   order?: 'asc' | 'desc'
+			 * }=} options
+			 * @returns {Promise<PaginatedReviewsResponse>}
+			 */
+			list: async (options = {}) => {
+				const validCriteria = ['rating', 'createdAt', 'updatedAt']
+				const validOrder = ['asc', 'desc']
+				const criteria = validCriteria.includes(options.criteria)
+					? options.criteria
+					: null
+				const order = validOrder.includes(options.order) ? options.order : null
+
+				const response = await upFetch.get(`${baseApiUrl}/reviews`, {
+					queryParams: {
+						...(options.productId
+							? { productId: options.productId.toString() }
+							: {}),
+						...(criteria ? { criteria } : {}),
+						...(order ? { order } : {}),
+						...(options.page ? { page: options.page.toString() } : { page: '1' }),
+						...(options.size ? { size: options.size.toString() } : { size: '100' })
+					}
+				})
+
+				const productIds = [
+					...new Set(
+						(response?.data ?? [])
+							.map(review => review?.productId)
+							.filter(productId => Number.isInteger(productId) && productId > 0)
+					)
+				]
+
+				if (productIds.length === 0) {
+					return {
+						...response,
+						data: (response?.data ?? []).map(review => ({
+							...review,
+							product: null
+						}))
+					}
+				}
+
+				const productsResponse = await methods.products.list({
+					ids: productIds,
+					page: 1,
+					size: productIds.length
+				})
+				const productsById = new Map(
+					(productsResponse?.data ?? []).map(product => [product.id, product])
+				)
+
+				return {
+					...response,
+					data: (response?.data ?? []).map(review => ({
+						...review,
+						product: productsById.get(review.productId) ?? null
+					}))
+				}
 			}
 		},
 		categories: {

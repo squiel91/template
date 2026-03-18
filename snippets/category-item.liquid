@@ -1,0 +1,24 @@
+{% comment %}
+Renders a server-side category card so listings stay visible without JavaScript.
+
+Required variables: category
+{% endcomment %}
+
+{% assign c_url = category.publicUrl %}
+{% assign c_image_url = 'no-image.svg' | asset_url %}
+{% assign c_image_alt = 'Sin imagen' %}
+{% if category.coverImage %}
+  {% assign c_image_url = category.coverImage.url %}
+  {% assign c_image_alt = category.coverImage.alt | default: category.name %}
+{% endif %}
+
+<article class="category-card">
+  <a class="category-card__link" href="{{ c_url }}">
+    <img class="category-card__image" src="{{ c_image_url }}" alt="{{ c_image_alt | escape }}" loading="lazy" />
+    <div class="category-card__overlay"></div>
+    <div class="category-card__content">
+      <p class="category-card__name">{{ category.name | default: 'Categoría' | escape }}</p>
+      <p class="category-card__count">{{ category.productCount | default: 0 }} {% if category.productCount == 1 %}producto{% else %}productos{% endif %}</p>
+    </div>
+  </a>
+</article>

@@ -1,0 +1,273 @@
+{% layout 'theme' %}
+{% block head %}
+{{ 'gallery.css' | asset_url | stylesheet_tag }}
+{{ 'product-page.css' | asset_url | stylesheet_tag }}
+{% endblock %}
+{% block content %}
+{% assign breadcrumb_origin_url = blank %}
+{% assign breadcrumb_origin_title = blank %}
+{% if request.url contains 'url-origen=' %}
+	{% assign breadcrumb_origin_url = request.url | split: 'url-origen=' | last | split: '&' | first | url_decode %}
+{% endif %}
+{% if request.url contains 'titulo-origen=' %}
+	{% assign breadcrumb_origin_title = request.url | split: 'titulo-origen=' | last | split: '&' | first | url_decode %}
+{% endif %}
+{% if breadcrumb_origin_url != blank and breadcrumb_origin_title != blank %}
+	{% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', level_2_href: breadcrumb_origin_url, level_2_label: breadcrumb_origin_title, current_label: product.title %}
+{% else %}
+	{% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', current_label: product.title %}
+{% endif %}
+
+<article id="product" aria-live="polite">
+	<div class="product-detail">
+		{% render 'product-gallery', gallery_images: product_page.gallery_images, product_title: product.title %}
+		<div class="product-info">
+			<h1 class="product-info__title">{{ product.title | escape }}</h1>
+
+			{% if product.unitsSold > 0 %}
+			<p class="product-units-sold">{% render 'icon-trending-up', size: 14 %}<span>
+				{% if product.unitsSold < 5 %}3 vendidos
+				{% elsif product.unitsSold < 10 %}Más de 5 vendidos
+				{% elsif product.unitsSold < 20 %}Más de 10 vendidos
+				{% elsif product.unitsSold < 30 %}Más de 20 vendidos
+				{% else %}Más de 30 vendidos
+				{% endif %}
+			</span></p>
+			{% endif %}
+
+			<button type="button" id="go-to-reviews-button" class="product-rating-summary" aria-label="Ver reseñas">
+				{% render 'rating-stars', stars: product %}
+				<span>{{ product.averageRating | default: 0 | round: 1 }} ({{ product.reviewsQuantity | default: 0 }} {% if product.reviewsQuantity == 1 %}reseña{% else %}reseñas{% endif %})</span>
+			</button>
+
+			<div class="product-price-line"{% if product_page.price.price_in_cents == blank %} hidden{% endif %}>
+				<span class="product-price" id="product-price">{% if product_page.price.price_is_from %}Desde {% endif %}{{ product_page.price.price_in_cents | money }}</span>
+				<span class="product-compare" id="product-compare"{% if product_page.price.compare_at_price_in_cents == blank %} hidden{% endif %}>{% if product_page.price.compare_is_from %}Desde {% endif %}{{ product_page.price.compare_at_price_in_cents | money }}</span>
+			</div>
+
+			<div id="variant-selector" class="variant-selector">
+				{% for attribute in product.attributes %}
+				{% assign selected_value_id = blank %}
+				{% assign selected_value_label = 'Selecciona una opción' %}
+				{% assign selected_value_color = blank %}
+				{% assign selected_value_image_url = blank %}
+				{% assign has_selected_value = false %}
+				{% assign attribute_id_str = attribute.id | append: '' %}
+				{% for selected_attribute in product_page.default_attribute_values %}
+					{% assign selected_attribute_id_str = selected_attribute.attribute_id | append: '' %}
+					{% if selected_attribute_id_str == attribute_id_str %}
+						{% assign selected_value_id = selected_attribute.value_id %}
+						{% assign has_selected_value = true %}
+					{% endif %}
+				{% endfor %}
+				{% if attribute.displayType == 'dropdown' %}
+				{% for value in attribute.values %}
+					{% assign selected_value_id_str = selected_value_id | append: '' %}
+					{% assign value_id_str = value.id | append: '' %}
+					{% if has_selected_value and selected_value_id_str == value_id_str %}
+						{% assign selected_value_label = value.value %}
+						{% assign selected_value_color = value.color %}
+						{% if value.image != blank and value.image.url != blank %}
+							{% assign selected_value_image_url = value.image.url %}
+						{% endif %}
+					{% endif %}
+				{% endfor %}
+				<fieldset class="variant-group variant-group--dropdown">
+					<legend>{{ attribute.name | escape }}</legend>
+					<div class="variant-select" data-attribute-id="{{ attribute.id }}">
+						<button class="variant-select__trigger" type="button" data-variant-select-trigger aria-haspopup="listbox" aria-expanded="false" aria-label="{{ attribute.name | escape_attr }}">
+							<span class="variant-select__trigger-swatch{% if has_selected_value == false or selected_value_image_url == blank and selected_value_color == blank %} variant-select__trigger-swatch--hidden{% endif %}" data-variant-select-trigger-swatch aria-hidden="true">
+								{% if has_selected_value and selected_value_image_url != blank %}
+								<span class="variant-select__swatch variant-select__swatch--image"><img src="{{ selected_value_image_url | escape_attr }}" alt="" loading="lazy" /></span>
+								{% elsif has_selected_value and selected_value_color != blank %}
+								<span class="variant-select__swatch variant-select__swatch--color" style="background: {{ selected_value_color | escape_attr }};"></span>
+								{% endif %}
+							</span>
+							<span class="variant-select__label{% if has_selected_value == false %} variant-select__label--placeholder{% endif %}" data-variant-select-label>{{ selected_value_label | escape }}</span>
+							<svg class="variant-select__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+						</button>
+						<div class="variant-select__menu" data-variant-select-menu role="listbox" hidden>
+						{% for value in attribute.values %}
+						<button class="variant-select__option" type="button" data-value-id="{{ value.id }}" data-label="{{ value.value | escape_attr }}"{% if value.color != blank %} data-color="{{ value.color | escape_attr }}"{% endif %}{% if value.image != blank and value.image.url != blank %} data-image-url="{{ value.image.url | escape_attr }}"{% endif %} aria-selected="{% if selected_value_id == value.id %}true{% else %}false{% endif %}">
+							{% if value.image != blank and value.image.url != blank %}
+							<span class="variant-select__swatch variant-select__swatch--image" aria-hidden="true"><img src="{{ value.image.url | escape_attr }}" alt="" loading="lazy" /></span>
+							{% elsif value.color != blank %}
+							<span class="variant-select__swatch variant-select__swatch--color" style="background: {{ value.color | escape_attr }};" aria-hidden="true"></span>
+							{% endif %}
+							<span class="variant-select__option-label">{{ value.value | escape }}</span>
+						</button>
+						{% endfor %}
+						</div>
+					</div>
+				</fieldset>
+				{% else %}
+				<fieldset class="variant-group">
+					<legend>{{ attribute.name | escape }}</legend>
+					{% for value in attribute.values %}
+					<button type="button" class="option-chip{% if value.image == blank and value.color == blank %} option-chip--no-swatch{% endif %}" data-attribute-id="{{ attribute.id }}" data-value-id="{{ value.id }}" aria-pressed="{% if selected_value_id == value.id %}true{% else %}false{% endif %}">
+						{% if value.image != blank and value.image.url != blank %}
+						<span class="option-chip__swatch option-chip__swatch--image" aria-hidden="true"><img src="{{ value.image.url | escape_attr }}" alt="" loading="lazy" /></span>
+						{% elsif value.color != blank %}
+						<span class="option-chip__swatch option-chip__swatch--color" style="background: {{ value.color | escape_attr }};" aria-hidden="true"></span>
+						{% endif %}
+						<span class="option-chip__label">{{ value.value | escape }}</span>
+					</button>
+					{% endfor %}
+				</fieldset>
+				{% endif %}
+				{% endfor %}
+			</div>
+			<p id="stock-note" class="product-stock-note product-stock-note--{{ product_page.stock_note.tone }}" data-tone="{{ product_page.stock_note.tone }}">
+				<span class="product-stock-note__dot-wrap" aria-hidden="true"><span class="product-stock-note__pulse"></span><span class="product-stock-note__dot"></span></span>
+				<span class="product-stock-note__message">{{ product_page.stock_note.message }}</span>
+			</p>
+
+			<div class="product-actions">
+				<div class="product-actions__primary">
+					<div id="product-quantity-input" class="quantity-input"{% if product_page.quantity_hidden %} hidden{% endif %}>
+						<button type="button" class="quantity-input__button" data-quantity-decrease aria-label="Disminuir cantidad">-</button>
+						<input class="quantity-input__field" type="number" inputmode="numeric" min="1" value="1" {% if product_page.quantity_max != blank %}max="{{ product_page.quantity_max }}"{% endif %} {% if product_page.quantity_disabled %}disabled{% endif %} aria-label="Cantidad" />
+						<button type="button" class="quantity-input__button" data-quantity-increase aria-label="Aumentar cantidad">+</button>
+					</div>
+					<button type="button" id="add-to-cart-button" class="button button--primary product-action-button" data-icon="{{ product_page.add_to_cart.icon }}" data-loading-icon="loader-2" data-loading-label="Agregando" aria-label="{{ product_page.add_to_cart.label | escape_attr }}" {% if product_page.add_to_cart.disabled %}disabled{% endif %}>
+						<span class="button__icon" aria-hidden="true">
+							<span data-button-icon="plus"{% if product_page.add_to_cart.icon != 'plus' %} hidden{% endif %}>{% render 'icon-plus', size: 18 %}</span>
+							<span data-button-icon="message-square"{% if product_page.add_to_cart.icon != 'message-square' %} hidden{% endif %}>{% render 'icon-message-square', size: 18 %}</span>
+							<span data-button-icon="loader-2" hidden>{% render 'icon-loader-2', size: 18 %}</span>
+						</span>
+						<span class="button__label">{{ product_page.add_to_cart.label }}</span>
+					</button>
+				</div>
+				<ul class="purchase-notes" aria-label="Beneficios de compra">
+					<li class="purchase-notes__item">{% render 'icon-truck', size: 16 %}<span>Envío a todo el país</span></li>
+					<li class="purchase-notes__item">{% render 'icon-rotate-ccw', size: 16 %}<span>Devolución simplificada</span></li>
+					<li class="purchase-notes__item">{% render 'icon-credit-card', size: 16 %}<span>Pagá hasta en 12 cuotas sin recargo</span></li>
+				</ul>
+				<button type="button" id="share-product-button" class="button button--secondary" aria-label="Compartir producto">
+					<span class="button__icon" aria-hidden="true">{% render 'icon-forward', size: 18 %}</span>
+					<span class="button__label">Compartir</span>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	{% if product.description != blank or product.specifications.size > 0 %}
+	<section id="description-section" class="description-section section" aria-labelledby="description-title">
+		<div class="section__header">
+			<h2 id="description-title" class="section__title section__title--large">Sobre el producto</h2>
+		</div>
+		{% if product.description != blank %}
+		{% assign desc_text = product.description | strip %}
+		<div id="product-description-wrap" class="product-description-wrap{% if desc_text.size > 260 %} product-description-wrap--collapsible is-collapsed{% endif %}">
+			<p id="product-description-text" class="product-description">{{ desc_text }}</p>
+			{% if desc_text.size > 260 %}
+			<div id="product-description-fade" class="product-description-fade" aria-hidden="true"></div>
+			{% endif %}
+		</div>
+		{% if desc_text.size > 260 %}
+		<button type="button" id="description-toggle" class="description-toggle">
+			<span id="description-toggle-label">Ver más</span>
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="m6 9 6 6 6-6"/></svg>
+		</button>
+		{% endif %}
+		{% endif %}
+
+		{% assign visible_specs = product.specifications | where: 'name', '' %}
+		{% comment %} We show all specs that don't start with _ {% endcomment %}
+		{% if product.specifications.size > 0 %}
+		<dl class="product-specs" id="product-specs">
+			{% for spec in product.specifications %}
+			{% unless spec.name contains '_' %}
+			<div>
+				<dt>{{ spec.name | escape }}</dt>
+				<dd>{{ spec.value | escape }}</dd>
+			</div>
+			{% endunless %}
+			{% endfor %}
+		</dl>
+		{% endif %}
+	</section>
+	{% endif %}
+
+	<section id="reviews-section" class="reviews-section" aria-labelledby="reviews-title">
+		<div class="section__header reviews-section__header reviews-section__header-layout">
+			<h2 id="reviews-title" class="section__title section__title--large">Reseñas</h2>
+			<span class="reviews-section__verified">{% render 'icon-shield-check', size: 14 %}Verificadas por Tiendu</span>
+		</div>
+
+		<div class="reviews-overview">
+			<div class="reviews-overview__score">
+				<strong>{{ product.averageRating | default: 0 | round: 1 }}</strong>
+				{% render 'rating-stars', stars: product %}
+				<span>{{ product.reviewsQuantity | default: 0 }} {% if product.reviewsQuantity == 1 %}reseña{% else %}reseñas{% endif %}</span>
+			</div>
+			<div class="reviews-overview__distribution">
+				{% for score in (1..5) reversed %}
+				{% assign review_count = 0 %}
+				{% for review in product_page.reviews %}
+					{% if review.rating == score %}{% assign review_count = review_count | plus: 1 %}{% endif %}
+				{% endfor %}
+				{% assign review_percent = 0 %}
+				{% if product_page.reviews.size > 0 %}
+					{% assign review_percent = review_count | times: 100.0 | divided_by: product_page.reviews.size %}
+				{% endif %}
+				<div class="reviews-overview__row">
+					<span>{{ score }} {% if score == 1 %}estrella{% else %}estrellas{% endif %}</span>
+					<div class="reviews-overview__bar"><div style="width:{{ review_percent }}%;"></div></div>
+					<strong>{{ review_count }}</strong>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+
+		<div class="reviews-list" id="reviews-list" data-expanded="false">
+			{% if product_page.reviews.size > 0 %}
+			{% for review in product_page.reviews %}
+			<article class="review-item{% if forloop.index > 3 and product_page.reviews.size > 3 %} review-item--extra{% endif %}">
+				<header class="review-item__header">
+					<div class="review-item__author">
+						<div class="review-item__name-line">
+							<h3>{{ review.authorName | default: "Cliente" | escape }}</h3>
+							{% if review.isVerifiedPurchase %}
+							<span class="review-item__verified">{% render 'icon-badge-check', size: 12 %}Compra verificada</span>
+							{% endif %}
+						</div>
+						<p>{{ review.relativeTime | escape }}</p>
+					</div>
+					<div class="review-item__meta">
+						{% render 'rating-stars', stars: review %}
+					</div>
+				</header>
+				<p class="review-item__content">{{ review.content | escape }}</p>
+			</article>
+			{% endfor %}
+			{% else %}
+			<div class="empty-state">{% render 'icon-messages-square', size: 48 %}<span class="empty-state__title">Este producto aún no tiene reseñas.</span></div>
+			{% endif %}
+		</div>
+		{% if product_page.reviews.size > 3 %}
+		<button type="button" id="reviews-toggle" class="reviews-toggle" aria-expanded="false">
+			<span id="reviews-toggle-label">Ver más reseñas</span>
+			{% render 'icon-chevron-down', size: 16 %}
+		</button>
+		{% endif %}
+	</section>
+
+	{% if product_page.related_products.size > 0 %}
+	<section id="related-products-section" class="related-products section" aria-labelledby="related-products-title">
+		<div class="section__header">
+			<h2 id="related-products-title" class="section__title section__title--large">También te puede interesar</h2>
+		</div>
+		<div id="related-products-list" class="product-list" aria-live="polite">
+			{% for related_product in product_page.related_products %}
+			{% render 'product-item', product: related_product %}
+			{% endfor %}
+		</div>
+	</section>
+	{% endif %}
+
+</article>
+
+<script id="product-json" type="application/json">{{ product | json }}</script>
+{{ 'product-page.js' | asset_url | script_tag }}
+{% endblock %}

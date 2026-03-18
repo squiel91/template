@@ -1,0 +1,23 @@
+{% assign fragment_origin_url = blank %}
+{% assign fragment_origin_title = blank %}
+{% if request.url contains 'originUrl=' %}
+  {% assign fragment_origin_url = request.url | split: 'originUrl=' | last | split: '&' | first | url_decode %}
+{% endif %}
+{% if request.url contains 'originTitle=' %}
+  {% assign fragment_origin_title = request.url | split: 'originTitle=' | last | split: '&' | first | url_decode %}
+{% endif %}
+
+{% products limit: products_page_size, page: current_page, sort: criteria, order: order, search: search_query, category_id: category_id, include_products_from_subcategories: include_products_from_subcategories, as: 'frag_products' %}
+<div
+  data-products-fragment
+  data-current-page="{{ paginate.current_page }}"
+  data-page-size="{{ paginate.page_size }}"
+  data-total-items="{{ paginate.items }}"
+  data-has-more="{% if paginate.next %}true{% else %}false{% endif %}"
+  {% if paginate.next %}data-next-page="{{ paginate.next.page }}"{% endif %}
+>
+  {% for product in frag_products %}
+    {% render 'product-item', product: product, origin_url: fragment_origin_url, origin_title: fragment_origin_title %}
+  {% endfor %}
+</div>
+{% endproducts %}

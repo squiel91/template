@@ -1,0 +1,325 @@
+{% assign full_request_url = request.url | append: '' %}
+{% assign canonical_url = store.url | append: request.path %}
+{% assign seo_title = store.name %}
+{% assign seo_description = store.description | default: store.name %}
+{% assign seo_type = 'website' %}
+{% assign seo_robots = 'index,follow' %}
+{% assign seo_image_url = '' %}
+{% assign seo_image_width = '' %}
+{% assign seo_image_height = '' %}
+{% assign seo_image_alt = '' %}
+{% assign seo_image_is_placeholder = false %}
+{% assign search_query = '' %}
+{% assign breadcrumb_origin_url = '' %}
+{% assign breadcrumb_origin_title = '' %}
+{% assign page_text_excerpt = '' %}
+{% assign blog_post_text_excerpt = '' %}
+
+{% if full_request_url contains '?q=' %}
+	{% assign search_query = full_request_url | split: '?q=' | last | split: '&' | first | url_decode %}
+{% elsif full_request_url contains '&q=' %}
+	{% assign search_query = full_request_url | split: '&q=' | last | split: '&' | first | url_decode %}
+{% endif %}
+
+{% if full_request_url contains 'url-origen=' %}
+	{% assign breadcrumb_origin_url = full_request_url | split: 'url-origen=' | last | split: '&' | first | url_decode %}
+{% endif %}
+{% if full_request_url contains 'titulo-origen=' %}
+	{% assign breadcrumb_origin_title = full_request_url | split: 'titulo-origen=' | last | split: '&' | first | url_decode %}
+{% endif %}
+
+{% if page and page.content != blank %}
+	{% for block in page.content %}
+		{% if page_text_excerpt == '' and block.type == 'paragraph' and block.text != blank %}
+			{% assign page_text_excerpt = block.text %}
+		{% endif %}
+	{% endfor %}
+{% endif %}
+
+{% if blogPost and blogPost.content != blank %}
+	{% for block in blogPost.content %}
+		{% if blog_post_text_excerpt == '' and block.type == 'paragraph' and block.text != blank %}
+			{% assign blog_post_text_excerpt = block.text %}
+		{% endif %}
+	{% endfor %}
+{% endif %}
+
+{% case request.page_type %}
+	{% when 'index' %}
+		{% assign seo_title = store.name | append: ' | Tu tienda online' %}
+		{% assign seo_description = store.description | default: 'Descubrí productos increíbles, envíos a todo el país y la mejor atención.' %}
+	{% when 'products' %}
+		{% assign seo_title = 'Productos | ' | append: store.name %}
+		{% assign seo_description = 'Explorá todo el catálogo de ' | append: store.name | append: '.' %}
+		{% if search_query != '' %}
+			{% assign encoded_search_query = search_query | url_encode %}
+			{% assign canonical_url = store.url | append: request.path | append: '?q=' | append: encoded_search_query %}
+			{% assign seo_title = 'Resultados para "' | append: search_query | append: '" | ' | append: store.name %}
+			{% assign seo_description = 'Resultados de búsqueda para "' | append: search_query | append: '" en ' | append: store.name | append: '.' %}
+			{% assign seo_robots = 'noindex,follow' %}
+		{% endif %}
+	{% when 'categories' %}
+		{% assign seo_title = 'Categorías | ' | append: store.name %}
+		{% assign seo_description = 'Explorá las categorías de ' | append: store.name | append: '.' %}
+	{% when 'category' %}
+		{% assign seo_title = category.name | append: ' | ' | append: store.name %}
+		{% assign seo_description = category.description | default: 'Explorá los productos de la categoría ' | append: category.name | append: ' en ' | append: store.name | append: '.' %}
+		{% if category.coverImage %}
+			{% assign seo_image_url = category.coverImage.url %}
+			{% assign seo_image_width = category.coverImage.width %}
+			{% assign seo_image_height = category.coverImage.height %}
+			{% assign seo_image_alt = category.coverImage.alt | default: category.name %}
+		{% endif %}
+	{% when 'product' %}
+		{% assign seo_type = 'product' %}
+		{% assign seo_title = product.title | append: ' | ' | append: store.name %}
+		{% assign seo_description = product.description | default: store.description %}
+		{% if product.images and product.images.size > 0 %}
+			{% assign seo_image_url = product.images.first.url %}
+			{% assign seo_image_width = product.images.first.width %}
+			{% assign seo_image_height = product.images.first.height %}
+			{% assign seo_image_alt = product.images.first.alt | default: product.title %}
+		{% endif %}
+	{% when 'page' %}
+		{% assign seo_title = page.title | default: store.name | append: ' | ' | append: store.name %}
+		{% assign seo_description = page_text_excerpt | default: store.description %}
+		{% if page.coverImage %}
+			{% assign seo_image_url = page.coverImage.url %}
+			{% assign seo_image_width = page.coverImage.width %}
+			{% assign seo_image_height = page.coverImage.height %}
+			{% assign seo_image_alt = page.coverImage.alt | default: page.title %}
+		{% endif %}
+	{% when 'blog' %}
+		{% assign seo_title = 'Blog | ' | append: store.name %}
+		{% assign seo_description = 'Ideas, novedades y recomendaciones de ' | append: store.name | append: '.' %}
+	{% when 'blog_post' %}
+		{% assign seo_type = 'article' %}
+		{% assign seo_title = blogPost.title | append: ' | ' | append: store.name %}
+		{% assign seo_description = blogPost.excerpt | default: blog_post_text_excerpt | default: store.description %}
+		{% if blogPost.coverImage %}
+			{% assign seo_image_url = blogPost.coverImage.url %}
+			{% assign seo_image_width = blogPost.coverImage.width %}
+			{% assign seo_image_height = blogPost.coverImage.height %}
+			{% assign seo_image_alt = blogPost.coverImage.alt | default: blogPost.title %}
+		{% endif %}
+{% endcase %}
+
+{% assign seo_description = seo_description | strip_html | strip | truncate: 160 %}
+{% if seo_image_url == '' %}
+	{% assign seo_image_url = 'social-share-default.svg' | asset_url | prepend: store.url %}
+	{% assign seo_image_width = 1200 %}
+	{% assign seo_image_height = 630 %}
+	{% assign seo_image_alt = store.name | append: ' - imagen temporal para compartir' %}
+	{% assign seo_image_is_placeholder = true %}
+{% endif %}
+{% assign twitter_card = 'summary' %}
+{% if seo_image_url != blank %}
+	{% assign twitter_card = 'summary_large_image' %}
+{% endif %}
+
+<title>{{ seo_title | escape }}</title>
+<meta name="description" content="{{ seo_description | escape_attr }}" />
+<meta name="robots" content="{{ seo_robots | escape_attr }}" />
+<meta name="application-name" content="{{ store.name | escape_attr }}" />
+<link rel="canonical" href="{{ canonical_url | escape_attr }}" />
+
+<meta property="og:locale" content="es_{{ store.country_code | escape_attr }}" />
+<meta property="og:site_name" content="{{ store.name | escape_attr }}" />
+<meta property="og:type" content="{{ seo_type | escape_attr }}" />
+<meta property="og:title" content="{{ seo_title | escape_attr }}" />
+<meta property="og:description" content="{{ seo_description | escape_attr }}" />
+<meta property="og:url" content="{{ canonical_url | escape_attr }}" />
+
+<meta name="twitter:card" content="{{ twitter_card | escape_attr }}" />
+<meta name="twitter:title" content="{{ seo_title | escape_attr }}" />
+<meta name="twitter:description" content="{{ seo_description | escape_attr }}" />
+
+<meta property="og:image" content="{{ seo_image_url | escape_attr }}" />
+<meta property="og:image:alt" content="{{ seo_image_alt | default: seo_title | escape_attr }}" />
+<meta name="twitter:image" content="{{ seo_image_url | escape_attr }}" />
+{% if seo_image_width != blank %}<meta property="og:image:width" content="{{ seo_image_width }}" />{% endif %}
+{% if seo_image_height != blank %}<meta property="og:image:height" content="{{ seo_image_height }}" />{% endif %}
+{% if seo_image_is_placeholder %}
+<!-- Temporary share image placeholder. Replace social-share-default.svg in assets/ with a branded asset when available. -->
+{% endif %}
+
+{% if request.page_type == 'blog_post' and blogPost.createdAt != blank %}
+<meta property="article:published_time" content="{{ blogPost.createdAt | escape_attr }}" />
+{% endif %}
+{% if request.page_type == 'blog_post' and blogPost.updatedAt != blank %}
+<meta property="article:modified_time" content="{{ blogPost.updatedAt | escape_attr }}" />
+{% endif %}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ store.name | json }},
+  "url": {{ store.url | json }}{% if store.description %},
+  "description": {{ store.description | strip_html | strip | truncate: 160 | json }}{% endif %}{% if store.email_address %},
+  "email": {{ store.email_address | json }}{% endif %}{% if store.whatsapp_number %},
+  "telephone": {{ store.whatsapp_number | json }}{% endif %}
+}
+</script>
+<!-- TODO: add Organization.sameAs entries when social profile URLs are available. -->
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": {{ store.name | json }},
+  "url": {{ store.url | json }},
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {{ store.url | append: '/productos?q={search_term_string}' | json }},
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": {{ seo_title | json }},
+  "description": {{ seo_description | json }},
+  "url": {{ canonical_url | json }},
+  "inLanguage": "es",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": {{ store.name | json }},
+    "url": {{ store.url | json }}
+  }
+}
+</script>
+
+{% if request.page_type == 'product' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "url": {{ canonical_url | json }},
+  "description": {{ seo_description | json }}{% if seo_image_url != blank %},
+  "image": [{{ seo_image_url | json }}]{% endif %}{% if product_page.price.price_in_cents != blank %},
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": {{ store.currency.code | json }},
+    "price": {{ product_page.price.price_in_cents | divided_by: 100.0 }},
+    "availability": "https://schema.org/{% if product_page.stock_note.tone == 'error' %}OutOfStock{% else %}InStock{% endif %}",
+    "url": {{ canonical_url | json }}
+  }{% endif %}{% if product.reviewsQuantity > 0 and product.averageRating != blank %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": {{ product.averageRating | round: 1 }},
+    "reviewCount": {{ product.reviewsQuantity }}
+  }{% endif %}
+}
+</script>
+{% endif %}
+
+{% if request.page_type == 'blog_post' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": {{ blogPost.title | json }},
+  "description": {{ seo_description | json }},
+  "url": {{ canonical_url | json }}{% if seo_image_url != blank %},
+  "image": [{{ seo_image_url | json }}]{% endif %}{% if blogPost.createdAt %},
+  "datePublished": {{ blogPost.createdAt | json }}{% endif %}{% if blogPost.updatedAt %},
+  "dateModified": {{ blogPost.updatedAt | json }}{% endif %},
+  "author": {
+    "@type": "Person",
+    "name": {{ blogPost.manager.name | default: store.name | json }}
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": {{ store.name | json }}
+  }
+}
+</script>
+{% endif %}
+
+{% if request.page_type != 'index' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": {{ store.url | append: '/' | json }}
+    }{% if request.page_type == 'products' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Productos",
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'categories' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Categorías",
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'category' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Categorías",
+      "item": {{ store.url | append: '/categorias' | json }}
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": {{ category.name | json }},
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'product' and breadcrumb_origin_url != blank and breadcrumb_origin_title != blank %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ breadcrumb_origin_title | json }},
+      "item": {{ store.url | append: breadcrumb_origin_url | json }}
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": {{ product.title | json }},
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'product' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ product.title | json }},
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'page' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ page.title | default: 'Página' | json }},
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'blog' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == 'blog_post' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": {{ store.url | append: '/blog' | json }}
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": {{ blogPost.title | json }},
+      "item": {{ canonical_url | json }}
+    }{% endif %}
+  ]
+}
+</script>
+{% endif %}

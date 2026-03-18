@@ -1,0 +1,42 @@
+<div class="product-gallery">
+	<div class="tiendu-carousel" id="product-gallery" data-product-gallery>
+		<div class="tiendu-carousel__stage">
+			<div class="tiendu-carousel__viewport" data-role="viewport" data-dragging="false">
+				<div class="tiendu-carousel__track" data-role="track">
+					{% for image in gallery_images %}
+					<div class="tiendu-carousel__slide" data-product-gallery-slide{% if image.id != blank %} data-image-id="{{ image.id }}"{% endif %}>
+						<img src="{{ image.url | escape_attr }}" alt="{{ image.alt | default: product_title | escape_attr }}" {% if forloop.first %}fetchpriority="high" loading="eager"{% else %}loading="lazy"{% endif %} />
+					</div>
+					{% endfor %}
+				</div>
+				<button class="tiendu-carousel__open" type="button" data-role="open-lightbox" aria-label="Ampliar imagen">
+					<span class="tiendu-carousel__open-indicator tiendu-carousel__action-surface" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+					</span>
+				</button>
+			</div>
+			<button class="tiendu-carousel__nav tiendu-carousel__nav--prev tiendu-carousel__action-surface" type="button" data-role="prev-image" aria-label="Imagen anterior"{% if gallery_images.size <= 1 %} hidden{% endif %}>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+			</button>
+			<button class="tiendu-carousel__nav tiendu-carousel__nav--next tiendu-carousel__action-surface" type="button" data-role="next-image" aria-label="Imagen siguiente"{% if gallery_images.size <= 1 %} hidden{% endif %}>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+			</button>
+		</div>
+		<div class="tiendu-carousel__thumbs" data-role="thumbs" aria-label="Selector de imagenes"{% if gallery_images.size <= 1 %} hidden{% endif %}>
+			{% for image in gallery_images %}
+			<button class="tiendu-carousel__thumb" type="button" data-thumb-index="{{ forloop.index0 }}"{% if image.id != blank %} data-image-id="{{ image.id }}"{% endif %} aria-current="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Ver imagen {{ forloop.index }}">
+				<img src="{{ image.url | escape_attr }}" alt="{{ image.alt | default: product_title | escape_attr }}" loading="lazy" />
+			</button>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="tiendu-lightbox" id="product-gallery-lightbox" data-product-gallery-lightbox hidden>
+		<div class="tiendu-lightbox__backdrop" data-role="backdrop"></div>
+		<div class="tiendu-lightbox__content" data-role="content">
+			<button class="tiendu-lightbox__close" type="button" data-role="close-lightbox" aria-label="Cerrar imagen ampliada">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 6-12 12"></path><path d="m6 6 12 12"></path></svg>
+			</button>
+			<img class="tiendu-lightbox__image" src="{{ gallery_images.first.url | escape_attr }}" alt="{{ gallery_images.first.alt | default: product_title | escape_attr }}" loading="eager" data-role="lightbox-image" />
+		</div>
+	</div>
+</div>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		{% render 'seo-head', store: store, request: request, product: product, product_page: product_page, category: category, page: page, blogPost: blogPost %}
+		<meta name="theme-color" content="#0f172a" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="icon" type="image/svg+xml" href="{{ 'favicon.svg' | asset_url }}" />
+		{{ 'theme.css' | asset_url | stylesheet_tag }}
+		{{ 'buttons.css' | asset_url | stylesheet_tag }}
+		{{ 'toast.css' | asset_url | stylesheet_tag }}
+		{{ 'breadcrumbs.css' | asset_url | stylesheet_tag }}
+		{{ 'rating-stars.css' | asset_url | stylesheet_tag }}
+		{{ 'product-item.css' | asset_url | stylesheet_tag }}
+		{{ 'category-item.css' | asset_url | stylesheet_tag }}
+		{{ 'blog-card.css' | asset_url | stylesheet_tag }}
+		{{ 'header-search.css' | asset_url | stylesheet_tag }}
+		{% block head %}{% endblock %}
+	</head>
+	<body>
+		<a href="#contenido" class="skip-link">Saltar al contenido</a>
+
+		<div class="top-banner" role="status" aria-live="polite">
+			<div class="container top-banner__inner">{{ store.name }} - Tu tienda online</div>
+		</div>
+
+		<nav class="site-header" aria-label="Navegación principal">
+			<div class="container site-header__inner">
+				<div class="site-header__left">
+					<button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menú">
+						{% render 'icon-align-left', size: 20 %}
+					</button>
+					<a href="/" class="brand brand__name" aria-label="Inicio Tienda">{{ store.name }}</a>
+				</div>
+				<div class="site-header__right">
+					{% render 'header-search' %}
+					<button type="button" id="open-cart-button" class="button button--secondary header-cart-button" aria-label="Abrir carrito" data-icon="shopping-cart" data-loading-icon="loader-2" data-loading-label="Carrito">
+						<span class="button__icon" aria-hidden="true">
+							<span data-button-icon="shopping-cart">{% render 'icon-shopping-cart', size: 18 %}</span>
+							<span data-button-icon="loader-2" hidden>{% render 'icon-loader-2', size: 18 %}</span>
+						</span>
+						<span class="button__label">Carrito</span>
+						<span class="cart-quantity" id="cart-quantity" aria-live="polite">0</span>
+					</button>
+				</div>
+			</div>
+		</nav>
+
+		<aside id="side-menu" class="side-menu" aria-hidden="true">
+			<div class="side-menu__backdrop" id="menu-backdrop"></div>
+			<div class="side-menu__panel" role="dialog" aria-label="Menú de navegación">
+				<div class="side-menu__header">
+					<strong>Menú</strong>
+					<button id="menu-close" class="side-menu__close" type="button" aria-label="Cerrar menú">{% render 'icon-x', size: 18 %}</button>
+				</div>
+				<div class="side-menu__content">
+					{% categories as: 'nav_categories' %}
+					{% if nav_categories.size > 0 %}
+					<section class="side-menu__section" aria-labelledby="menu-categories-title">
+						<h2 id="menu-categories-title" class="side-menu__section-title">Categorías</h2>
+						<ul class="side-menu__list">
+							{% for cat in nav_categories %}
+							<li><a href="/categorias/{{ cat.id }}/{{ cat.name | url_safe }}">{{ cat.name | escape }}</a></li>
+							{% endfor %}
+						</ul>
+					</section>
+					{% endif %}
+					{% endcategories %}
+					{% pages as: 'nav_pages' %}
+					<section class="side-menu__section" aria-labelledby="menu-pages-title">
+						<h2 id="menu-pages-title" class="side-menu__section-title">+ Información</h2>
+						{% if nav_pages.size > 0 %}
+						<ul class="side-menu__list">
+							{% for pg in nav_pages %}
+							<li><a href="/paginas/{{ pg.id }}/{{ pg.title | url_safe }}">{{ pg.title | default: 'Página' | escape }}</a></li>
+							{% endfor %}
+						</ul>
+						{% endif %}
+						<ul class="side-menu__list">
+							<li><a href="/blog">Blog</a></li>
+						</ul>
+					</section>
+					{% endpages %}
+				</div>
+			</div>
+		</aside>
+
+		<main id="contenido" class="container page-shell" role="main">
+			{% block content %}{% endblock %}
+		</main>
+
+		{% if store.whatsapp_number %}
+		<a href="https://wa.me/{{ store.whatsapp_number }}?text=%C2%A1Hola%21%20Tengo%20una%20consulta." class="whatsapp-fab" target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp" title="Escribinos por WhatsApp">
+			<img src="{{ 'whatsapp-logo.svg' | asset_url }}" alt="WhatsApp" loading="lazy" decoding="async" />
+		</a>
+		{% endif %}
+
+		<footer class="site-footer">
+			<div class="container">
+				<div class="footer-grid">
+					<section class="footer-column" aria-labelledby="footer-store-title">
+						<h2 id="footer-store-title">{{ store.name }}</h2>
+						<p>{{ store.description | default: "Tu tienda online de confianza." }}</p>
+						<ul class="footer-contact-list">
+							{% if store.whatsapp_number %}
+							<li>{% render 'icon-phone', size: 14, stroke_width: 1.5 %}<a href="tel:+{{ store.whatsapp_number }}">{{ store.whatsapp_number }}</a></li>
+							{% endif %}
+							{% if store.email_address %}
+							<li>{% render 'icon-mail', size: 14, stroke_width: 1.5 %}<a href="mailto:{{ store.email_address }}">{{ store.email_address }}</a></li>
+							{% endif %}
+						</ul>
+					</section>
+					{% categories as: 'footer_categories' %}
+					{% if footer_categories.size > 0 %}
+					<section class="footer-column" aria-labelledby="footer-categories-title">
+						<h2 id="footer-categories-title">Categorías</h2>
+						<ul class="footer-links">
+							{% for cat in footer_categories %}
+							<li><a href="/categorias/{{ cat.id }}/{{ cat.name | url_safe }}">{{ cat.name | escape }}</a></li>
+							{% endfor %}
+						</ul>
+					</section>
+					{% endif %}
+					{% endcategories %}
+					{% pages as: 'footer_pages' %}
+					{% if footer_pages.size > 0 %}
+					<section class="footer-column" aria-labelledby="footer-info-title">
+						<h2 id="footer-info-title">Información Útil</h2>
+						<ul class="footer-links">
+							{% for pg in footer_pages %}
+							<li><a href="/paginas/{{ pg.id }}/{{ pg.title | url_safe }}">{{ pg.title | default: 'Página' | escape }}</a></li>
+							{% endfor %}
+						</ul>
+					</section>
+					{% endif %}
+					{% endpages %}
+					<section class="footer-column" aria-labelledby="footer-news-title">
+						<h2 id="footer-news-title">Mantente Informado</h2>
+						<p>Recibe las últimas novedades y ofertas exclusivas</p>
+						<form class="footer-subscribe-form" method="post" data-skip-overlay novalidate>
+							<label class="sr-only" for="footer-subscribe-email">Tu email</label>
+							<div class="inline-form-control">
+								<span id="footer-subscribe-icon" class="inline-form-control__icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg>
+								</span>
+								<input id="footer-subscribe-email" type="email" name="email" autocomplete="email" placeholder="Tu email" class="inline-form-control__input" />
+								<button type="submit" class="inline-form-control__button">Unirme</button>
+							</div>
+						</form>
+						<ul class="footer-social-links">
+							<li><a href="#" aria-label="Facebook" title="Facebook">{% render 'icon-facebook', size: 20, stroke_width: 1.5 %}</a></li>
+							<li><a href="#" aria-label="Instagram" title="Instagram">{% render 'icon-instagram', size: 20, stroke_width: 1.5 %}</a></li>
+							<li><a href="#" aria-label="YouTube" title="YouTube">{% render 'icon-youtube', size: 20, stroke_width: 1.5 %}</a></li>
+						</ul>
+					</section>
+				</div>
+				<p class="footer-legal">
+					&copy; <span id="footer-year"></span> {{ store.name }}. Todos los derechos reservados.
+					<br />Tienda co-creada junto a <a class="footer-legal__link" href="https://tiendu.uy" target="_blank" rel="noopener noreferrer">Tiendu</a>.
+				</p>
+			</div>
+		</footer>
+
+		{{ 'layout.js' | asset_url | script_tag }}
+	</body>
+</html>

@@ -1,0 +1,71 @@
+.rating-stars {
+	--rating-stars-size: 16px;
+	--rating-stars-gap: 2px;
+	--rating-stars-fill: 0%;
+	position: relative;
+	display: inline-block;
+	width: calc((var(--rating-stars-size) * 5) + (var(--rating-stars-gap) * 4));
+	height: var(--rating-stars-size);
+	line-height: 1;
+	flex: 0 0 auto;
+}
+
+.rating-stars__layer {
+	display: flex;
+	align-items: center;
+	gap: var(--rating-stars-gap);
+	width: 100%;
+	height: 100%;
+}
+
+.rating-stars__layer svg,
+.rating-stars__layer i {
+	width: var(--rating-stars-size);
+	height: var(--rating-stars-size);
+	display: block;
+	flex: 0 0 auto;
+	color: currentColor;
+}
+
+.rating-stars__layer svg,
+.rating-stars__layer svg * {
+	fill: currentColor;
+	stroke: none;
+}
+
+.rating-stars__layer--base {
+	position: absolute;
+	inset: 0;
+	color: #cbd5e1;
+}
+
+.rating-stars__fill-wrap {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	overflow: hidden;
+	width: var(--rating-stars-fill);
+}
+
+.rating-stars__layer--fill {
+	position: absolute;
+	inset: 0;
+	color: #f59e0b;
+}
+
+.product-card__rating-line .rating-stars {
+	--rating-stars-size: 18px;
+}
+
+.product-rating-summary .rating-stars {
+	--rating-stars-size: 22px;
+}
+
+.reviews-overview__score .rating-stars {
+	--rating-stars-size: 28px;
+}
+
+.review-item__meta .rating-stars {
+	--rating-stars-size: 22px;
+}
