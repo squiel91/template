@@ -47,7 +47,7 @@
 {% case request.page_type %}
 	{% when 'index' %}
 		{% assign seo_title = store.name | append: ' | Tu tienda online' %}
-		{% assign seo_description = store.description | default: 'Descubrí productos increíbles, envíos a todo el país y la mejor atención.' %}
+		{% assign seo_description = store.description | default: 'Los productos que buscas, en un solo lugar, envíos a todo el país y la mejor atención.' %}
 	{% when 'products' %}
 		{% assign seo_title = 'Productos | ' | append: store.name %}
 		{% assign seo_description = 'Explorá todo el catálogo de ' | append: store.name | append: '.' %}
