@@ -22,7 +22,6 @@ storefronts/30/
   scripts/         — Build/dev scripts (not served to browser)
   skills/          — Agent skill definitions
   tiendu-sdk.js    — Typed storefront SDK surface
-  tiendu.config.js — Storefront configuration (gitignored)
 ```
 
 ### `assets/`
@@ -68,9 +67,13 @@ import { tiendu } from '/assets/tiendu-client.js'
 import { showErrorToast } from '/assets/toast.js'
 ```
 
-The only exceptions are root-level files that stay outside `assets/`:
+The only exception is the root-level file that stays outside `assets/`:
 - `/tiendu-sdk.js` — the SDK factory
-- `/tiendu.config.js` — storefront env config
+
+Runtime storefront config is injected from `layout/theme.liquid` through window globals:
+
+- `window.__TIENDU_STORE_ID__`
+- `window.__TIENDU_BASE_URL__`
 
 ## Core references
 

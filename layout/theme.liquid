@@ -5,6 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		{% render 'seo-head', store: store, request: request, product: product, product_page: product_page, category: category, page: page, blogPost: blogPost %}
 		<meta name="theme-color" content="#0f172a" />
+		<script>window.__TIENDU_STORE_ID__={{ store.id | json }};window.__TIENDU_BASE_URL__={{ tiendu_base_url | json }};</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link

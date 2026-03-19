@@ -1,29 +1,24 @@
 // @ts-nocheck
 
-import {
-	PUBLIC_TIENDU_API_BASE_URL,
-	PUBLIC_TIENDU_STORE_ID,
-	PUBLIC_TIENDU_HOME_CATEGORY_IDS,
-	PUBLIC_TIENDU_HOME_LIST_CATEGORY_IDS
-} from '/tiendu.config.js'
+const runtimeStoreId = Number(globalThis.__TIENDU_STORE_ID__)
+const runtimeBaseUrl =
+	typeof globalThis.__TIENDU_BASE_URL__ === 'string'
+		? globalThis.__TIENDU_BASE_URL__.trim()
+		: ''
 
-const homeCategoryIds = Array.isArray(PUBLIC_TIENDU_HOME_CATEGORY_IDS)
-	? PUBLIC_TIENDU_HOME_CATEGORY_IDS
-			.map(value => Number(value))
-			.filter(value => Number.isFinite(value) && value > 0)
-	: []
+if (!Number.isFinite(runtimeStoreId) || runtimeStoreId <= 0) {
+	throw new Error('[storefront] Missing valid window.__TIENDU_STORE_ID__ runtime config.')
+}
 
-const homeListCategoryIds = Array.isArray(PUBLIC_TIENDU_HOME_LIST_CATEGORY_IDS)
-	? PUBLIC_TIENDU_HOME_LIST_CATEGORY_IDS
-			.map(value => Number(value))
-			.filter(value => Number.isFinite(value) && value > 0)
-	: []
+if (!runtimeBaseUrl) {
+	throw new Error('[storefront] Missing valid window.__TIENDU_BASE_URL__ runtime config.')
+}
 
 export const storefrontConfig = {
 	storeName: 'Tienda Genérica',
 	tagline: 'Vendemos todo lo que necesites. Todo, literal.',
-	storeId: PUBLIC_TIENDU_STORE_ID,
-	baseUrl: PUBLIC_TIENDU_API_BASE_URL,
-	homeCategoryIds,
-	homeListCategoryIds
+	storeId: Math.floor(runtimeStoreId),
+	baseUrl: runtimeBaseUrl.replace(/\/$/, ''),
+	homeCategoryIds: [],
+	homeListCategoryIds: []
 }
