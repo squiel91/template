@@ -19,12 +19,14 @@ This storefront uses the custom Liquid renderer in `src/lib/server/liquid-storef
 ## Routes
 
 - Home: `theme/home.md`
-- Products listing and category detail: `theme/products.md`
+- Category detail: `theme/categoria.md`
+- Search: `theme/busqueda.md`
 - Product detail: `theme/product.md`
 - Categories index: `theme/categories.md`
 - Page detail: `theme/page.md`
 - Blog index: `theme/blog.md`
 - Blog post: `theme/blog-post.md`
+- Not found: `theme/404.md`
 - Products fragment pagination: `theme/fragments-products.md`
 
 ## Caveats

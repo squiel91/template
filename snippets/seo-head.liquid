@@ -48,16 +48,6 @@
 	{% when 'index' %}
 		{% assign seo_title = store.name | append: ' | Tu tienda online' %}
 		{% assign seo_description = store.description | default: 'Los productos que buscas, en un solo lugar, envíos a todo el país y la mejor atención.' %}
-	{% when 'products' %}
-		{% assign seo_title = 'Productos | ' | append: store.name %}
-		{% assign seo_description = 'Explorá todo el catálogo de ' | append: store.name | append: '.' %}
-		{% if search_query != '' %}
-			{% assign encoded_search_query = search_query | url_encode %}
-			{% assign canonical_url = store.url | append: request.path | append: '?q=' | append: encoded_search_query %}
-			{% assign seo_title = 'Resultados para "' | append: search_query | append: '" | ' | append: store.name %}
-			{% assign seo_description = 'Resultados de búsqueda para "' | append: search_query | append: '" en ' | append: store.name | append: '.' %}
-			{% assign seo_robots = 'noindex,follow' %}
-		{% endif %}
 	{% when 'categories' %}
 		{% assign seo_title = 'Categorías | ' | append: store.name %}
 		{% assign seo_description = 'Explorá las categorías de ' | append: store.name | append: '.' %}
@@ -69,6 +59,16 @@
 			{% assign seo_image_width = category.coverImage.width %}
 			{% assign seo_image_height = category.coverImage.height %}
 			{% assign seo_image_alt = category.coverImage.alt | default: category.name %}
+		{% endif %}
+	{% when 'search' %}
+		{% assign seo_title = 'Busqueda | ' | append: store.name %}
+		{% assign seo_description = 'Buscá productos en ' | append: store.name | append: '.' %}
+		{% assign seo_robots = 'noindex,follow' %}
+		{% if search_query != '' %}
+			{% assign encoded_search_query = search_query | url_encode %}
+			{% assign canonical_url = store.url | append: request.path | append: '?q=' | append: encoded_search_query %}
+			{% assign seo_title = 'Resultados para "' | append: search_query | append: '" | ' | append: store.name %}
+			{% assign seo_description = 'Resultados de busqueda para "' | append: search_query | append: '" en ' | append: store.name | append: '.' %}
 		{% endif %}
 	{% when 'product' %}
 		{% assign seo_type = 'product' %}
@@ -102,6 +102,10 @@
 			{% assign seo_image_height = blogPost.coverImage.height %}
 			{% assign seo_image_alt = blogPost.coverImage.alt | default: blogPost.title %}
 		{% endif %}
+	{% when '404' %}
+		{% assign seo_title = 'Pagina no encontrada | ' | append: store.name %}
+		{% assign seo_description = 'La pagina que buscas no esta disponible en ' | append: store.name | append: '.' %}
+		{% assign seo_robots = 'noindex,follow' %}
 {% endcase %}
 
 {% assign seo_description = seo_description | strip_html | strip | truncate: 160 %}
@@ -171,7 +175,7 @@
   "url": {{ store.url | json }},
   "potentialAction": {
     "@type": "SearchAction",
-    "target": {{ store.url | append: '/productos?q={search_term_string}' | json }},
+    "target": {{ store.url | append: '/busqueda?q={search_term_string}' | json }},
     "query-input": "required name=search_term_string"
   }
 }
@@ -252,11 +256,11 @@
       "position": 1,
       "name": "Inicio",
       "item": {{ store.url | append: '/' | json }}
-    }{% if request.page_type == 'products' %},
+    }{% if request.page_type == 'search' %},
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Productos",
+      "name": "Busqueda",
       "item": {{ canonical_url | json }}
     }{% elsif request.page_type == 'categories' %},
     {
@@ -317,6 +321,12 @@
       "@type": "ListItem",
       "position": 3,
       "name": {{ blogPost.title | json }},
+      "item": {{ canonical_url | json }}
+    }{% elsif request.page_type == '404' %},
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "No encontrada",
       "item": {{ canonical_url | json }}
     }{% endif %}
   ]

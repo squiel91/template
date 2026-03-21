@@ -28,5 +28,5 @@ Each category item exposes fields such as:
 
 ## Caveats
 
-- This route is the category index; category detail is rendered by `templates/products.liquid`.
+- This route is the category index; category detail is rendered by `templates/categoria.liquid`.
 - Category trees come from the public service and may include nested `children`, but the current page renders only the top-level items it receives.

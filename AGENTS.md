@@ -16,7 +16,7 @@ This storefront is a server-rendered Liquid theme built on Tiendu, a multi-tenan
 storefronts/30/
   assets/          — All browser-served CSS, JS, images, fonts, icons
   layout/          — Liquid layout shells (e.g. theme.liquid)
-  templates/       — Page templates (index, products, product, etc.)
+  templates/       — Page templates (index, categoria, product, busqueda, etc.)
   snippets/        — Reusable Liquid snippets and icon partials
   docs/            — Implementation notes for agents and maintainers
   scripts/         — Build/dev scripts (not served to browser)
@@ -38,7 +38,7 @@ Contains the main Liquid layout shell (`theme.liquid`). This wraps all page temp
 
 ### `templates/`
 
-Page templates rendered per route: `index.liquid`, `products.liquid`, `product.liquid`, `categories.liquid`, `page.liquid`, `blog.liquid`, `blog-post.liquid`. Also contains `fragments/products.liquid` for partial HTML responses.
+Page templates rendered per route: `index.liquid`, `categoria.liquid`, `product.liquid`, `categories.liquid`, `busqueda.liquid`, `page.liquid`, `blog.liquid`, `blog-post.liquid`, `404.liquid`. Also contains `fragments/products.liquid` for partial HTML responses.
 
 ### `snippets/`
 

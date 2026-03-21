@@ -1,28 +1,16 @@
-# Products listing and category detail
+# Category detail
 
-Template: `templates/products.liquid`
+Template: `templates/categoria.liquid`
 
-This template renders two page types:
+Route:
 
-- `/productos`
 - `/categorias/:id/:slug`
 
 ## Direct route context
 
-Always available:
-
+- `category`
 - `current_page`
 - `products_page_size`
-
-Products listing route also injects:
-
-- `criteria`
-- `order`
-- `search_query`
-
-Category detail route also injects:
-
-- `category`
 
 Useful `category` fields used in the template:
 
@@ -33,15 +21,10 @@ Useful `category` fields used in the template:
 
 ## Liquid tags used
 
-- main listing/category content uses `{% products %}`
+- main listing content uses `{% products %}`
 - output variables are:
   - `products`
   - `paginate`
-
-Tag caveats:
-
-- `search` is the supported search arg for the products tag.
-- `paginate` is only set when the tag is used as a listing, not when fetching a single item by `id`.
 
 ## Origin handling
 
@@ -50,6 +33,5 @@ Tag caveats:
 
 ## Caveats
 
-- Search result pages are still `/productos?q=...` and should stay in Spanish route form.
-- Category detail intentionally shares this template with product listing.
+- This template currently handles category detail only.
 - If you change data attributes on `#product-listing`, update the load-more script and fragment template too.

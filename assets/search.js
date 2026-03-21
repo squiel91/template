@@ -232,7 +232,7 @@ class StorefrontSearchController {
 		this.setDropdownOpen(false)
 		this.mobileOpen = false
 		delete this.root.dataset.mobileOpen
-		window.location.assign(`/productos?q=${encodeURIComponent(normalizedQuery)}`)
+		window.location.assign(`/busqueda?q=${encodeURIComponent(normalizedQuery)}`)
 	}
 
 	async fetchProducts(term) {
@@ -283,7 +283,7 @@ class StorefrontSearchController {
 	}
 
 	renderItem(product) {
-		const searchPageUrl = `/productos?q=${encodeURIComponent(this.query)}`
+		const searchPageUrl = `/busqueda?q=${encodeURIComponent(this.query)}`
 		const priceLabel = getListingPriceLabel(product)
 		const productUrl = withOriginQuery(
 			`/productos/${product.id}/${urlSafe(product.title || '')}`,
@@ -351,7 +351,7 @@ class StorefrontSearchController {
 		const moreHtml = !this.loading && this.items.length === SEARCH_DROPDOWN_LIMIT
 			? `
 				<div class="storefront-search__more">
-					<a class="storefront-search__more-link" href="/productos?q=${encodeURIComponent(this.query)}">Ver mas resultados</a>
+					<a class="storefront-search__more-link" href="/busqueda?q=${encodeURIComponent(this.query)}">Ver mas resultados</a>
 				</div>
 			`
 			: ''

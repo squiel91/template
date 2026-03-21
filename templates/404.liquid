@@ -1,0 +1,21 @@
+{% layout 'theme' %}
+{% block head %}
+{{ 'listing.css' | asset_url | stylesheet_tag }}
+{% endblock %}
+{% block content %}
+<section class="listing-head" aria-labelledby="not-found-title">
+	<div class="listing-meta">
+		<h1 id="not-found-title" class="page-title">No encontramos esta pagina</h1>
+		<p>La direccion que abriste no existe o ya no esta disponible.</p>
+	</div>
+</section>
+
+<div class="empty-state">
+	{% render 'icon-package-search', size: 48 %}
+	<span class="empty-state__title">Proba volver al inicio o explorar las categorias disponibles.</span>
+	<div style="display:flex;gap:var(--space-3);flex-wrap:wrap;justify-content:center;">
+		<a class="btn btn--primary" href="/">Ir al inicio</a>
+		<a class="btn btn--secondary" href="/categorias">Ver categorias</a>
+	</div>
+</div>
+{% endblock %}
