@@ -1,6 +1,6 @@
 # Blog post
 
-Template: `templates/blog-post.liquid`
+Template: `templates/article.liquid`
 
 ## Direct route context
 
@@ -31,3 +31,8 @@ Supported block types currently handled:
 
 - Like pages, blog posts are rendered directly in Liquid.
 - SEO metadata for blog posts is generated centrally in `snippets/seo-head.liquid` from `blogPost`.
+
+## Alternate templates
+
+- This route supports alternate templates via `article.{suffix}.liquid`.
+- Saved `template_suffix` and `?view=` both follow the normal template selection rules.

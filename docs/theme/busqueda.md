@@ -1,6 +1,6 @@
 # Search
 
-Template: `templates/busqueda.liquid`
+Template: `templates/search.liquid`
 
 Route:
 

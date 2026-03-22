@@ -19,15 +19,22 @@ This storefront uses the custom Liquid renderer in `src/lib/server/liquid-storef
 ## Routes
 
 - Home: `theme/home.md`
-- Category detail: `theme/categoria.md`
+- Collection detail: `theme/categoria.md`
 - Search: `theme/busqueda.md`
 - Product detail: `theme/product.md`
-- Categories index: `theme/categories.md`
+- Collections index: `theme/categories.md`
 - Page detail: `theme/page.md`
 - Blog index: `theme/blog.md`
-- Blog post: `theme/blog-post.md`
+- Article (blog post): `theme/blog-post.md`
 - Not found: `theme/404.md`
 - Products fragment pagination: `theme/fragments-products.md`
+
+## Template selection
+
+Alternate templates can be created for products, collections, pages, and articles using dot-suffix naming. See `docs/template-selection.md` for full details.
+
+- Supported single-resource routes: `/productos/:id/:slug?`, `/categorias/:id/:slug?`, `/paginas/:id/:slug?`, `/blog/:id/:slug?`
+- Route-level templates like `index.liquid`, `search.liquid`, `blog.liquid`, `list-collections.liquid`, and `404.liquid` stay outside per-resource template selection.
 
 ## Caveats
 

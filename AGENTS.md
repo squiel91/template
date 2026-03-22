@@ -16,7 +16,7 @@ This storefront is a server-rendered Liquid theme built on Tiendu, a multi-tenan
 storefronts/30/
   assets/          — All browser-served CSS, JS, images, fonts, icons
   layout/          — Liquid layout shells (e.g. theme.liquid)
-  templates/       — Page templates (index, categoria, product, busqueda, etc.)
+  templates/       — Page templates (index, collection, product, search, etc.)
   snippets/        — Reusable Liquid snippets and icon partials
   docs/            — Implementation notes for agents and maintainers
   scripts/         — Build/dev scripts (not served to browser)
@@ -38,7 +38,7 @@ Contains the main Liquid layout shell (`theme.liquid`). This wraps all page temp
 
 ### `templates/`
 
-Page templates rendered per route: `index.liquid`, `categoria.liquid`, `product.liquid`, `categories.liquid`, `busqueda.liquid`, `page.liquid`, `blog.liquid`, `blog-post.liquid`, `404.liquid`. Also contains `fragments/products.liquid` for partial HTML responses.
+Page templates rendered per route: `index.liquid`, `collection.liquid`, `product.liquid`, `list-collections.liquid`, `search.liquid`, `page.liquid`, `blog.liquid`, `article.liquid`, `404.liquid`. Also contains `fragments/products.liquid` for partial HTML responses. Alternate templates use dot-suffix naming (e.g. `product.gift-guide.liquid`); see `docs/template-selection.md`.
 
 ### `snippets/`
 
@@ -78,6 +78,7 @@ Runtime storefront config is injected from `layout/theme.liquid` through window 
 ## Core references
 
 - Theme system: `docs/theme.md`
+- Template selection (alternate templates): `docs/template-selection.md`
 - Icons: `docs/icons.md`
 - Storefront SDK: `tiendu-sdk.js`
 

@@ -1,10 +1,10 @@
 # Category detail
 
-Template: `templates/categoria.liquid`
+Template: `templates/collection.liquid`
 
 Route:
 
-- `/categorias/:id/:slug`
+- `/categorias/:id/:slug?`
 
 ## Direct route context
 
@@ -35,3 +35,8 @@ Useful `category` fields used in the template:
 
 - This template currently handles category detail only.
 - If you change data attributes on `#product-listing`, update the load-more script and fragment template too.
+
+## Alternate templates
+
+- This route supports alternate templates via `collection.{suffix}.liquid`.
+- Saved `template_suffix` and `?view=` both follow the normal template selection rules.

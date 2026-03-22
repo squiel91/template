@@ -17,7 +17,6 @@
 {% else %}
 	{% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', current_label: product.title %}
 {% endif %}
-
 <article id="product" aria-live="polite">
 	<div class="product-detail">
 		{% render 'product-gallery', gallery_images: product_page.gallery_images, product_title: product.title %}

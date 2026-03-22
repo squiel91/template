@@ -7,7 +7,7 @@ Route: `/__fragments/products`
 ## Purpose
 
 - returns SSR product cards for "load more" behavior
-- should stay markup-compatible with the main product grid in `templates/categoria.liquid` and `templates/busqueda.liquid`
+- should stay markup-compatible with the main product grid in `templates/collection.liquid` and `templates/search.liquid`
 
 ## Direct route context
 
@@ -35,4 +35,4 @@ These are pulled from `request.url` and passed to `product-item` so breadcrumb o
 ## Caveats
 
 - This response is marked as a Liquid fragment by the resolver, so shopper session bootstrapping and page-view analytics are skipped.
-- Any markup change to product cards should be checked both here and in `templates/categoria.liquid` and `templates/busqueda.liquid`.
+- Any markup change to product cards should be checked both here and in `templates/collection.liquid` and `templates/search.liquid`.
