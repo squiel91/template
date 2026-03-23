@@ -2,6 +2,8 @@
 
 Template: `templates/article.liquid`
 
+`request.page_type`: `article`
+
 ## Direct route context
 
 - `blogPost`
@@ -12,7 +14,8 @@ Fields used:
 - `blogPost.title`
 - `blogPost.excerpt`
 - `blogPost.coverImage`
-- `blogPost.publicUrl`
+- `blogPost.url` (relative path, e.g. `/blog/4/este-es-el-primer-blog`)
+- `blogPost.publicUrl` (absolute URL)
 - `blogPost.createdAt`
 - `blogPost.updatedAt`
 - `blogPost.manager`

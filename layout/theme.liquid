@@ -5,7 +5,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		{% render 'seo-head', store: store, request: request, product: product, product_page: product_page, category: category, page: page, blogPost: blogPost %}
 		<meta name="theme-color" content="#0f172a" />
-		<script>window.__TIENDU_STORE_ID__={{ store.id | json }};window.__TIENDU_BASE_URL__={{ tiendu_base_url | json }};</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -24,7 +23,7 @@
 		{{ 'header-search.css' | asset_url | stylesheet_tag }}
 		{% block head %}{% endblock %}
 	</head>
-	<body>
+	<body{% if store.whatsapp_number %} data-store-whatsapp="{{ store.whatsapp_number }}"{% endif %}>
 		<a href="#contenido" class="skip-link">Saltar al contenido</a>
 
 		<div class="top-banner" role="status" aria-live="polite">
@@ -67,7 +66,7 @@
 						<h2 id="menu-categories-title" class="side-menu__section-title">Categorías</h2>
 						<ul class="side-menu__list">
 							{% for cat in nav_categories %}
-							<li><a href="/categorias/{{ cat.id }}/{{ cat.name | url_safe }}">{{ cat.name | escape }}</a></li>
+							<li><a href="{{ cat.url }}">{{ cat.name | escape }}</a></li>
 							{% endfor %}
 						</ul>
 					</section>
@@ -79,7 +78,7 @@
 						{% if nav_pages.size > 0 %}
 						<ul class="side-menu__list">
 							{% for pg in nav_pages %}
-							<li><a href="/paginas/{{ pg.id }}/{{ pg.title | url_safe }}">{{ pg.title | default: 'Página' | escape }}</a></li>
+							<li><a href="{{ pg.url }}">{{ pg.title | default: 'Página' | escape }}</a></li>
 							{% endfor %}
 						</ul>
 						{% endif %}
@@ -123,7 +122,7 @@
 						<h2 id="footer-categories-title">Categorías</h2>
 						<ul class="footer-links">
 							{% for cat in footer_categories %}
-							<li><a href="/categorias/{{ cat.id }}/{{ cat.name | url_safe }}">{{ cat.name | escape }}</a></li>
+							<li><a href="{{ cat.url }}">{{ cat.name | escape }}</a></li>
 							{% endfor %}
 						</ul>
 					</section>
@@ -135,7 +134,7 @@
 						<h2 id="footer-info-title">Información Útil</h2>
 						<ul class="footer-links">
 							{% for pg in footer_pages %}
-							<li><a href="/paginas/{{ pg.id }}/{{ pg.title | url_safe }}">{{ pg.title | default: 'Página' | escape }}</a></li>
+							<li><a href="{{ pg.url }}">{{ pg.title | default: 'Página' | escape }}</a></li>
 							{% endfor %}
 						</ul>
 					</section>

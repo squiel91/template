@@ -5,7 +5,7 @@
 List them with:
 
 ```bash
-node storefronts/30/scripts/discover-icons.mjs local
+node scripts/discover-icons.mjs local
 ```
 
 ## Search remote libraries
@@ -13,20 +13,20 @@ node storefronts/30/scripts/discover-icons.mjs local
 Lucide:
 
 ```bash
-node storefronts/30/scripts/discover-icons.mjs search lucide arrow
+node scripts/discover-icons.mjs search lucide arrow
 ```
 
 Heroicons:
 
 ```bash
-node storefronts/30/scripts/discover-icons.mjs search heroicons user
+node scripts/discover-icons.mjs search heroicons user
 ```
 
 ## Explore tags / variants
 
 ```bash
-node storefronts/30/scripts/discover-icons.mjs tags lucide
-node storefronts/30/scripts/discover-icons.mjs variants heroicons
+node scripts/discover-icons.mjs tags lucide
+node scripts/discover-icons.mjs variants heroicons
 ```
 
 ## Add new icons
@@ -34,13 +34,13 @@ node storefronts/30/scripts/discover-icons.mjs variants heroicons
 Lucide:
 
 ```bash
-npx @ckreidl/sis add lucide search x arrow-right -d storefronts/30/snippets -p icon- -f
+npx @ckreidl/sis add lucide search x arrow-right -d snippets -p icon- -f
 ```
 
 Heroicons example:
 
 ```bash
-npx @ckreidl/sis add heroicons:24/outline user magnifying-glass -d storefronts/30/snippets -p icon- -f
+npx @ckreidl/sis add heroicons:24/outline user magnifying-glass -d snippets -p icon- -f
 ```
 
 ## Caveats

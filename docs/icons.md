@@ -1,6 +1,6 @@
 # Icons docs
 
-Storefront 30 uses snippet-rendered icons generated with `shopify-icon-snippets`.
+The storefront uses snippet-rendered icons generated with `@ckreidl/sis` (icon snippet generator).
 
 ## Start here
 

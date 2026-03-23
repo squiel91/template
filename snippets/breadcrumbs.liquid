@@ -4,14 +4,14 @@
 		<li class="breadcrumbs__item">
 			<a href="{{ level_1_href }}">{{ level_1_label | escape }}</a>
 		</li>
-		<li class="breadcrumbs__separator" aria-hidden="true">{% render 'icon-chevron-right', size: 14 %}</li>
 		{% endif %}
 		{% if level_2_label != blank and level_2_href != blank %}
+		<li class="breadcrumbs__separator" aria-hidden="true">{% render 'icon-chevron-right', size: 14 %}</li>
 		<li class="breadcrumbs__item">
 			<a href="{{ level_2_href }}">{{ level_2_label | escape }}</a>
 		</li>
-		<li class="breadcrumbs__separator" aria-hidden="true">{% render 'icon-chevron-right', size: 14 %}</li>
 		{% endif %}
+		<li class="breadcrumbs__separator" aria-hidden="true">{% render 'icon-chevron-right', size: 14 %}</li>
 		<li class="breadcrumbs__item breadcrumbs__item--current" aria-current="page" title="{{ current_label | escape }}">
 			<span>{{ current_label | escape }}</span>
 		</li>

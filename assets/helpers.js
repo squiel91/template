@@ -1,10 +1,15 @@
 // @ts-nocheck
 
-export const PRICE_CONTACT_WHATSAPP_URL = 'https://wa.me/59899424414'
+export const getStoreWhatsAppUrl = () => {
+	const number = document.querySelector('[data-store-whatsapp]')?.dataset.storeWhatsapp
+	return number ? `https://wa.me/${number}` : null
+}
 
 export const buildOutOfStockWhatsAppUrl = productTitle => {
+	const baseUrl = getStoreWhatsAppUrl()
+	if (!baseUrl) return null
 	const message = `¡Hola! Quiero consultarles sobre el producto "${productTitle}" que vi que ya no tienen en stock.`
-	return `${PRICE_CONTACT_WHATSAPP_URL}?text=${encodeURIComponent(message)}`
+	return `${baseUrl}?text=${encodeURIComponent(message)}`
 }
 
 export const hasPurchasablePrice = (product, variant) => {

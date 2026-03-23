@@ -1,8 +1,5 @@
 // @ts-nocheck
 
-const SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY = 'shopper_session_token'
-const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
-
 const SEARCH_DEDUPE_STORAGE_KEY = 'tiendu:analytics:search-dedupe'
 const PURCHASE_DEDUPE_STORAGE_KEY = 'tiendu:analytics:purchase-dedupe'
 const SEARCH_DEDUPE_WINDOW_MS = 5000
@@ -54,14 +51,6 @@ const warnCapiErrorOnce = (key, message, details) => {
 const getGlobal = () => {
 	if (typeof window === 'undefined') return null
 	return window
-}
-
-const getShopperSessionToken = () => {
-	try {
-		return localStorage.getItem(SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY)
-	} catch {
-		return null
-	}
 }
 
 const getCookieValue = name => {
@@ -238,45 +227,17 @@ const resolveGA4ClientId = () => {
 }
 
 const sendGA4MeasurementProtocolEvent = async ({
-	storeId,
-	baseUrl,
 	eventName,
 	customData
 }) => {
-	const normalizedStoreId = toPositiveInt(storeId)
-	if (!normalizedStoreId) return
-
 	const clientId = resolveGA4ClientId()
 	if (!clientId) return
 
-	const origin = typeof window !== 'undefined' ? window.location.origin : baseUrl
-	if (typeof origin !== 'string' || !origin.trim()) return
-
-	const endpoint = new URL(
-		`/api/stores/${normalizedStoreId}/analytics/ga4-events`,
-		origin
-	).toString()
-
-	const headers = {
-		'Content-Type': 'application/json'
-	}
-
-	const shopperSessionToken = getShopperSessionToken()
-	if (shopperSessionToken) {
-		headers[SHOPPER_SESSION_TOKEN_HEADER] = shopperSessionToken
-	}
-
-	const payload = {
-		eventName,
-		clientId,
-		customData
-	}
-
 	try {
-		const response = await fetch(endpoint, {
+		const response = await fetch('/api/analytics/ga4-events', {
 			method: 'POST',
-			headers,
-			body: JSON.stringify(payload),
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ eventName, clientId, customData }),
 			keepalive: true
 		})
 
@@ -297,32 +258,10 @@ const sendGA4MeasurementProtocolEvent = async ({
 }
 
 const sendMetaConversionApiEvent = async ({
-	storeId,
-	baseUrl,
 	eventName,
 	eventId,
 	customData
 }) => {
-	const normalizedStoreId = toPositiveInt(storeId)
-	if (!normalizedStoreId) return
-
-	const origin = typeof window !== 'undefined' ? window.location.origin : baseUrl
-	if (typeof origin !== 'string' || !origin.trim()) return
-
-	const endpoint = new URL(
-		`/api/stores/${normalizedStoreId}/analytics/meta-events`,
-		origin
-	).toString()
-
-	const headers = {
-		'Content-Type': 'application/json'
-	}
-
-	const shopperSessionToken = getShopperSessionToken()
-	if (shopperSessionToken) {
-		headers[SHOPPER_SESSION_TOKEN_HEADER] = shopperSessionToken
-	}
-
 	const payload = {
 		eventName,
 		eventId,
@@ -335,9 +274,9 @@ const sendMetaConversionApiEvent = async ({
 	}
 
 	try {
-		const response = await fetch(endpoint, {
+		const response = await fetch('/api/analytics/meta-events', {
 			method: 'POST',
-			headers,
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(payload),
 			keepalive: true
 		})
@@ -381,11 +320,11 @@ const buildMetaValuePayload = ({
 	}
 }
 
-export const trackSearchEvent = ({ storeId, baseUrl, query, source, resultsCount }) => {
+export const trackSearchEvent = ({ query, source, resultsCount }) => {
 	const normalizedQuery = String(query || '').trim()
 	if (normalizedQuery.length < 2) return
 
-	const dedupeKey = `${String(storeId || 'unknown')}:${normalizedQuery.toLowerCase()}`
+	const dedupeKey = normalizedQuery.toLowerCase()
 	if (
 		typeof sessionStorage !== 'undefined' &&
 		shouldSkipByWindow(
@@ -415,8 +354,6 @@ export const trackSearchEvent = ({ storeId, baseUrl, query, source, resultsCount
 	)
 
 	void sendMetaConversionApiEvent({
-		storeId,
-		baseUrl,
 		eventName: META_EVENT_NAMES.search,
 		eventId,
 		customData: {
@@ -427,8 +364,6 @@ export const trackSearchEvent = ({ storeId, baseUrl, query, source, resultsCount
 	})
 
 	void sendGA4MeasurementProtocolEvent({
-		storeId,
-		baseUrl,
 		eventName: GOOGLE_EVENT_NAMES.search,
 		customData: {
 			search_term: normalizedQuery
@@ -437,8 +372,6 @@ export const trackSearchEvent = ({ storeId, baseUrl, query, source, resultsCount
 }
 
 export const trackViewContentEvent = ({
-	storeId,
-	baseUrl,
 	productId,
 	productTitle,
 	productVariantId,
@@ -465,16 +398,12 @@ export const trackViewContentEvent = ({
 	trackMeta(META_EVENT_NAMES.viewContent, metaParams, eventId)
 
 	void sendMetaConversionApiEvent({
-		storeId,
-		baseUrl,
 		eventName: META_EVENT_NAMES.viewContent,
 		eventId,
 		customData: metaParams
 	})
 
 	void sendGA4MeasurementProtocolEvent({
-		storeId,
-		baseUrl,
 		eventName: GOOGLE_EVENT_NAMES.viewContent,
 		customData: {
 			currency,
@@ -485,8 +414,6 @@ export const trackViewContentEvent = ({
 }
 
 export const trackAddToCartEvent = ({
-	storeId,
-	baseUrl,
 	productVariantId,
 	quantity,
 	priceInCents,
@@ -515,16 +442,12 @@ export const trackAddToCartEvent = ({
 	trackMeta(META_EVENT_NAMES.addToCart, metaPayload, eventId)
 
 	void sendMetaConversionApiEvent({
-		storeId,
-		baseUrl,
 		eventName: META_EVENT_NAMES.addToCart,
 		eventId,
 		customData: metaPayload
 	})
 
 	void sendGA4MeasurementProtocolEvent({
-		storeId,
-		baseUrl,
 		eventName: GOOGLE_EVENT_NAMES.addToCart,
 		customData: {
 			currency,
@@ -535,8 +458,6 @@ export const trackAddToCartEvent = ({
 }
 
 export const trackBeginCheckoutEvent = ({
-	storeId,
-	baseUrl,
 	totalPriceInCents,
 	items,
 	currency = 'UYU'
@@ -560,16 +481,12 @@ export const trackBeginCheckoutEvent = ({
 	trackMeta(META_EVENT_NAMES.beginCheckout, metaPayload, eventId)
 
 	void sendMetaConversionApiEvent({
-		storeId,
-		baseUrl,
 		eventName: META_EVENT_NAMES.beginCheckout,
 		eventId,
 		customData: metaPayload
 	})
 
 	void sendGA4MeasurementProtocolEvent({
-		storeId,
-		baseUrl,
 		eventName: GOOGLE_EVENT_NAMES.beginCheckout,
 		customData: {
 			currency,
@@ -580,8 +497,6 @@ export const trackBeginCheckoutEvent = ({
 }
 
 export const trackPurchaseEvent = ({
-	storeId,
-	baseUrl,
 	totalPriceInCents,
 	items,
 	currency = 'UYU',
@@ -595,7 +510,7 @@ export const trackPurchaseEvent = ({
 		`${String(totalPriceInCents)}:${normalizedItems
 			.map(item => `${item.id}:${item.quantity}`)
 			.join('|')}`
-	const purchaseDedupeKey = `${String(storeId || 'unknown')}:${dedupeReference}`
+	const purchaseDedupeKey = dedupeReference
 
 	if (
 		typeof localStorage !== 'undefined' &&
@@ -635,8 +550,6 @@ export const trackPurchaseEvent = ({
 	trackMeta(META_EVENT_NAMES.purchase, metaPayload, eventId)
 
 	void sendMetaConversionApiEvent({
-		storeId,
-		baseUrl,
 		eventName: META_EVENT_NAMES.purchase,
 		eventId,
 		customData: {
@@ -646,8 +559,6 @@ export const trackPurchaseEvent = ({
 	})
 
 	void sendGA4MeasurementProtocolEvent({
-		storeId,
-		baseUrl,
 		eventName: GOOGLE_EVENT_NAMES.purchase,
 		customData: {
 			transaction_id: transactionId,

@@ -1,8 +1,10 @@
 // @ts-nocheck
 
-import { tiendu } from '/assets/tiendu-client.js'
+import { Tiendu } from '/assets/tiendu-sdk.js'
 import { showErrorToast, showSuccessToast } from '/assets/toast.js'
 import { initHeaderSearch } from '/assets/search.js'
+
+const tiendu = Tiendu()
 
 const CART_BUTTON_LOADING_TIMEOUT_MS = 4000
 const NEWSLETTER_SUCCESS_MESSAGE =

@@ -4,7 +4,7 @@ These objects are available in every Liquid template rendered by the Liquid stor
 
 ## `store`
 
-Injected in `src/lib/server/liquid-storefront-handler/index.ts`.
+Injected by the Liquid storefront handler at render time.
 
 Fields:
 
@@ -22,7 +22,7 @@ Fields:
 
 ## `request`
 
-Also injected in `src/lib/server/liquid-storefront-handler/index.ts`.
+Also injected by the Liquid storefront handler at render time.
 
 Fields:
 
@@ -30,6 +30,48 @@ Fields:
 - `request.path`
 - `request.url`
 - `request.page_type`
+
+Current `request.page_type` values produced by the Liquid route loader:
+
+- `index`
+- `products` (`/__fragments/products`)
+- `product`
+- `list-collections`
+- `collection`
+- `search`
+- `page`
+- `blog`
+- `article`
+- `404`
+
+## `{% metadata %}` tag
+
+Fetches public metadata by key from the store's metadata system. Available in any template.
+
+Usage:
+
+```liquid
+{% metadata key: 'my-key' %}
+  {{ metadata }}
+{% endmetadata %}
+```
+
+With custom variable name:
+
+```liquid
+{% metadata key: 'extra-payment-methods' as: 'payment_methods' %}
+  {% for method in payment_methods %}
+    {{ method.name }}
+  {% endfor %}
+{% endmetadata %}
+```
+
+- `key` (required): The metadata key to look up.
+- `as` (optional): Variable name to inject. Defaults to `metadata`.
+- Returns `null` if the key doesn't exist or isn't marked as public.
+- The data is the populated metadata value (references to images, products, categories are resolved).
+
+API equivalent: `GET /api/metadata/{key}`
 
 ## Caveats
 

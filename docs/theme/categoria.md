@@ -1,6 +1,8 @@
-# Category detail
+# Collection detail
 
 Template: `templates/collection.liquid`
+
+`request.page_type`: `collection`
 
 Route:
 
@@ -17,7 +19,8 @@ Useful `category` fields used in the template:
 - `category.id`
 - `category.name`
 - `category.description`
-- `category.publicUrl`
+- `category.url` (relative path, e.g. `/categorias/615/alimentos`)
+- `category.publicUrl` (absolute URL)
 
 ## Liquid tags used
 

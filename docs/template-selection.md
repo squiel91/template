@@ -1,6 +1,6 @@
 # Template selection
 
-Shopify-style alternate template support for storefront 30. Allows resources (products, collections, pages, articles) to render with alternate templates instead of the default one.
+Alternate template support for the storefront theme. Allows resources (products, collections, pages, articles) to render with alternate templates instead of the default one.
 
 The theme intentionally ships with only the default templates. Alternate templates are opt-in and should be added only when a store needs them.
 
@@ -79,7 +79,7 @@ To list which alternate suffixes are available for a template family:
 GET /api/stores/{storeId}/code/template-suffixes?templateFamily=product
 ```
 
-Returns an array of suffix strings found by scanning the live filesystem under `storefronts/30/templates/`. For example, if `templates/product.gift-guide.liquid` and `templates/product.minimal.liquid` exist, the response is `["gift-guide", "minimal"]`.
+Returns an array of suffix strings found by scanning the theme's `templates/` directory. For example, if `templates/product.gift-guide.liquid` and `templates/product.minimal.liquid` exist, the response is `["gift-guide", "minimal"]`.
 
 Supported families:
 

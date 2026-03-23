@@ -13,7 +13,7 @@
  */
 
 import '/assets/listing-quick-add.js'
-import { tiendu } from '/assets/tiendu-client.js'
+import { Tiendu } from '/assets/tiendu-sdk.js'
 import { createProductGallery } from '/assets/gallery.js'
 import { showWarningToast } from '/assets/toast.js'
 import {
@@ -23,7 +23,7 @@ import {
 	getSharedVariantCoverImageId
 } from '/assets/product-pricing.js'
 import {
-	PRICE_CONTACT_WHATSAPP_URL,
+	getStoreWhatsAppUrl,
 	buildOutOfStockWhatsAppUrl,
 	hasPurchasablePrice,
 	normalizeVariants,
@@ -31,6 +31,8 @@ import {
 	serializeMap,
 	buildVariantIndex
 } from '/assets/helpers.js'
+
+const tiendu = Tiendu()
 
 const loadProductFromPage = () => {
 	const scriptEl = document.getElementById('product-json')
@@ -516,11 +518,13 @@ const hydrateProduct = product => {
 				return
 			}
 			if (currentVariant && currentVariant.stock === 0) {
-				window.open(buildOutOfStockWhatsAppUrl(title), '_blank', 'noopener,noreferrer')
+				const outOfStockUrl = buildOutOfStockWhatsAppUrl(title)
+				if (outOfStockUrl) window.open(outOfStockUrl, '_blank', 'noopener,noreferrer')
 				return
 			}
 			if (!hasPurchasablePrice(product, currentVariant)) {
-				window.open(PRICE_CONTACT_WHATSAPP_URL, '_blank', 'noopener,noreferrer')
+				const contactUrl = getStoreWhatsAppUrl()
+				if (contactUrl) window.open(contactUrl, '_blank', 'noopener,noreferrer')
 				return
 			}
 			if (!currentVariant) return

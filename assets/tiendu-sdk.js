@@ -7,8 +7,8 @@ import {
 	trackViewContentEvent
 } from '/assets/tracking.js'
 
-const SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY = 'shopper_session_token'
-const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
+// The shopper session is managed via HttpOnly cookies (same-origin).
+// No localStorage token or custom headers needed.
 
 /**
 	* @typedef {Object} PublicImage
@@ -104,6 +104,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {Array<ProductAttribute>} attributes
 	* @property {number} unitsSold
 	* @property {Array<ProductVariant>} variants
+	* @property {string} url
 	* @property {string} publicUrl
 	* @property {string} updatedAt
 	*/
@@ -123,6 +124,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {number | null} averageRating
 	* @property {Array<ProductAttribute>} attributes
 	* @property {Array<ProductVariant>} variants
+	* @property {string} url
 	* @property {string} publicUrl
 	* @property {number} unitsSold
 	* @property {string} updatedAt
@@ -135,6 +137,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {string | null} description
 	* @property {number} productCount
 	* @property {PublicImage | null} coverImage
+	* @property {string} url
 	* @property {string} publicUrl
 	* @property {Array<Category>} children
 	*/
@@ -144,6 +147,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {number} id
 	* @property {string | null} title
 	* @property {PublicImage | null} coverImage
+	* @property {string} url
 	* @property {string} publicUrl
 	*/
 
@@ -164,6 +168,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {string | null} title
 	* @property {Array<PageBlock>} content
 	* @property {PublicImage | null} coverImage
+	* @property {string} url
 	* @property {string} publicUrl
 	*/
 
@@ -179,6 +184,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {string | null} excerpt
 	* @property {PublicImage | null} coverImage
 	* @property {PublicUser} manager
+	* @property {string} url
 	* @property {string} publicUrl
 	* @property {string} createdAt
 	* @property {string} updatedAt
@@ -191,6 +197,7 @@ const SHOPPER_SESSION_TOKEN_HEADER = 'X-shopper-session-token'
 	* @property {string | null} excerpt
 	* @property {PublicImage | null} coverImage
 	* @property {PublicUser} manager
+	* @property {string} url
 	* @property {string} publicUrl
 	* @property {string} createdAt
 	* @property {string} updatedAt
@@ -288,22 +295,11 @@ const up = baseFetch => {
 	}
 }
 
-export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
-	const upFetch = up(customFetch || fetch)
-	const baseApiUrl = `${baseUrl}/api/stores/${storeId}`
+export const Tiendu = () => {
+	const upFetch = up(fetch)
+	const baseApiUrl = `/api`
 
 	const methods = {
-		shoppers: {
-			getToken: async () => {
-				return localStorage.getItem(SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY)
-			},
-			setToken: token => {
-				localStorage.setItem(SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY, token)
-			},
-			deleteToken: () => {
-				localStorage.removeItem(SHOPPER_SESSION_TOKEN_LOCAL_STORAGE_KEY)
-			}
-		},
 		products: {
 			/**
 			 * @param {{
@@ -479,8 +475,6 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 		analytics: {
 			trackSearch: ({ query, source, resultsCount } = {}) => {
 				trackSearchEvent({
-					storeId,
-					baseUrl,
 					query,
 					source,
 					resultsCount
@@ -488,8 +482,6 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 			},
 			trackViewContent: ({ productId, productTitle, productVariantId, priceInCents, currency } = {}) => {
 				trackViewContentEvent({
-					storeId,
-					baseUrl,
 					productId,
 					productTitle,
 					productVariantId,
@@ -500,45 +492,26 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 		},
 		cart: {
 			addProductVariant: async (productVariant, quantity, onClose) => {
-				const shopperSessionToken = await methods.shoppers.getToken()
-
-				const response = await upFetch.post(
-					`${baseApiUrl}/cart/products/variants/${productVariant.id}`,
-					{ quantity },
-					{
-						headers: shopperSessionToken
-							? { [SHOPPER_SESSION_TOKEN_HEADER]: shopperSessionToken }
-							: undefined
-					}
+				await upFetch.post(
+					`/api/cart/products/variants/${productVariant.id}`,
+					{ quantity }
 				)
-				const token = response?.data?.token ?? response?.token
-				if (token) methods.shoppers.setToken(token)
 				methods.cart.open(onClose)
 
 				trackAddToCartEvent({
-					storeId,
-					baseUrl,
 					productVariantId: productVariant?.id,
 					quantity,
 					priceInCents: productVariant?.priceInCents
 				})
 			},
 			getQuantity: async () => {
-				const shopperSessionToken = await methods.shoppers.getToken()
-				if (!shopperSessionToken) {
-					return { quantity: 0 }
-				}
-				const response = await upFetch.get(`${baseApiUrl}/cart/quantity`, {
-					headers: { [SHOPPER_SESSION_TOKEN_HEADER]: shopperSessionToken }
-				})
+				const response = await upFetch.get(`/api/cart/quantity`)
 
 				return {
 					quantity: response?.data?.quantity ?? response?.quantity ?? 0
 				}
 			},
 			open: async onClose => {
-				const shopperSessionToken = await methods.shoppers.getToken()
-				const checkoutOrigin = new URL(baseUrl, window.location.href).origin
 				let hasTrackedBeginCheckout = false
 
 				if (typeof activeCartOverlayCleanup === 'function') {
@@ -547,14 +520,12 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				}
 
 				const iframe = document.createElement('iframe')
-				iframe.src = `${baseUrl}/stores/${storeId}/embedded-checkout`
+				iframe.src = `/checkout`
 				iframe.id = 'left-iframe'
-				let hasSentToken = false
-				let isIframeReady = false
 				let isClosed = false
 
 				const isTrustedIframeMessage = event => {
-					if (event.origin !== checkoutOrigin) return false
+					if (event.origin !== window.location.origin) return false
 					return iframe.contentWindow && event.source === iframe.contentWindow
 				}
 
@@ -573,29 +544,8 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 
 				activeCartOverlayCleanup = cleanup
 
-				const sendTokenToIframe = () => {
-					if (isClosed) return
-					if (hasSentToken) return
-					if (!iframe.contentWindow) {
-						return
-					}
-					iframe.contentWindow.postMessage(
-						{
-							type: 'SHOPPER_SESSION_TOKEN',
-							token: shopperSessionToken || null
-						},
-						checkoutOrigin
-					)
-					hasSentToken = true
-				}
-
 				const handleIframeMessage = event => {
 					if (!isTrustedIframeMessage(event)) return
-					if (event.data?.type === 'IFRAME_READY') {
-						isIframeReady = true
-						sendTokenToIframe()
-						return
-					}
 
 					if (event.data?.type === 'close') {
 						if (onClose && typeof event.data.updatedCartItemsQuantity === 'number') {
@@ -639,8 +589,6 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 					if (!hasTrackedBeginCheckout && checkoutStartedSteps.has(event.data.step)) {
 						hasTrackedBeginCheckout = true
 						trackBeginCheckoutEvent({
-							storeId,
-							baseUrl,
 							totalPriceInCents,
 							items,
 							currency: normalizedCurrencyCode
@@ -649,8 +597,6 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 
 					if (event.data.step === 'success') {
 						trackPurchaseEvent({
-							storeId,
-							baseUrl,
 							totalPriceInCents,
 							items,
 							currency: normalizedCurrencyCode,
@@ -669,13 +615,6 @@ export const Tiendu = ({ storeId, baseUrl, fetch: customFetch }) => {
 				iframe.style.height = '100%'
 				iframe.style.zIndex = '9999'
 				iframe.style.border = 'none'
-
-				iframe.onload = () => {
-					if (isClosed) return
-					if (isIframeReady) {
-						sendTokenToIframe()
-					}
-				}
 
 				document.body.appendChild(iframe)
 

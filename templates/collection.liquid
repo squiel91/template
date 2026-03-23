@@ -5,10 +5,7 @@
 {% block content %}
 {% render 'breadcrumbs', aria_label: 'Breadcrumb', level_1_href: '/', level_1_label: 'Inicio', level_2_href: '/categorias', level_2_label: 'Categorias', current_label: category.name %}
 
-{% assign products_origin_url = category.publicUrl | default: request.path %}
-{% if products_origin_url contains request.host %}
-	{% assign products_origin_url = products_origin_url | split: request.host | last %}
-{% endif %}
+{% assign products_origin_url = category.url | default: request.path %}
 
 {% products limit: products_page_size, page: current_page, category_id: category.id, include_products_from_subcategories: true %}
 <section class="listing-head" aria-labelledby="category-title">

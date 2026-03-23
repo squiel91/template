@@ -11,7 +11,8 @@ Fields used:
 - `page.id`
 - `page.title`
 - `page.coverImage`
-- `page.publicUrl`
+- `page.url` (relative path)
+- `page.publicUrl` (absolute URL)
 - `page.content`
 
 ## Content rendering

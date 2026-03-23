@@ -56,10 +56,7 @@ Required variables: product
   {% endfor %}
 {% endif %}
 
-{% assign p_url = product.publicUrl %}
-{% if p_url contains request.host %}
-  {% assign p_url = p_url | split: request.host | last %}
-{% endif %}
+{% assign p_url = product.url %}
 {% if origin_url != blank and origin_title != blank %}
   {% assign encoded_origin_url = origin_url | url_encode %}
   {% assign encoded_origin_title = origin_title | url_encode %}

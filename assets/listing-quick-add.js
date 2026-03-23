@@ -1,6 +1,8 @@
 // @ts-nocheck
 
-import { tiendu } from '/assets/tiendu-client.js'
+import { Tiendu } from '/assets/tiendu-sdk.js'
+
+const tiendu = Tiendu()
 
 const BUTTON_SELECTOR = '[data-product-card-add]'
 

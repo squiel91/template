@@ -4,7 +4,7 @@ Renders a server-side category card so listings stay visible without JavaScript.
 Required variables: category
 {% endcomment %}
 
-{% assign c_url = category.publicUrl %}
+{% assign c_url = category.url %}
 {% assign c_image_url = 'no-image.svg' | asset_url %}
 {% assign c_image_alt = 'Sin imagen' %}
 {% if category.coverImage %}

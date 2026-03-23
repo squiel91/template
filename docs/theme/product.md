@@ -15,7 +15,8 @@ Fields used by the template and scripts:
 
 - `product.id`
 - `product.title`
-- `product.publicUrl`
+- `product.url` (relative path, e.g. `/productos/123/mi-producto`)
+- `product.publicUrl` (absolute URL)
 - `product.description`
 - `product.specifications`
 - `product.images`

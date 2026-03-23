@@ -48,10 +48,10 @@
 	{% when 'index' %}
 		{% assign seo_title = store.name | append: ' | Tu tienda online' %}
 		{% assign seo_description = store.description | default: 'Los productos que buscas, en un solo lugar, envíos a todo el país y la mejor atención.' %}
-	{% when 'categories' %}
+	{% when 'list-collections' %}
 		{% assign seo_title = 'Categorías | ' | append: store.name %}
 		{% assign seo_description = 'Explorá las categorías de ' | append: store.name | append: '.' %}
-	{% when 'category' %}
+	{% when 'collection' %}
 		{% assign seo_title = category.name | append: ' | ' | append: store.name %}
 		{% assign seo_description = category.description | default: 'Explorá los productos de la categoría ' | append: category.name | append: ' en ' | append: store.name | append: '.' %}
 		{% if category.coverImage %}
@@ -92,7 +92,7 @@
 	{% when 'blog' %}
 		{% assign seo_title = 'Blog | ' | append: store.name %}
 		{% assign seo_description = 'Ideas, novedades y recomendaciones de ' | append: store.name | append: '.' %}
-	{% when 'blog_post' %}
+	{% when 'article' %}
 		{% assign seo_type = 'article' %}
 		{% assign seo_title = blogPost.title | append: ' | ' | append: store.name %}
 		{% assign seo_description = blogPost.excerpt | default: blog_post_text_excerpt | default: store.description %}
@@ -147,10 +147,10 @@
 <!-- Temporary share image placeholder. Replace social-share-default.svg in assets/ with a branded asset when available. -->
 {% endif %}
 
-{% if request.page_type == 'blog_post' and blogPost.createdAt != blank %}
+{% if request.page_type == 'article' and blogPost.createdAt != blank %}
 <meta property="article:published_time" content="{{ blogPost.createdAt | escape_attr }}" />
 {% endif %}
-{% if request.page_type == 'blog_post' and blogPost.updatedAt != blank %}
+{% if request.page_type == 'article' and blogPost.updatedAt != blank %}
 <meta property="article:modified_time" content="{{ blogPost.updatedAt | escape_attr }}" />
 {% endif %}
 
@@ -222,7 +222,7 @@
 </script>
 {% endif %}
 
-{% if request.page_type == 'blog_post' %}
+{% if request.page_type == 'article' %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -262,13 +262,13 @@
       "position": 2,
       "name": "Busqueda",
       "item": {{ canonical_url | json }}
-    }{% elsif request.page_type == 'categories' %},
+		}{% elsif request.page_type == 'list-collections' %},
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Categorías",
       "item": {{ canonical_url | json }}
-    }{% elsif request.page_type == 'category' %},
+		}{% elsif request.page_type == 'collection' %},
     {
       "@type": "ListItem",
       "position": 2,
@@ -310,7 +310,7 @@
       "position": 2,
       "name": "Blog",
       "item": {{ canonical_url | json }}
-    }{% elsif request.page_type == 'blog_post' %},
+		}{% elsif request.page_type == 'article' %},
     {
       "@type": "ListItem",
       "position": 2,

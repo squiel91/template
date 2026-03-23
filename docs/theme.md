@@ -1,6 +1,6 @@
 # Theme docs
 
-This storefront uses the custom Liquid renderer in `src/lib/server/liquid-storefront-handler/`.
+This storefront uses the Tiendu Liquid renderer.
 
 ## Mental model
 
@@ -9,7 +9,7 @@ This storefront uses the custom Liquid renderer in `src/lib/server/liquid-storef
 - Page templates provide `{% block content %}` and optionally `{% block head %}`.
 - Two globals are always available in the theme: `store` and `request`.
 - Route-specific objects are injected by the Liquid route loader.
-- Liquid block tags like `{% products %}`, `{% categories %}`, `{% pages %}`, and `{% blog_posts %}` fetch extra public data inside templates.
+- Liquid block tags like `{% products %}`, `{% categories %}`, `{% pages %}`, `{% blog_posts %}`, and `{% metadata %}` fetch extra public data inside templates.
 
 ## Start here
 
@@ -19,13 +19,13 @@ This storefront uses the custom Liquid renderer in `src/lib/server/liquid-storef
 ## Routes
 
 - Home: `theme/home.md`
-- Collection detail: `theme/categoria.md`
+- Collection detail (`collection.liquid`): `theme/categoria.md`
 - Search: `theme/busqueda.md`
 - Product detail: `theme/product.md`
-- Collections index: `theme/categories.md`
+- Collections index (`list-collections.liquid`): `theme/categories.md`
 - Page detail: `theme/page.md`
 - Blog index: `theme/blog.md`
-- Article (blog post): `theme/blog-post.md`
+- Article (`article.liquid`): `theme/blog-post.md`
 - Not found: `theme/404.md`
 - Products fragment pagination: `theme/fragments-products.md`
 

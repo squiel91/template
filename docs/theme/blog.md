@@ -19,7 +19,8 @@ Useful post fields:
 - `excerpt`
 - `coverImage`
 - `manager`
-- `publicUrl`
+- `url` (relative path)
+- `publicUrl` (absolute URL)
 - `createdAt`
 - `updatedAt`
 
@@ -30,5 +31,4 @@ Useful post fields:
 
 ## Caveats
 
-- The template currently builds post links manually with `/blog/{{ id }}/{{ title | url_safe }}` even though `publicUrl` also exists.
-- If you want stricter consistency with other routes, switching to `publicUrl` is a possible future cleanup.
+- Use `post.url` for blog post links. Prefer `url` (relative) over `publicUrl` (absolute) in templates.

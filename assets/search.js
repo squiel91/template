@@ -1,10 +1,12 @@
 // @ts-nocheck
 
-import { tiendu } from '/assets/tiendu-client.js'
+import { Tiendu } from '/assets/tiendu-sdk.js'
 import { getListingPriceLabel } from '/assets/product-pricing.js'
 import { withOriginQuery } from '/assets/navigation-origin.js'
 import { urlSafe } from '/assets/url-safe.js'
 import { escapeHtml } from '/assets/sanitize.js'
+
+const tiendu = Tiendu()
 
 const DROPDOWN_ANIMATION_MS = 180
 const SEARCH_DROPDOWN_LIMIT = 8

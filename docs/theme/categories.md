@@ -2,6 +2,8 @@
 
 Template: `templates/list-collections.liquid`
 
+`request.page_type`: `list-collections`
+
 ## Direct route context
 
 - no extra top-level route object beyond `store` and `request`
@@ -19,7 +21,8 @@ Each category item exposes fields such as:
 - `productCount`
 - `coverImage`
 - `children`
-- `publicUrl`
+- `url` (relative path)
+- `publicUrl` (absolute URL)
 
 ## Current rendering pattern
 

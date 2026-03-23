@@ -46,6 +46,7 @@ All JS lives in `assets/`. Referenced in templates via `asset_url`:
 - `search.js` — search suggestion dropdown and mobile search behavior
 - `product-page.js` — product detail page hydration (gallery, variants, cart, reviews)
 - `listing-quick-add.js` — quick add-to-cart from listing pages
+- `tiendu-sdk.js` — same-origin browser SDK surface
 
 ## Caveats
 
