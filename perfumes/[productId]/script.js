@@ -230,7 +230,7 @@ const renderProduct = (product, relatedProducts = []) => {
 					</div>
 					<ul class="purchase-notes" aria-label="Beneficios de compra">
 						<li class="purchase-notes__item"><i data-lucide="truck" aria-hidden="true"></i><span>Envío gratis en pedidos mayores a $ 7.000</span></li>
-						<li class="purchase-notes__item"><i data-lucide="banknote" aria-hidden="true"></i><span><span class="purchase-notes__badge">5% OFF</span> con deposito bancario</span></li>
+						<li class="purchase-notes__item"><i data-lucide="banknote" aria-hidden="true"></i><span><span class="purchase-notes__badge">10% OFF</span> con deposito bancario</span></li>
 						<li class="purchase-notes__item"><i data-lucide="credit-card" aria-hidden="true"></i><span>Hasta 12 cuotas sin recargo con tarjeta de crédito</span></li>
 					</ul>
 					<ul class="payment-methods" aria-label="Medios de pago disponibles">
@@ -621,11 +621,8 @@ const renderProduct = (product, relatedProducts = []) => {
 		addToCartButton.setAttribute('icon', 'plus')
 		addToCartButton.setAttribute('aria-label', 'Agregar al carrito')
 
-		const unavailable = !currentVariant
 		if (typeof addToCartButton.setDisabled === 'function') {
-			addToCartButton.setDisabled(unavailable)
-		} else if (unavailable) {
-			addToCartButton.setAttribute('disabled', '')
+			addToCartButton.setDisabled(false)
 		} else {
 			addToCartButton.removeAttribute('disabled')
 		}
@@ -635,7 +632,7 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	const showVariantSelectionWarning = () => {
 		if (toastStack && typeof toastStack.showWarning === 'function') {
-			toastStack.showWarning('Elegí una variante antes de agregarla al carrito', 5000)
+			toastStack.showWarning('Por favor, selecciona un tamaño para tu fragancia antes de agregarla al carrito.', 5000)
 		}
 	}
 
@@ -818,11 +815,16 @@ const renderProduct = (product, relatedProducts = []) => {
 
 	if (addToCartButton) {
 		addToCartButton.addEventListener('app-click', () => {
-			if (
-				(requiresVariantSelection && !currentVariant) ||
-				(requiresMetadataColorSelection && !isMetadataColorSelectionComplete())
-			) {
+			const isVariantMissing = requiresVariantSelection && !currentVariant;
+			const isColorMissing = requiresMetadataColorSelection && !isMetadataColorSelectionComplete();
+
+			if (isVariantMissing || isColorMissing) {
 				showVariantSelectionWarning()
+				
+				const selector = document.getElementById('variant-selector')
+				if (selector) {
+					selector.scrollIntoView({ behavior: 'smooth', block: 'center' })
+				}
 				return
 			}
 
